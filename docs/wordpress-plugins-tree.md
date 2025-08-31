@@ -31,8 +31,7 @@ The plugin is built using **Next.js** and **React**, and all the frontend logic 
 * **API Integration**: The plugin communicates with the Django backend via the `api.ts` file, using **AJAX requests** to fetch data (e.g., student data, test results).
 
 ### **Mermaid Diagram: Plugin Architecture Overview**
-
-Here’s a **Mermaid diagram** to explain the different components/modules in the **Competence WP** plugin:
+ 
 
 ```mermaid
 flowchart TB
