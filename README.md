@@ -1,17 +1,10 @@
+<img src="https://nathabee.github.io/beelab/beelab.svg" alt="BeeLab Logo" width="512">
+ 
+[View documentation](https://nathabee.github.io/beelab/index.html)
+
+
 # BeeLab: Dockerized Multiservice (Django + Next.js + Postgres + WordPress + MariaDB)
 
-animated logo from githubpage imported from img :
-<img src="https://nathabee.github.io/beelab/beelab.svg" alt="BeeLab Logo" width="512">
-
-logo from doc gifs imported from img :
-<img src="docs/beelab.gif" alt="BeeLab Logo" width="512">
-
-
-logo local direct gif :
-![BeeLab Logo](docs/beelab.gif)
-
-logo in github io page from html
-[Live animated logo](https://nathabee.github.io/beelab/beelab.html)
 
 
 BeeLab provides a dockerized multi-service development stack:
