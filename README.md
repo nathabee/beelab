@@ -1,4 +1,4 @@
-<img src="https://nathabee.github.io/beelab/beelab.svg" alt="BeeLab Logo" width="512">
+<img src="./docs/beelab.svg" alt="BeeLab Logo" width="512">
  
 [View documentation](https://nathabee.github.io/beelab/index.html)
 
