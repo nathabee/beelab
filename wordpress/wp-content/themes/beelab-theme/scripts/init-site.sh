@@ -9,21 +9,21 @@ if ! wp core is-installed > /dev/null 2>&1; then
 fi
 
 # Parent theme if you’re a child of 2025
-if grep -qi '^Template:\s*twentytwentyfive' wp-content/themes/pomolobee-theme/style.css; then
+if grep -qi '^Template:\s*twentytwentyfive' wp-content/themes/beelab-theme/style.css; then
   wp theme is-installed twentytwentyfive || wp theme install twentytwentyfive
 fi
 
 # Activate your theme (idempotent)
-wp theme activate pomolobee-theme || true
+wp theme activate beelab-theme || true
 
 # Site basics + permalinks
-wp option update blogname 'PomoloBee'
-wp option update blogdescription 'Smart orchard & field management'
+wp option update blogname 'BeeLab'
+wp option update blogdescription ' Dockerized Multiservice (Django + Next.js plugins + WordPress + databases)'
 wp option update permalink_structure '/%postname%/'
 wp rewrite flush --hard || true   # may warn; that’s fine if .htaccess is present
 
 # Import & set logo
-LOGO='/var/www/html/wp-content/themes/pomolobee-theme/assets/images/logo.png'
+LOGO='/var/www/html/wp-content/themes/beelab-theme/assets/images/logo.png'
 if [[ -f "$LOGO" ]]; then
   CUR="$(wp theme mod get custom_logo --format=value 2>/dev/null || true)"
   if [[ -z "${CUR:-}" || "$CUR" == "0" ]]; then

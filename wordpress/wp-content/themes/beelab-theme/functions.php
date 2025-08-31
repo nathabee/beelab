@@ -1,6 +1,6 @@
 <?php
 add_action('wp_enqueue_scripts', function() {
-  wp_enqueue_style('pomolobee-style', get_stylesheet_uri(), [], wp_get_theme()->get('Version'));
+  wp_enqueue_style('beelab-style', get_stylesheet_uri(), [], wp_get_theme()->get('Version'));
 });
 
  
