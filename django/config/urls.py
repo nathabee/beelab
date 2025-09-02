@@ -7,6 +7,16 @@ from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from django.conf.urls import handler404, handler500
  
+from django.db import connection
+from django.db.utils import OperationalError
+
+def ready(_):
+    try:
+        connection.cursor()  # no query; just open a connection
+        return JsonResponse({"status": "ok", "db": "ok"}, status=200)
+    except OperationalError:
+        return JsonResponse({"status": "ok", "db": "down"}, status=503)
+
 
 def custom_404(request, exception=None):
     return JsonResponse({
@@ -35,6 +45,7 @@ def health(_):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("health", health),
+    path("ready", ready),
 
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),

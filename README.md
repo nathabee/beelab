@@ -95,7 +95,32 @@ Service URLs:
 * Web (Next.js): `http://localhost:8080`
 * WordPress: `http://localhost:8082`
 
+ 
+to connect tpo WordPress admin : `http://localhost:8082/wp-admin` use the wordpress login created precedently
+activate the plugin you want ("competence WP" , "pomolobee WP") 
+```bash
+# for pomolobee plugin
+docker compose exec django python manage.py changepassword pomofarmer
+# for competence plugin
+docker compose exec django python manage.py changepassword nathaprof
+```
+to test the plugins go to WordPress: `http://localhost:8082/`, choose in the menu the plugin you want and enter login/password
+ 
 
+to change some data in Django  `http://localhost:8001/admin` use the django login created precedently
+
+
+## Screenshots
+
+### Pomolobee Plugin in WordPress
+<a href="./docs/screenshot_pomolobee_plugin.png">
+  <img src="./docs/screenshot_pomolobee_plugin.png" alt="Pomolobee plugin screenshot" width="400">
+</a>
+
+### Competence Plugin in WordPress
+<a href="./docs/screenshot_competence_plugin.png">
+  <img src="./docs/screenshot_competence_plugin.png" alt="Competence plugin screenshot" width="400">
+</a>
 
 ## Getting Started (detailled explanation)
 

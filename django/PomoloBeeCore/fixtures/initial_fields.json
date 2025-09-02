@@ -8,7 +8,7 @@
         "name": "ChampMaison",
         "description": "Champ situé sur la parcelle de la maison",
         "orientation": "NW",
-        "svg_map": "/fields/svg/C1_map.svg",
+        "svg_map": "/pomolobee/fields/svg/C1_map.svg",
         "background_image": "/fields/background/C1.jpeg"
       }
     },
@@ -21,7 +21,7 @@
         "name": "ChampSud",
         "description": "Champ situé au sud de la propriété, très ensoleillé.",
         "orientation": "S",
-        "svg_map": "/fields/svg/C2_map.svg"
+        "svg_map": "/pomolobee/fields/svg/C2_map.svg"
       }
     },
     {
@@ -33,7 +33,7 @@
         "name": "VergerHaut",
         "description": "Verger en hauteur avec terre calcaire.",
         "orientation": "E",
-        "svg_map": "/fields/svg/C3_map.svg"
+        "svg_map": "/pomolobee/fields/svg/C3_map.svg"
       }
     },
     {
@@ -45,7 +45,7 @@
         "name": "VergerBas",
         "description": "Verger en contrebas, plus humide.",
         "orientation": "W",
-        "svg_map": "/fields/svg/C4_map.svg"
+        "svg_map": "/pomolobee/fields/svg/C4_map.svg"
       }
     },
     {
@@ -57,7 +57,7 @@
         "name": "PlaineOuest",
         "description": "Grande plaine à l'ouest, sol fertile.",
         "orientation": "W",
-        "svg_map": "/fields/svg/C5_map.svg"
+        "svg_map": "/pomolobee/fields/svg/C5_map.svg"
       }
     },
     {
@@ -69,7 +69,7 @@
         "name": "TestZone",
         "description": "Petite parcelle expérimentale.",
         "orientation": "N",
-        "svg_map": "/fields/svg/default_map.svg"
+        "svg_map": "/pomolobee/fields/svg/default_map.svg"
       }
     }
   ]
