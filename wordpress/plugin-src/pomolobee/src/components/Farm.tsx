@@ -1,0 +1,34 @@
+// src/components/Farm.tsx
+'use client';
+
+import React from "react";
+import { useProtectedPage } from "@hooks/useProtectedPage";
+import FieldSelection from "@components/FieldSelection";
+import ActiveContextCard from "@components/ActiveContextCard";
+import FieldCard from "@components/FieldCard";
+
+import { useAuth } from '@context/AuthContext';
+
+
+
+const Farm: React.FC = () => {
+  console.log('[Farm] component called');
+  useProtectedPage(); // redirects if not logged
+
+
+
+  const {  activeField } = useAuth();
+
+
+
+  return (
+    <>
+      <h1>Farm</h1>
+      <FieldSelection />
+      <ActiveContextCard />
+      <FieldCard field={activeField} />
+    </>
+  );
+};
+
+export default Farm;

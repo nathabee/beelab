@@ -55,7 +55,7 @@ const App = () => {
     <div className="pomolobee-app-container">
       <BrowserRouter basename={window.pomolobeeSettings?.basename || '/'}>
         <div className="translate-box" style={{ padding: '10px', textAlign: 'right' }}>
-          🌐 Translate: <span id="google_translate_element"></span>
+          🌐 Translate : <span id="google_translate_element"></span>
         </div>
 
         <div className="app-layout">

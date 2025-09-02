@@ -16,6 +16,7 @@ const PomoloBeeLogin = () => {
   const { handleLogin, errorMessage } = useLoginHandler();
 
   const submit = async (e: React.FormEvent) => {
+    console.log('[PomoloBeeLogin] submit login pressed');
     e.preventDefault();
     await handleLogin(username, password, () => navigate('/pomolobee_dashboard'));
   };
@@ -29,7 +30,7 @@ const PomoloBeeLogin = () => {
         <input
                 type="password"
                 name="password"
-                placeholder="Mot de passe"
+                placeholder="Mot de passe VERSION1"
                 autoComplete="current-password"
                 required
                 value={password}

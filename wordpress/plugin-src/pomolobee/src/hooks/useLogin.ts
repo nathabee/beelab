@@ -18,6 +18,7 @@ export function useLoginHandler() {
     try { 
 
 
+      console.warn('[useLoginHandler] handleLogin called');
       const response = await apiUser.post("/auth/login/",  { username, password });
 
       const { access: token } = response.data;
@@ -26,20 +27,27 @@ export function useLoginHandler() {
 
       const userResponse = await apiUser.get("/me/", { headers: authHeaders(token) });
 
-
       const userInfo = userResponse.data;
+      console.log('[useLoginHandler] /me OK:', userInfo);
+
+
       login(token, userInfo);
 
-      // 🔽 hydrate all frontend data now
-      await fetchBootstrapData();
+      console.log('[useLoginHandler] calling fetchBootstrapData(token)');
+      await fetchBootstrapData(token, { force: true });
+      console.log('[useLoginHandler] fetchBootstrapData() finished');
+ 
 
       onSuccess();
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      setErrorMessage(
-        axiosError.response?.status === 401 ? 'Invalid username or password' : 'Connection error'
-      );
-      console.error('Login failed:', error);
+    } catch (e: any) {
+      if (e?.response?.status === 401) {
+        setErrorMessage('Invalid username or password');
+      } else if (e?.response?.status === 403) {
+        setErrorMessage('Your account is not permitted to access this application.');
+      } else {
+        setErrorMessage('Connection error');
+      } 
+      console.error('Login failed:', errorMessage);
     }
   };
 

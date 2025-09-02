@@ -22,54 +22,34 @@ register_activation_hook(__FILE__, 'pomolobee_wp_create_pages');
 function pomolobee_wp_create_pages() {
     $pages = [
         [
-            'title' => 'Login',
-            'slug'  => 'pomolobee_login',
+            'title' => 'PomoloBee Login',
+            'slug'  => 'pomolobee',
             'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
+            'type'  => 'page',
         ],
         [
             'title' => 'Home',
             'slug'  => 'pomolobee_home',
             'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
+            'type'  => 'pomolobee_page',
         ],
         [
             'title' => 'Dashboard',
             'slug'  => 'pomolobee_dashboard',
             'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
+            'type'  => 'pomolobee_page',
         ],
         [
-            'title' => 'Catalogue Management',
-            'slug'  => 'pomolobee_catalogue_mgt',
+            'title' => 'Farm',
+            'slug'  => 'pomolobee_farm',
             'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
-        ],
-        [
-            'title' => 'Report Management',
-            'slug'  => 'pomolobee_report_mgt',
-            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
-        ],
-        [
-            'title' => 'Student Management',
-            'slug'  => 'pomolobee_student_mgt',
-            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
-        ],
-        [
-            'title' => 'Overview Ongoing Test',
-            'slug'  => 'pomolobee_overview_test',
-            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
-        ],
-        [
-            'title' => 'PDF Setup',
-            'slug'  => 'pomolobee_pdf_conf',
-            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
-        ],
-        [
-            'title' => 'PDF View',
-            'slug'  => 'pomolobee_pdf_view',
-            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
+            'type'  => 'pomolobee_page',
         ],
         [
             'title' => 'Error',
             'slug'  => 'pomolobee_error',
             'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
+            'type'  => 'pomolobee_page',
         ]
     ];
 
@@ -80,8 +60,8 @@ function pomolobee_wp_create_pages() {
             'post_name'    => $page['slug'],
             'post_content' => $page['block'],
             'post_status'  => 'publish',
-            'post_type'    => 'page',
-            'page_template' => 'page-plugin' 
+            'post_type'    => $page['type'],  
+            'page_template' => 'plugin_page' 
             ]);
         }
     }
@@ -203,3 +183,21 @@ add_action('wp_print_scripts', function () {
         }
     }
 });
+
+// functions.php or plugin main file
+add_action('init', function () {
+    register_post_type('pomolobee_page', [
+        'label'               => 'Pomolobee Pages',
+        'public'              => true,
+        'show_ui'             => true,
+        'show_in_rest'        => true,   // Gutenberg/Blocks
+        'has_archive'         => false,
+        'rewrite'             => ['slug' => 'pomolobee'], // /pomolobee/...
+        'supports'            => ['title', 'editor'],
+        'show_in_nav_menus'   => false,  // <<< keep out of default menus
+        'exclude_from_search' => true,   // optional
+        'menu_position'       => 20,
+        'menu_icon'           => 'dashicons-chart-line',
+    ]);
+});
+

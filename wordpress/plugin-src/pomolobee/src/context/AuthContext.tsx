@@ -5,8 +5,7 @@ import React, { createContext, useContext, useEffect, useState,useMemo } from "r
 import { User } from "@mytypes/user";
 import { FarmWithFields } from "@mytypes/farm"; 
 import { Fruit } from '@mytypes/fruit';
-import { Field, FieldBasic } from '@mytypes/field';
- 
+import { Field, FieldBasic } from '@mytypes/field'; 
 
 
 type Maybe<T> = T | null;
@@ -53,7 +52,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     () => Object.fromEntries(fields.map(f => [f.field_id, f])),
     [fields]
   );
-  const isLoggedIn = !!token;
+  const isLoggedIn = !!token; 
+
+  // DEBUG
+  useEffect(() => {
+  console.log('[Auth] DEBUG token changed:', token);
+}, [token]);
+
+useEffect(() => {
+  console.log('[Auth] DEBUG user changed:', user);
+}, [user]);
+
+useEffect(() => {
+  console.log('[Auth] DEBUG farms set:', farms);
+}, [farms]);
+
+useEffect(() => {
+  console.log('[Auth] DEBUG fields set:', fields);
+}, [fields]);
+
+useEffect(() => {
+  console.log('[Auth] DEBUG fruits set:', fruits);
+}, [fruits]);
+
+  // END DEBUG
+
+
+useEffect(() => {
+  console.log('[Auth] activeFarm:', activeFarm, 'activeField:', activeField);
+}, [activeFarm, activeField]);
 
   // boot from localStorage
   useEffect(() => {
@@ -74,7 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // persist
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (token) localStorage.setItem("authToken", token);
+    if (token)  
+      localStorage.setItem("authToken", token); 
     else localStorage.removeItem("authToken");
   }, [token]); 
   useEffect(() => {
@@ -109,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (tok: string, u: User) => {
     setTokenState(tok);
     setUser(u);
+    console.log('[AuthProvider] login called');
   };
 
   const logout = () => {
@@ -120,6 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (typeof window !== "undefined") {
       localStorage.clear(); // simple reset for MVP
     }
+    console.log('[AuthProvider] logout called');
   };
 
   const setToken = (t: Maybe<string>) => setTokenState(t);

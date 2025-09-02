@@ -22,7 +22,7 @@ const PomoloBeeHeader = () => {
               <Link to="/pomolobee_dashboard" className="nav-link">📊 Dashboard</Link>
               {canAccessFarm ? (
                 <>
-                  <Link to="/pomolobee_Farm" className="nav-link">📄 Farm Management</Link> 
+                  <Link to="/pomolobee_farm" className="nav-link">Farm Management</Link> 
                 </>
               ) : (
                 <>

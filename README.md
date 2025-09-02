@@ -10,19 +10,9 @@
 [![status: work in progress](https://img.shields.io/badge/status-work_in_progress-orange)](#)
 
 
-<div align="center" style="margin:1rem 0;padding:0.75rem 1rem;border:1px solid #e1e4e8;border-radius:6px;background:#fafbfc;">
-  <strong>Work in progress</strong> — APIs, docs, and structure may change.
-</div>
-
-<details>
-  <summary><strong>Project status: Work in progress</strong></summary>
-
-This repository is under active development. Expect breaking changes and incomplete docs.
-
-</details>
 
 
-# BeeLab: Dockerized Multiservice (Django + Next.js + Postgres + WordPress + MariaDB)
+# BeeLab: Dockerized Multiservice (Django + Next.js plugins + WordPress + databases)
 
 
 

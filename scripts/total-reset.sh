@@ -165,7 +165,8 @@ fi
 # --- load Pomolobee fixtures ---------------------------------------  
 echo "📥 Loading fixtures into Django..."
 set +e
-docker compose exec django python manage.py seed_pomolobee --clear
+docker compose exec django python manage.py seed_pomolobee --clear 
+docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_groups.json || echo "⚠️ superuser fixture failed"
 docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_superuser.json || echo "⚠️ superuser fixture failed"
 docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_farms.json   || echo "⚠️ farms fixture failed"
 docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_fields.json  || echo "⚠️ fields fixture failed"

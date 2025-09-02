@@ -12,7 +12,7 @@ check() {
 echo "🔎 Pinging services..."
 check "Web (Next.js)" "http://localhost:8080"
 check "Django health" "http://localhost:8001/health"
-check "Django hello"  "http://localhost:8001/api/user/hello"
+check "Django hello"  "http://localhost:8001/api/user/hello/"
 check "WordPress"     "http://localhost:8082"
 
 echo
@@ -22,3 +22,4 @@ docker compose --profile "$PROFILE" run --rm wpcli wp theme list
 docker compose --profile "$PROFILE" run --rm wpcli wp option get blogname
 docker compose --profile "$PROFILE" run --rm wpcli wp theme mod get custom_logo || true
 docker compose --profile "$PROFILE" run --rm wpcli wp post list --post_type=attachment --fields=ID,post_title,guid --format=table || true
+ 

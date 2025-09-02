@@ -14,13 +14,14 @@ from rest_framework.permissions import BasePermission
  
 class IsFarmer(BasePermission):
     """
-    Allows access only to farmer 
+    Authenticated and either in 'farmer' group or superuser.
     """
-
     def has_permission(self, request, view):
-        # General permission check to ensure user is a teacher and authenticated
-        return request.user.is_authenticated and request.user.groups.filter(name='farmer').exists()
-
+        u = request.user
+        return (
+            u and u.is_authenticated and
+            (u.is_superuser or u.groups.filter(name='farmer').exists())
+        )
  
 class IsAdmin(BasePermission):
     """

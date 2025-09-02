@@ -37,4 +37,4 @@ EOF
 
 
 # Run the in-container initializer (activates theme, permalinks, writes .htaccess, imports logo)
-docker compose run --rm wpcli bash /var/www/html/wp-content/themes/pomolobee-theme/scripts/init-site.sh
+docker compose run --rm wpcli bash /var/www/html/wp-content/themes/beelab-theme/scripts/init-site.sh

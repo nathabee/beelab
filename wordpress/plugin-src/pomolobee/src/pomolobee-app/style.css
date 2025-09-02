@@ -1,7 +1,7 @@
 :root {
   /* Theme-aware color variables with fallbacks */
   --custom-dark: var(--wp--preset--color--primary, #22473f);
-  --custom-blue: var(--wp--preset--color--surface-1, #d4f0eb);
+  --custom-blue: var(--wp--preset--color--surface-1, #66e9cd);
   --custom-blue-complement: var(--wp--preset--color--secondary, #deecbe);
   --custom-text: var(--wp--preset--color--base, #343a40);
   --custom-text-on-dark: var(--wp--preset--color--background, white);
@@ -9,7 +9,7 @@
   --custom-alert: var(--wp--preset--color--tertiary, #c4361d);
   --custom-link-hover: var(--wp--preset--color--primary, #ff9100);
   --custom-link-disabled: var(--wp--preset--color--contrast, #999999);
-  --custom-light: var(--wp--preset--color--background, #d1f3f1);
+  --custom-light: var(--wp--preset--color--background, #f3d1e9);
   --custom-dark-shadow: rgba(0, 0, 0, 0.1);
   --custom-gradient: linear-gradient(
     to right,

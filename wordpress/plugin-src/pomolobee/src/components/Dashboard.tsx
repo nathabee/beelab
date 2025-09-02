@@ -7,12 +7,12 @@ import FieldSelection from "@components/FieldSelection";
 import ActiveContextCard from "@components/ActiveContextCard";
 
 const Dashboard: React.FC = () => {
+  console.log('[Dashboard] component called');
   useProtectedPage(); // redirects if not logged
 
   return (
     <>
-      <h1>📊 Dashboard</h1>
-      <FieldSelection />
+      <h1>📊 Dashboard</h1> 
       <ActiveContextCard />
     </>
   );

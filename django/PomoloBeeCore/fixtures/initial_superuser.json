@@ -1,9 +1,5 @@
 [
   {
-    "model": "auth.group",
-    "fields": { "name": "farmer" }
-  },
-  {
     "model": "usercore.customuser",
     "fields": {
       "username": "pomofarmer",
