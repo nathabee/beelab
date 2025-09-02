@@ -9,7 +9,7 @@
         "description": "Champ situé sur la parcelle de la maison",
         "orientation": "NW",
         "svg_map": "/pomolobee/fields/svg/C1_map.svg",
-        "background_image": "/fields/background/C1.jpeg"
+        "background_image": "/pomolobee/fields/background/C1.jpeg"
       }
     },
     {

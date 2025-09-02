@@ -114,12 +114,12 @@ to change some data in Django  `http://localhost:8001/admin` use the django logi
 
 ### Pomolobee Plugin in WordPress
 <a href="./docs/screenshot_pomolobee_plugin.png">
-  <img src="./docs/screenshot_pomolobee_plugin.png" alt="Pomolobee plugin screenshot" width="400">
+  <img src="./docs/screenshot_pomolobee_plugin.png" alt="Pomolobee plugin screenshot" width="49%">
 </a>
 
 ### Competence Plugin in WordPress
 <a href="./docs/screenshot_competence_plugin.png">
-  <img src="./docs/screenshot_competence_plugin.png" alt="Competence plugin screenshot" width="400">
+  <img src="./docs/screenshot_competence_plugin.png" alt="Competence plugin screenshot" width="49%">
 </a>
 
 ## Getting Started (detailled explanation)

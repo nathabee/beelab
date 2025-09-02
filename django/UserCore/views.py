@@ -16,7 +16,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import permissions, viewsets
 from .models import CustomUser
 
- 
+from rest_framework.response import Response
+from django.contrib.auth.models import Group
+
 from .serializers import  UserSerializer
 
  
@@ -35,7 +37,7 @@ def me(request):
     u = request.user
     return JsonResponse({"id": u.id, "username": u.username, "email": u.email})
 
-
+ 
 
  
 ####################################################################

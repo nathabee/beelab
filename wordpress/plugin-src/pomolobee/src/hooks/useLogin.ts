@@ -25,10 +25,10 @@ export function useLoginHandler() {
 
  
 
-      const userResponse = await apiUser.get("/me/", { headers: authHeaders(token) });
+      const userResponse = await apiUser.get("/users/me/", { headers: authHeaders(token) });
 
       const userInfo = userResponse.data;
-      console.log('[useLoginHandler] /me OK:', userInfo);
+      console.log('[useLoginHandler] apiUser /users/me OK:', userInfo);
 
 
       login(token, userInfo);

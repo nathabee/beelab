@@ -41,7 +41,6 @@ const FieldCard: React.FC<Props> = ({ field }) => {
   const bgUrl = resolved?.background_image_url || null;
   const svgUrl = resolved?.svg_map_url || null;
 
-  // If you sometimes have nested rows on the field, show the count; otherwise show "—"
   const rowCount =
     (resolved as any)?.rows?.length ??
     (field as any)?.rows?.length ??
@@ -57,46 +56,95 @@ const FieldCard: React.FC<Props> = ({ field }) => {
       <div className="mb-2 text-muted">{description || '—'}</div>
 
       <div className="row g-3 align-items-stretch">
-        {/* Info */}
-        <div className="col-12 col-md-6">
-          <ul className="list-unstyled mb-0">
-            <li className="mb-1">
-              <strong>Orientation:</strong> {orientation || '—'}
-            </li>
-            <li className="mb-1">
-              <strong>Rows:</strong> {rowCount ?? '—'}
-            </li>
-            <li className="mb-1">
-              <strong>SVG map:</strong>{' '}
-              {svgUrl ? (
-                <a href={svgUrl} target="_blank" rel="noreferrer">
-                  View
-                </a>
-              ) : (
-                '—'
-              )}
-            </li>
-            <li className="mb-1">
-              <strong>Production estimation:</strong> —
-              <small className="text-muted"> (depends on rows/estimates)</small>
-            </li>
-          </ul>
+        {/* LEFT: Info */}
+        <div className="col-12 col-lg-4">
+          <div className="h-100 d-flex flex-column">
+            <ul className="list-unstyled mb-3">
+              <li className="mb-1">
+                <strong>Orientation:</strong> {orientation || '—'}
+              </li>
+              <li className="mb-1">
+                <strong>Rows:</strong> {rowCount ?? '—'}
+              </li>
+              <li className="mb-1">
+                <strong>SVG map:</strong>{' '}
+                {svgUrl ? (
+                  <a href={svgUrl as string} target="_blank" rel="noreferrer noopener">
+                    Open SVG
+                  </a>
+                ) : (
+                  '—'
+                )}
+              </li>
+              <li className="mb-1">
+                <strong>Background:</strong>{' '}
+                {bgUrl ? (
+                  <a href={bgUrl as string} target="_blank" rel="noreferrer noopener">
+                    Open image
+                  </a>
+                ) : (
+                  '—'
+                )}
+              </li>
+              <li className="mb-1">
+                <strong>Production estimation:</strong> —
+                <small className="text-muted"> (depends on rows/estimates)</small>
+              </li>
+            </ul>
+
+            {/* You can add extra actions here if needed */}
+            <div className="mt-auto small text-muted">
+              Tip: use the links above to open full-size for zoom.
+            </div>
+          </div>
         </div>
 
-        {/* Background image preview */}
-        <div className="col-12 col-md-6">
+        {/* MIDDLE: Inline SVG preview (if any) */}
+        <div className="col-12 col-lg-4">
           <div
-            className="border rounded overflow-hidden"
-            style={{
-              minHeight: 180,
-              background: bgUrl ? `url(${bgUrl}) center/cover no-repeat` : '#f8f9fa',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
+            className="border rounded overflow-hidden h-100 d-flex align-items-center justify-content-center"
+            style={{ minHeight: 220, background: '#f8f9fa' }}
+            aria-label="SVG preview"
+          >
+            {svgUrl ? (
+              // object provides best SVG render; fallback <img> if object fails
+              <object
+                data={svgUrl as string}
+                type="image/svg+xml"
+                className="w-100"
+                style={{ aspectRatio: '4 / 3' }}
+                aria-label="Field SVG map"
+              >
+                <img
+                  src={svgUrl as string}
+                  alt="Field SVG map"
+                  className="img-fluid"
+                  style={{ maxHeight: 360, objectFit: 'contain' }}
+                />
+              </object>
+            ) : (
+              <span className="text-muted">No SVG map</span>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT: Background image preview */}
+        <div className="col-12 col-lg-4">
+          <div
+            className="border rounded overflow-hidden h-100 d-flex align-items-center justify-content-center"
+            style={{ minHeight: 220, background: '#f8f9fa' }}
             aria-label="Field background"
           >
-            {!bgUrl && <span className="text-muted">No background image</span>}
+            {bgUrl ? (
+              <img
+                src={bgUrl as string}
+                alt="Field background"
+                className="img-fluid"
+                style={{ maxHeight: 360, width: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              <span className="text-muted">No background image</span>
+            )}
           </div>
         </div>
       </div>
