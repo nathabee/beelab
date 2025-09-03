@@ -1,13 +1,21 @@
 // src/hooks/useBootstrapData.ts
 'use client';
-
 import { useAuth } from '@context/AuthContext';
 import { apiPom, authHeaders } from '@utils/api';
-import { FarmWithFields } from '@mytypes/farm';
-import { Field } from '@mytypes/field';
-import { Fruit } from '@mytypes/fruit';
+import type { FarmWithFields } from '@mytypes/farm';
+import type { Field, FieldLocation } from '@mytypes/field';
+import type { Fruit } from '@mytypes/fruit';
+import type { Row } from '@mytypes/row';
 
 type BootstrapOpts = { force?: boolean };
+
+function getLocationsArray(payload: any): FieldLocation[] {
+  // current server shape: { status, data: { locations: [...] } }
+  if (Array.isArray(payload?.data?.locations)) return payload.data.locations;
+  if (Array.isArray(payload?.locations)) return payload.locations;
+  if (Array.isArray(payload)) return payload as FieldLocation[];
+  return [];
+}
 
 export default function useBootstrapData() {
   const {
@@ -15,62 +23,61 @@ export default function useBootstrapData() {
     farms, setFarms,
     fields, setFields,
     fruits, setFruits,
+    rows, setRows,
     setActiveFarm,
   } = useAuth();
 
-// tokenParam is optional; if omitted we use the context token, but better not at the init, the asynchron update
-// will call fetchBootstrapData before the login as logged the token in the authContext.tsx in AuthProvider
-const fetchBootstrapData = async (tokenParam?: string, opts: BootstrapOpts = {}) => {
-   const t = tokenParam ?? token;
-   console.log('[bootstrap] start, token:', t, 'opts:', opts);
-   if (!t) { console.warn('[bootstrap] no token, bail'); return; }
-
-    const needFarms  = opts.force || farms.length  === 0;
-    const needFields = opts.force || fields.length === 0;
-    const needFruits = opts.force || fruits.length === 0;
-    console.log('[bootstrap] needFarms/Fields/Fruits:', needFarms, needFields, needFruits);
-    if (!needFarms && !needFields && !needFruits) { console.log('[bootstrap] nothing to do'); return; }
- 
-    const headers = authHeaders(t);
-    console.log('[bootstrap] headers:', headers);
-
-    try {
-      const farmsReq  = needFarms  ? apiPom.get<FarmWithFields[]>('/farms/',  { headers }) : Promise.resolve({ data: farms });
-      const fieldsReq = needFields ? apiPom.get<Field[]>('/fields/',          { headers }) : Promise.resolve({ data: fields });
-      const fruitsReq = needFruits ? apiPom.get<Fruit[]>('/fruits/',          { headers }) : Promise.resolve({ data: fruits });
-
-      console.log('[bootstrap] sending requests...');
-      const [farmsRes, fieldsRes, fruitsRes] = await Promise.all([farmsReq, fieldsReq, fruitsReq]);
-
-      console.log('[bootstrap] /farms status:', (farmsRes as any)?.status, 'data:', farmsRes.data);
-      console.log('[bootstrap] /fields status:', (fieldsRes as any)?.status, 'data:', fieldsRes.data);
-      console.log('[bootstrap] /fruits status:', (fruitsRes as any)?.status, 'data:', fruitsRes.data);
-
-      const farmsData  = farmsRes.data  ?? farms;
-      const fieldsData = fieldsRes.data ?? fields;
-      const fruitsData = fruitsRes.data ?? fruits;
-
-      setFarms(farmsData);
-      setFields(fieldsData);
-      setFruits(fruitsData);
-      if (farmsData.length === 1) setActiveFarm(farmsData[0]);
-      console.log('[bootstrap] state hydrated');
-    } catch (err: any) {
-      // log axios error details
-      console.error('[bootstrap] FAILED', {
-        message: err?.message,
-        status: err?.response?.status,
-        url: err?.config?.url,
-        data: err?.response?.data
-      });
-    }
-  };
-
-  
-
-
   const headersFor = (t?: string) => authHeaders(t ?? token);
 
+  const fetchBootstrapData = async (tokenParam?: string, opts: BootstrapOpts = {}) => {
+    const t = tokenParam ?? token;
+    if (!t) { console.warn('[bootstrap] no token, bail'); return; }
+
+    const needFarms  = opts.force || farms.length  === 0;
+    const needFruits = opts.force || fruits.length === 0;
+    const needRows   = opts.force || rows.length   === 0; // rows drives locations fetch
+
+    const headers = headersFor(t);
+
+    // Only three requests: farms, fruits, locations (fields come from locations)
+    const farmsReq = needFarms  ? apiPom.get<FarmWithFields[]>('/farms/',    { headers }) : Promise.resolve({ data: farms });
+    const fruitsReq= needFruits ? apiPom.get<Fruit[]>('/fruits/',            { headers }) : Promise.resolve({ data: fruits });
+    const locsReq  = needRows   ? apiPom.get<any>('/locations/',             { headers }) : Promise.resolve({ data: null });
+
+    const [farmsRes, fruitsRes, locsRes] = await Promise.all([farmsReq, fruitsReq, locsReq]);
+
+    const farmsData  = farmsRes.data  ?? farms;
+    const fruitsData = fruitsRes.data ?? fruits;
+
+    let fieldsData: Field[] = fields;
+    let flatRows: Row[] = rows;
+
+    if (needRows && locsRes?.data) {
+      const locs = getLocationsArray(locsRes.data);
+      // dedupe fields by field_id, prefer last (or first – doesn’t matter if consistent)
+      const map = new Map<number, Field>();
+      const accRows: Row[] = [];
+      for (const loc of locs) {
+        const f = loc.field;
+        map.set(f.field_id, f);
+        for (const r of loc.rows) {
+          accRows.push({ ...r, field_id: f.field_id });
+        }
+      }
+      fieldsData = Array.from(map.values());
+      flatRows = accRows;
+      console.log('[bootstrap] fields from locations:', fieldsData.length, 'rows:', flatRows.length);
+    }
+
+    setFarms(farmsData);
+    setFruits(fruitsData);
+    setFields(fieldsData);
+    setRows(flatRows);
+
+    if (farmsData.length === 1) setActiveFarm(farmsData[0]);
+  };
+
+  // Targeted refreshes if you still need them
   const fetchFieldById = async (fieldId: number, tokenParam?: string) => {
     const res = await apiPom.get<Field>(`/fields/${fieldId}/`, { headers: headersFor(tokenParam) });
     const updated = res.data;
@@ -81,17 +88,20 @@ const fetchBootstrapData = async (tokenParam?: string, opts: BootstrapOpts = {})
     return updated;
   };
 
-  const fetchFarmsOnly = async (tokenParam?: string) => {
-    const res = await apiPom.get<FarmWithFields[]>('/farms/', { headers: headersFor(tokenParam) });
-    setFarms(res.data);
-    return res.data;
+  const fetchLocationsOnly = async (tokenParam?: string) => {
+    const res = await apiPom.get<any>('/locations/', { headers: headersFor(tokenParam) });
+    const locs = getLocationsArray(res.data);
+    const map = new Map<number, Field>();
+    const accRows: Row[] = [];
+    for (const loc of locs) {
+      const f = loc.field;
+      map.set(f.field_id, f);
+      for (const r of loc.rows) accRows.push({ ...r, field_id: f.field_id });
+    }
+    setFields(Array.from(map.values()));
+    setRows(accRows);
+    return accRows;
   };
 
-  const fetchFieldsOnly = async (tokenParam?: string) => {
-    const res = await apiPom.get<Field[]>('/fields/', { headers: headersFor(tokenParam) });
-    setFields(res.data);
-    return res.data;
-  };
-
-  return { fetchBootstrapData, fetchFieldById, fetchFarmsOnly, fetchFieldsOnly };
+  return { fetchBootstrapData, fetchFieldById, fetchLocationsOnly };
 }

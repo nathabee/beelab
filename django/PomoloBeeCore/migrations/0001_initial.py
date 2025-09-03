@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=255)),
                 ('description', models.TextField(blank=True, null=True)),
                 ('orientation', models.CharField(blank=True, max_length=50, null=True)),
-                ('svg_map', models.FileField(blank=True, default='fields/svg/default_map.svg', help_text='Upload SVG map of the field layout.', null=True, upload_to=PomoloBeeCore.models.svg_upload_path)),
+                ('svg_map', models.FileField(blank=True, default='pomolobee/fields/svg/default_map.svg', help_text='Upload SVG map of the field layout.', null=True, upload_to=PomoloBeeCore.models.svg_upload_path)),
                 ('background_image', models.ImageField(blank=True, help_text='Upload background image for the field layout.', null=True, upload_to=PomoloBeeCore.models.background_image_upload_path)),
                 ('farm', models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='fields', to='pomolobeecore.farm')),
             ],

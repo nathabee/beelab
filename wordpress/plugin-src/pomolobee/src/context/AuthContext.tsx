@@ -1,11 +1,12 @@
 // src/context/AuthContext.tsx
 'use client';
 
-import React, { createContext, useContext, useEffect, useState,useMemo } from "react";
+import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { User } from "@mytypes/user";
-import { FarmWithFields } from "@mytypes/farm"; 
+import { FarmWithFields } from "@mytypes/farm";
 import { Fruit } from '@mytypes/fruit';
-import { Field, FieldBasic } from '@mytypes/field'; 
+import { Field, FieldBasic } from '@mytypes/field';
+import type { Row } from '@mytypes/row';
 
 
 type Maybe<T> = T | null;
@@ -19,13 +20,23 @@ type AuthContextType = {
   logout: () => void;
   setToken: (t: Maybe<string>) => void;
 
+
   // domain
- farms: FarmWithFields[];
+  farms: FarmWithFields[];
   setFarms: (f: FarmWithFields[]) => void;
 
   fields: Field[];                         // full field records
   setFields: (f: Field[]) => void;
   fieldsById: Record<number, Field>;       // quick lookup
+  patchField: (fieldId: number, patch: Partial<Field>) => void;
+
+
+  rows: Row[];
+  setRows: (r: Row[]) => void;
+  rowsByFieldId: Record<number, Row[]>;
+  getFieldWithRows: (fieldId: number) => (Field & { rows: Row[] }) | null;
+
+
 
   fruits: Fruit[];
   setFruits: (f: Fruit[]) => void;
@@ -45,42 +56,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [farms, setFarmsState] = useState<FarmWithFields[]>([]);
   const [activeFarm, setActiveFarmState] = useState<Maybe<FarmWithFields>>(null);
   const [activeField, setActiveFieldState] = useState<Maybe<FieldBasic | Field>>(null);
-  const [fields, setFieldsState]   = useState<Field[]>([]);
-  const [fruits, setFruitsState]   = useState<Fruit[]>([]);
+  const [fields, setFieldsState] = useState<Field[]>([]);
+  const [fruits, setFruitsState] = useState<Fruit[]>([]);
+  const [rows, setRowsState] = useState<Row[]>([]);
 
   const fieldsById = useMemo(
     () => Object.fromEntries(fields.map(f => [f.field_id, f])),
     [fields]
   );
-  const isLoggedIn = !!token; 
+  const isLoggedIn = !!token;
+
+  const patchField = (fieldId: number, patch: Partial<Field>) => {
+    setFieldsState(prev => prev.map(f => (f.field_id === fieldId ? { ...f, ...patch } : f)));
+    setActiveFieldState(prev => {
+      if (!prev) return prev;
+      const fid = (prev as any).field_id;
+      const isFull = (prev as any).orientation !== undefined;
+      return isFull && fid === fieldId ? { ...(prev as Field), ...patch } : prev;
+    });
+  };
+  const rowsByFieldId = useMemo(() => {
+    const map: Record<number, Row[]> = {};
+    for (const r of rows) {
+      if (!map[r.field_id]) map[r.field_id] = [];
+      map[r.field_id].push(r);
+    }
+    return map;
+  }, [rows]);
+
+  const getFieldWithRows = (fieldId: number) => {
+    const f = fields.find(x => x.field_id === fieldId);
+    if (!f) return null;
+    return { ...f, rows: rowsByFieldId[fieldId] ?? [] };
+  };
+
+
 
   // DEBUG
   useEffect(() => {
-  console.log('[Auth] DEBUG token changed:', token);
-}, [token]);
+    console.log('[Auth] DEBUG token changed:', token);
+  }, [token]);
 
-useEffect(() => {
-  console.log('[Auth] DEBUG user changed:', user);
-}, [user]);
+  useEffect(() => {
+    console.log('[Auth] DEBUG user changed:', user);
+  }, [user]);
 
-useEffect(() => {
-  console.log('[Auth] DEBUG farms set:', farms);
-}, [farms]);
+  useEffect(() => {
+    console.log('[Auth] DEBUG farms set:', farms);
+  }, [farms]);
 
-useEffect(() => {
-  console.log('[Auth] DEBUG fields set:', fields);
-}, [fields]);
+  useEffect(() => {
+    console.log('[Auth] DEBUG fields set:', fields);
+  }, [fields]);
 
-useEffect(() => {
-  console.log('[Auth] DEBUG fruits set:', fruits);
-}, [fruits]);
+  useEffect(() => {
+    console.log('[Auth] DEBUG fruits set:', fruits);
+  }, [fruits]);
+
+  useEffect(() => {
+    console.log('[Auth] rows set length:', rows.length, 'sample:', rows.slice(0, 3));
+  }, [rows]);
+
+  useEffect(() => {
+    const ids = Array.from(new Set(rows.map(r => r.field_id)));
+    console.log('[Auth] rowsByFieldId keys:', ids);
+  }, [rows]);
 
   // END DEBUG
 
 
-useEffect(() => {
-  console.log('[Auth] activeFarm:', activeFarm, 'activeField:', activeField);
-}, [activeFarm, activeField]);
+  useEffect(() => {
+    console.log('[Auth] activeFarm:', activeFarm, 'activeField:', activeField);
+  }, [activeFarm, activeField]);
 
   // boot from localStorage
   useEffect(() => {
@@ -101,10 +148,10 @@ useEffect(() => {
   // persist
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (token)  
-      localStorage.setItem("authToken", token); 
+    if (token)
+      localStorage.setItem("authToken", token);
     else localStorage.removeItem("authToken");
-  }, [token]); 
+  }, [token]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem("fields", JSON.stringify(fields));
@@ -144,6 +191,8 @@ useEffect(() => {
     setTokenState(null);
     setUser(null);
     setFarmsState([]);
+    setFieldsState([]);
+    setFruitsState([]);
     setActiveFarmState(null);
     setActiveFieldState(null);
     if (typeof window !== "undefined") {
@@ -162,8 +211,29 @@ useEffect(() => {
   const setActiveField = (f: Maybe<FieldBasic | Field>) => setActiveFieldState(f);
 
   // expose setters
-const setFields = (f: Field[]) => setFieldsState(f);
-const setFruits = (f: Fruit[]) => setFruitsState(f);
+  const setFields = (f: Field[]) => setFieldsState(f);
+  const setFruits = (f: Fruit[]) => setFruitsState(f);
+
+  //row 
+
+
+
+  // boot from localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const rs = localStorage.getItem('rows');
+    if (rs) setRowsState(JSON.parse(rs));
+  }, []);
+
+  // persist
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('rows', JSON.stringify(rows));
+  }, [rows]);
+
+  // setters to expose
+  const setRows = (r: Row[]) => setRowsState(r);
+
 
   return (
     <AuthContext.Provider value={{
@@ -171,8 +241,12 @@ const setFruits = (f: Fruit[]) => setFruitsState(f);
       farms, setFarms,
       activeFarm, setActiveFarm,
       activeField, setActiveField,
-      fields, setFields, 
-      fieldsById, 
+      fields, setFields,
+      fieldsById,
+      patchField,
+      rows, setRows,
+      getFieldWithRows,
+      rowsByFieldId,
       fruits, setFruits
 
     }}>

@@ -16,7 +16,12 @@ export interface Field extends FieldBasic {
 }
 
 // Field + nested rows (FieldLocationSerializer)
-export interface FieldLocation {
-  field: Field;
+//export interface FieldLocation {
+//  field: Field;
+//  rows: Row[];
+//}
+
+
+export interface FieldWithRows extends Field {
   rows: Row[];
 }

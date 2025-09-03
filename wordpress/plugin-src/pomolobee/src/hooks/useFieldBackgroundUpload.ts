@@ -4,40 +4,32 @@
 import { useAuth } from '@context/AuthContext';
 import { apiPom, authHeaders } from '@utils/api';
 
-type UploadResult = {
-  background_image_url?: string; // preferred
-  [k: string]: any;
-};
+type UploadResult = { background_image_url?: string; [k: string]: any };
 
 export default function useFieldBackgroundUpload() {
-  const { token } = useAuth();
+  const { token, patchField } = useAuth();
 
   async function uploadBackground(fieldId: number, file: File, desiredFilename?: string): Promise<string> {
     if (!token) throw new Error('No auth token');
 
-    // Pick a filename: prefer caller’s, else field shortcode logic can feed us one
-    const name = desiredFilename ?? file.name;
-
     const form = new FormData();
-    // IMPORTANT: server-side field name may differ. If your DRF action expects a different key,
-    // change 'background_image' below to match.
-    form.append('background_image', file, name);
+    form.append('background_image', file, desiredFilename ?? file.name);
 
-    const headers = {
-      ...authHeaders(token), 
-    };
+    const res = await apiPom.post<UploadResult>(`/fields/${fieldId}/background/`, form, {
+      headers: { ...authHeaders(token) }, // do not set Content-Type
+    });
 
-    // Default endpoint. If your ViewSet uses a custom action, align this path.
-    const res = await apiPom.post<UploadResult>(`/fields/${fieldId}/background/`, form, { headers });
-
-    // Try common shapes
     const url =
       res.data?.background_image_url ??
       (res.data as any)?.field?.background_image_url ??
       (typeof res.data === 'string' ? res.data : null);
 
     if (!url) throw new Error('Upload succeeded but no background_image_url returned');
-    return url; // relative URL is fine; your <img> will resolve if the host serves it
+
+    // 🔧 Patch the field in memory so UI updates instantly
+    patchField(fieldId, { background_image_url: url });
+
+    return url;
   }
 
   return { uploadBackground };

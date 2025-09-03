@@ -50,7 +50,7 @@ const App = () => {
       setSidebarOpen(false);
     }
   }, []);
-
+ 
   return (
     <div className="pomolobee-app-container">
       <BrowserRouter basename={window.pomolobeeSettings?.basename || '/'}>
