@@ -15,56 +15,56 @@ if ( function_exists( 'wp_register_block_types_from_metadata_collection' ) ) {
     });
 }
 
+// --- CPT registration ----
+function pomolobee_register_cpt() {
+    register_post_type('pomolobee_page', [
+        'label'               => 'Pomolobee Pages',
+        'public'              => true,
+        'show_ui'             => true,
+        'show_in_rest'        => true,
+        'has_archive'         => false,
+        'rewrite'             => ['slug' => 'pomolobee'], // /pomolobee/...
+        'supports'            => ['title', 'editor'],
+        'show_in_nav_menus'   => false,
+        'exclude_from_search' => true,
+        'menu_position'       => 20,
+        'menu_icon'           => 'dashicons-chart-line',
+    ]);
+}
+add_action('init', 'pomolobee_register_cpt');
+
+
 
 // FIRST INIT
+// --- Activation: create pages ---- 
 register_activation_hook(__FILE__, 'pomolobee_wp_create_pages');
-
 function pomolobee_wp_create_pages() {
+    // Ensure CPT exists
+    pomolobee_register_cpt();
+
     $pages = [
-        [
-            'title' => 'PomoloBee Login',
-            'slug'  => 'pomolobee',
-            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
-            'type'  => 'page',
-        ],
-        [
-            'title' => 'Home',
-            'slug'  => 'pomolobee_home',
-            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
-            'type'  => 'pomolobee_page',
-        ],
-        [
-            'title' => 'Dashboard',
-            'slug'  => 'pomolobee_dashboard',
-            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
-            'type'  => 'pomolobee_page',
-        ],
-        [
-            'title' => 'Farm',
-            'slug'  => 'pomolobee_farm',
-            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
-            'type'  => 'pomolobee_page',
-        ],
-        [
-            'title' => 'Error',
-            'slug'  => 'pomolobee_error',
-            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
-            'type'  => 'pomolobee_page',
-        ]
+        ['title' => 'PomoloBee Login', 'slug' => 'pomolobee',           'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'page'],
+        ['title' => 'Home',            'slug' => 'pomolobee_home',      'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'pomolobee_page'],
+        ['title' => 'Dashboard',       'slug' => 'pomolobee_dashboard', 'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'pomolobee_page'],
+        ['title' => 'Farm',            'slug' => 'pomolobee_farm',      'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'pomolobee_page'],
+        ['title' => 'Farm Management', 'slug' => 'pomolobee_farmmgt',   'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'pomolobee_page'],
+        ['title' => 'Error',           'slug' => 'pomolobee_error',     'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'pomolobee_page'],
     ];
 
     foreach ($pages as $page) {
-        if (!get_page_by_path($page['slug'])) {
-            wp_insert_post([
+        $existing = get_page_by_path($page['slug'], OBJECT, $page['type']);
+        if ($existing) continue;
+
+        wp_insert_post([
             'post_title'   => $page['title'],
             'post_name'    => $page['slug'],
             'post_content' => $page['block'],
             'post_status'  => 'publish',
-            'post_type'    => $page['type'],  
-            'page_template' => 'plugin_page' 
-            ]);
-        }
+            'post_type'    => $page['type'],
+        ]);
     }
+
+    flush_rewrite_rules();
 }
 
 
@@ -150,26 +150,20 @@ function pomolobee_settings_page_html() {
 add_action('enqueue_block_assets', function () {
     $handle = 'pomolobee-pomolobee-app-view';
 
-    // Load the React bundle from the plugin directory
     wp_enqueue_script(
         $handle,
         plugins_url('build/pomolobee-app/view.js', __FILE__),
         ['wp-element', 'wp-blocks'],
         '1.0.0',
-        true // Footer
+        true
     );
 
-    // Inject the API URL into the frontend script
     $api_url = get_option('pomolobee_api_url', 'http://localhost:8001/api');
 
- 
- 
-
     wp_localize_script($handle, 'pomolobeeSettings', [
-    'apiUrl' => $api_url,
-    'basename' => parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)
+        'apiUrl'   => $api_url,
+        'basename' => '/pomolobee', // <- fixed base for SPA routes
     ]);
-
 });
 
 // 🐞 Optional: debug registered script handles in the frontend
@@ -184,20 +178,4 @@ add_action('wp_print_scripts', function () {
     }
 });
 
-// functions.php or plugin main file
-add_action('init', function () {
-    register_post_type('pomolobee_page', [
-        'label'               => 'Pomolobee Pages',
-        'public'              => true,
-        'show_ui'             => true,
-        'show_in_rest'        => true,   // Gutenberg/Blocks
-        'has_archive'         => false,
-        'rewrite'             => ['slug' => 'pomolobee'], // /pomolobee/...
-        'supports'            => ['title', 'editor'],
-        'show_in_nav_menus'   => false,  // <<< keep out of default menus
-        'exclude_from_search' => true,   // optional
-        'menu_position'       => 20,
-        'menu_icon'           => 'dashicons-chart-line',
-    ]);
-});
-
+ 

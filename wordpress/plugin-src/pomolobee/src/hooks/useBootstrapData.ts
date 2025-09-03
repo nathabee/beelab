@@ -65,5 +65,33 @@ const fetchBootstrapData = async (tokenParam?: string, opts: BootstrapOpts = {})
       });
     }
   };
-  return { fetchBootstrapData };
+
+  
+
+
+  const headersFor = (t?: string) => authHeaders(t ?? token);
+
+  const fetchFieldById = async (fieldId: number, tokenParam?: string) => {
+    const res = await apiPom.get<Field>(`/fields/${fieldId}/`, { headers: headersFor(tokenParam) });
+    const updated = res.data;
+    const next = [...fields];
+    const idx = next.findIndex(f => f.field_id === updated.field_id);
+    if (idx >= 0) next[idx] = updated; else next.push(updated);
+    setFields(next);
+    return updated;
+  };
+
+  const fetchFarmsOnly = async (tokenParam?: string) => {
+    const res = await apiPom.get<FarmWithFields[]>('/farms/', { headers: headersFor(tokenParam) });
+    setFarms(res.data);
+    return res.data;
+  };
+
+  const fetchFieldsOnly = async (tokenParam?: string) => {
+    const res = await apiPom.get<Field[]>('/fields/', { headers: headersFor(tokenParam) });
+    setFields(res.data);
+    return res.data;
+  };
+
+  return { fetchBootstrapData, fetchFieldById, fetchFarmsOnly, fetchFieldsOnly };
 }

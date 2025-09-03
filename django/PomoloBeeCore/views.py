@@ -1,10 +1,19 @@
 import os
-from rest_framework import status
+from rest_framework import viewsets, status
 from django.core.files.storage import default_storage
 from django.conf import settings
 from django.utils import timezone
 import requests
 import logging
+ 
+from rest_framework.decorators import action 
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+
+
+from .models import Field, background_image_upload_path, svg_upload_path   
+from .serializers import FieldSerializer
+
 
 from .exceptions import APIError, MLUnavailableError
 from PomoloBeeCore.utils import get_object_or_error
@@ -14,8 +23,7 @@ from .serializers import (
     ImageSerializer, ImageUploadSerializer, 
     EstimationSerializer,  FarmWithFieldsSerializer
 )
-from .utils import BaseAPIView
-from rest_framework.parsers import MultiPartParser
+from .utils import BaseAPIView 
 from django.db import transaction
 
 from rest_framework.viewsets import ReadOnlyModelViewSet
@@ -41,17 +49,117 @@ class FarmViewSet(ReadOnlyModelViewSet):
         return Farm.objects.filter(owner=user).prefetch_related('fields')
 
 # ---------- FIELD + FRUIT ---------- 
+# views.py
+import os
+import logging
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
 
-class FieldViewSet(ReadOnlyModelViewSet):
-    permission_classes = [IsAuthenticated, IsFarmer ]
+from .models import Field, background_image_upload_path, svg_upload_path
+from .serializers import FieldSerializer
+
+logger = logging.getLogger(__name__)
+
+class FieldViewSet(viewsets.ModelViewSet):
     queryset = Field.objects.all()
     serializer_class = FieldSerializer
-    def get_queryset(self):
-        user = self.request.user
-        if user.is_superuser:
-            return Field.objects.all()
-        return Field.objects.filter(farm__owner=user)
-    
+    permission_classes = [IsAuthenticated]  # add IsFarmer too if you want owner-only access
+
+    @action(detail=True, methods=['post'], url_path='background', parser_classes=[MultiPartParser, FormParser])
+    def upload_background(self, request, pk=None):
+        field = self.get_object()
+        file = (request.FILES.get('background_image')
+                or request.FILES.get('file')
+                or request.FILES.get('image'))
+
+        logger.info("BG upload POST keys: data=%s files=%s",
+                    list(request.data.keys()), list(request.FILES.keys()))
+
+        if not file:
+            logger.warning("BG upload: missing file | user=%s field_id=%s short=%s",
+                           getattr(request.user, 'id', None), field.id, field.short_name)
+            return Response({"detail": "Missing file (use 'background_image')."}, status=400)
+
+        orig_name = getattr(file, 'name', '')
+        content_type = getattr(file, 'content_type', '')
+        size = getattr(file, 'size', None)
+        logger.info("BG upload: start | user=%s field_id=%s short=%s orig=%s type=%s size=%s",
+                    getattr(request.user, 'id', None), field.id, field.short_name, orig_name, content_type, size)
+
+        ext = os.path.splitext(orig_name)[1].lower()
+        if ext not in ('.png', '.jpg', '.jpeg'):
+            logger.warning("BG upload: invalid ext | user=%s field_id=%s short=%s ext=%s",
+                           getattr(request.user, 'id', None), field.id, field.short_name, ext)
+            return Response({"detail": "Only PNG/JPG/JPEG allowed."}, status=400)
+
+        desired_ext = '.png' if ext == '.png' else '.jpeg'
+        file.name = f"{field.short_name}{desired_ext}"
+
+        storage = field.background_image.storage
+        target_relpath = background_image_upload_path(field, file.name)
+        abs_target = None
+        if hasattr(storage, 'path'):
+            try:
+                abs_target = storage.path(target_relpath)
+            except Exception:
+                pass
+
+        logger.info("BG upload: target | rel=%s abs=%s", target_relpath, abs_target)
+
+        if storage.exists(target_relpath):
+            logger.info("BG upload: deleting existing | rel=%s", target_relpath)
+            storage.delete(target_relpath)
+
+        field.background_image = file
+        field.save(update_fields=['background_image'])
+
+        saved_url = field.background_image.url
+        saved_rel = field.background_image.name
+        saved_abs = None
+        if hasattr(storage, 'path'):
+            try:
+                saved_abs = storage.path(saved_rel)
+            except Exception:
+                pass
+
+        logger.info("BG upload: done | user=%s field_id=%s short=%s url=%s rel=%s abs=%s",
+                    getattr(request.user, 'id', None), field.id, field.short_name, saved_url, saved_rel, saved_abs)
+
+        return Response({"background_image_url": saved_url}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='svg', parser_classes=[MultiPartParser, FormParser])
+    def upload_svg(self, request, pk=None):
+        field = self.get_object()
+        file = request.FILES.get('svg_map') or request.FILES.get('file')
+
+        logger.info("SVG upload POST keys: data=%s files=%s",
+                    list(request.data.keys()), list(request.FILES.keys()))
+
+        if not file:
+            return Response({"detail": "Missing file (use 'svg_map')."}, status=400)
+
+        ext = os.path.splitext(file.name)[1].lower()
+        if ext != '.svg':
+            return Response({"detail": "Only .svg allowed."}, status=400)
+
+        file.name = f"{field.short_name}_map.svg"
+
+        storage = field.svg_map.storage
+        target_relpath = svg_upload_path(field, file.name)
+        if storage.exists(target_relpath):
+            logger.info("SVG upload: deleting existing | rel=%s", target_relpath)
+            storage.delete(target_relpath)
+
+        field.svg_map = file
+        field.save(update_fields=['svg_map'])
+
+        return Response({"svg_map_url": field.svg_map.url}, status=status.HTTP_200_OK)
+
+
+# ------------FRUIT --------------
 
 class FruitViewSet(ReadOnlyModelViewSet):
     queryset = Fruit.objects.all()

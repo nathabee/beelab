@@ -4,6 +4,7 @@ from django.db import models
 from django.conf import settings
 import logging 
 
+import os    
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +31,20 @@ class Farm(models.Model):
     def __str__(self):
         return f"Farm: {self.name}"
  
+ 
 
 def svg_upload_path(instance, filename):
-    # Save SVGs to media/svg/fields/<field_short_name>.svg
-    return f"fields/svg/{instance.short_name}_{filename}"
+    # Always <short>_map.<ext> under pomolobee/fields/svg/
+    ext = os.path.splitext(filename)[1].lower() or '.svg'
+    return f"pomolobee/fields/svg/{instance.short_name}_map{ext}"
 
 def background_image_upload_path(instance, filename):
-    return f"fields/background/{instance.short_name}_{filename}"
-
+    # Always <short>.<ext> under pomolobee/fields/background/
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in ('.png', '.jpg', '.jpeg'):
+        ext = '.jpeg'
+    return f"pomolobee/fields/background/{instance.short_name}{ext}"
+ 
 class Field(models.Model):
     farm = models.ForeignKey('Farm', on_delete=models.CASCADE, related_name='fields', default=1)
     short_name = models.CharField(max_length=50, unique=True)
@@ -45,24 +52,38 @@ class Field(models.Model):
     description = models.TextField(blank=True, null=True)
     orientation = models.CharField(max_length=50, blank=True, null=True)
 
+
     svg_map = models.FileField(
         upload_to=svg_upload_path,
         blank=True,
         null=True,
-        default='fields/svg/default_map.svg',
+        default='pomolobee/fields/svg/default_map.svg',
         help_text="Upload SVG map of the field layout."
     )
-
-    background_image = models.ImageField(  # ✅ ADD THIS
+    background_image = models.ImageField(
         upload_to=background_image_upload_path,
         blank=True,
         null=True,
         help_text="Upload background image for the field layout."
     )
+#    svg_map = models.FileField(
+#        upload_to=svg_upload_path,
+#        blank=True,
+#        null=True,
+#        default='pomolobee/fields/svg/default_map.svg',
+#        help_text="Upload SVG map of the field layout."
+#    )#
+
+ #   background_image = models.ImageField(  # ✅ ADD THIS
+ #       upload_to=background_image_upload_path,
+ #       blank=True,
+ #       null=True,
+ #       help_text="Upload background image for the field layout."
+ #   )
 
     def save(self, *args, **kwargs):
         if not self.svg_map:
-            self.svg_map.name = 'fields/svg/default_map.svg'
+            self.svg_map.name = 'pomolobee/fields/svg/default_map.svg'
         super().save(*args, **kwargs)
 
 
