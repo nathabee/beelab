@@ -126,7 +126,7 @@ function pomolobee_register_settings() {
 
 // ✅ Renders the input box in the admin settings form
 function pomolobee_api_url_render() { 
-    $value = get_option('pomolobee_api_url', 'http://localhost:8001/api');
+    $value = get_option('pomolobee_api_url', 'http://localhost:9001/api');
     echo "<input type='text' name='pomolobee_api_url' value='" . esc_attr($value) . "' size='50'>";
 }
 
@@ -158,7 +158,7 @@ add_action('enqueue_block_assets', function () {
         true
     );
 
-    $api_url = get_option('pomolobee_api_url', 'http://localhost:8001/api');
+    $api_url = get_option('pomolobee_api_url', 'http://localhost:9001/api');
 
     wp_localize_script($handle, 'pomolobeeSettings', [
         'apiUrl'   => $api_url,

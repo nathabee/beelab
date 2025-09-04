@@ -15,7 +15,7 @@ After activating the plugin:
   * `/pomolobee_error` – ⚠️ Error fallback
 * 🛠️ An **admin configuration page** is added under “Settings > PomoloBee Settings”.
 
-  * There, you can set the base API URL (e.g., `https://localhost:8001/`) used by the frontend to communicate with the Django backend.
+  * There, you can set the base API URL (e.g., `https://localhost:9001/`) used by the frontend to communicate with the Django backend.
 * 🧠 The plugin provides a React UI with internal routing (`react-router-dom`) that seamlessly operates inside WordPress view rendering.
 
 ### 🔸 2. Compilation & Installation

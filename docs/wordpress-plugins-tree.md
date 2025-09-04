@@ -69,7 +69,7 @@ flowchart TB
     P --> Q["Home, Dashboard, Reports, etc."]
     click E "https://developer.wordpress.org/plugins/"
     click G "https://reactjs.org/docs/getting-started.html"
-    click M "http://localhost:8001/api/"
+    click M "http://localhost:9001/api/"
 
 ```
 

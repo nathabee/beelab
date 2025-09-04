@@ -26,7 +26,7 @@ wordpress:
   environment:
     <<: *wp_env
   ports:
-    - "8082:80"
+    - "9082:80"
   volumes:
     - wp_data:/var/www/html             # Persist WordPress files
     - ./wordpress/wp-content:/var/www/html/wp-content  # Custom themes and plugins
@@ -66,7 +66,7 @@ This plugin is used for managing orchard-related data in WordPress and interacts
 The plugin requires **API configuration** to connect to the Django backend:
 
    * Navigate to **Settings → Competence Settings** in the WordPress Admin.
-   * Check the **API endpoint** to `http://localhost:8001/api/pomolobee/` for local development.
+   * Check the **API endpoint** to `http://localhost:9001/api/pomolobee/` for local development.
 
 #### **Competence Plugin**:
 
@@ -90,7 +90,7 @@ During the initial WordPress setup (creating the WordPress admin user), the scri
 Once everything is set up, you can log in to the WordPress admin interface at:
 
 ```text
-http://localhost:8082/wp-admin
+http://localhost:9082/wp-admin
 ```
 
 From here, you can configure your WordPress site further, manage posts, users, and settings.
@@ -103,10 +103,10 @@ From here, you can configure your WordPress site further, manage posts, users, a
    WordPress media files are shared with the **Django app** via the `./django/media` directory, and the media is served by Apache inside the WordPress container.
 
    * WordPress media will be available at:
-     `http://localhost:8082/media/`
+     `http://localhost:9082/media/`
 
    * Django media will be available at:
-     `http://localhost:8082/wp-content/uploads/`
+     `http://localhost:9082/wp-content/uploads/`
 
    Ensure that the media permissions are set correctly in the **`wp-init.sh`** script to avoid access issues.
 
@@ -114,7 +114,7 @@ From here, you can configure your WordPress site further, manage posts, users, a
    Static files (CSS, JS) from Django are also served by WordPress and are mounted to the `/var/www/html/static` directory:
 
    * Accessible via:
-     `http://localhost:8082/static/`
+     `http://localhost:9082/static/`
 
 ### **WordPress Rebuilds and Data Loss**:
 
@@ -135,7 +135,7 @@ Since WordPress files (including themes and plugins) are bind-mounted from the h
   Check if your WordPress container is up and running:
 
   ```bash
-  curl -s http://localhost:8082
+  curl -s http://localhost:9082
   ```
 
 ---

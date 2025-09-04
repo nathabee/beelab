@@ -4,7 +4,7 @@ The **web** service provides the frontend for the project.
 
 - **Framework**: Next.js 14 (TypeScript, App Router)
 - **Runs in dev mode** with hot reload inside Docker
-- **Port**: exposed at [http://localhost:8080](http://localhost:8080)
+- **Port**: exposed at [http://localhost:9080](http://localhost:9080)
 
 ## Features
 

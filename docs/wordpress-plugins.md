@@ -63,7 +63,7 @@ This will:
 
 Once the plugin is installed, you can go to the WordPress Admin panel to **activate the plugin**:
 
-* **Go to**: [http://localhost:8082/wp-admin/plugins.php](http://localhost:8082/wp-admin/plugins.php)
+* **Go to**: [http://localhost:9082/wp-admin/plugins.php](http://localhost:9082/wp-admin/plugins.php)
 * Find the **PomoloBee** or **Competence** plugin and **activate** it.
 
 ---

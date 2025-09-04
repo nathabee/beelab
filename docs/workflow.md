@@ -14,8 +14,8 @@ docker compose --profile dev up --build
 
 Services:
 
-* **Web (Next.js)** → [http://localhost:8080](http://localhost:8080)
-* **Django API** → [http://localhost:8001](http://localhost:8001)
+* **Web (Next.js)** → [http://localhost:9080](http://localhost:9080)
+* **Django API** → [http://localhost:9001](http://localhost:9001)
 * **Postgres** → internal service `db:5432`
 
 ---
@@ -66,13 +66,13 @@ docker exec -it beelab-api bash -lc "python manage.py createsuperuser"
 * **Login** (via Django):
 
   ```bash
-  curl -s -X POST http://localhost:8001/api/auth/login \
+  curl -s -X POST http://localhost:9001/api/auth/login \
     -H "Content-Type: application/json" \
     -d '{"username":"<user>","password":"<pass>"}'
   ```
 
 
-  curl -s -X POST http://localhost:8001/api/auth/login \
+  curl -s -X POST http://localhost:9001/api/auth/login \
     -H "Content-Type: application/json" \
     -d '{"username":"test","password":"test"}'
 
@@ -81,12 +81,12 @@ docker exec -it beelab-api bash -lc "python manage.py createsuperuser"
 
   ```bash
   ACCESS=<token>
-  curl -s http://localhost:8001/api/me -H "Authorization: Bearer $ACCESS"
+  curl -s http://localhost:9001/api/me -H "Authorization: Bearer $ACCESS"
   ```
 
 * **Web frontend**:
 
-  * Go to [http://localhost:8080](http://localhost:8080)
+  * Go to [http://localhost:9080](http://localhost:9080)
   * Fill in login form
   * Call “Who am I” → fetches `/api/me` through proxy
 

@@ -4,7 +4,7 @@ cd /var/www/html
 
 # Make sure WP is installed
 if ! wp core is-installed > /dev/null 2>&1; then
-  echo "❌ WordPress not installed yet. Open http://localhost:8082 to finish setup."
+  echo "❌ WordPress not installed yet. Open http://localhost:9082 to finish setup."
   exit 1
 fi
 

@@ -116,8 +116,8 @@ docker compose --profile "$PROFILE" up -d --build
 
 
 # --- wait for Django --------------------------------------------
-# Django maps host 8001 -> container 8000
-wait_http_200 "http://localhost:8001/health" 90 || true
+# Django maps host 9001 -> container 8000
+wait_http_200 "http://localhost:9001/health" 90 || true
 
 # --- load Django Migration if necessary --------------------------------------- 
 
@@ -147,7 +147,7 @@ docker exec -it beelab-api bash -lc "python manage.py collectstatic --noinput"
  
 # --- WordPress init ---------------------------------------------
 echo "Run WordPress init script activate theme, permalinks, logo?"
-echo "📋 Open WordPress installer at: http://localhost:8082"
+echo "📋 Open WordPress installer at: http://localhost:9082"
 echo "   Create the initial admin user, then return here."
 if yes_no "Ready?" default_no; then
   #  wp-perms.sh is called in wp-init.sh
@@ -195,6 +195,6 @@ fi
 
 echo
 echo "✅ Done."
-echo "🖥  Web:     http://localhost:8080"
-echo "🔌 Django:  http://localhost:8001 health, /api/user/hello"
-echo "📝 WP:      http://localhost:8082"
+echo "🖥  Web:     http://localhost:9080"
+echo "🔌 Django:  http://localhost:9001 health, /api/user/hello"
+echo "📝 WP:      http://localhost:9082"

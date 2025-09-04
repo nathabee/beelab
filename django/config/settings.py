@@ -140,7 +140,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Dev-only: allow WP origin
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8082",
+    "http://localhost:9082",
 ]
 
 # Internationalization
@@ -219,7 +219,7 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "BeeLab API",
     "DESCRIPTION": "Django backend for PomoloBee and Competence.",
     "VERSION": "0.1.0",
-    "SERVERS": [{"url": "http://localhost:8001"}],
+    "SERVERS": [{"url": "http://localhost:9001"}],
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": r"/api/",
     "SECURITY": [{"BearerAuth": []}],

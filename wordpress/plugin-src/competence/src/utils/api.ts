@@ -25,7 +25,7 @@ export function getBaseApi(): string {
   }
 
   // 4) Fallback (dev)
-  return "http://localhost:8001/api";
+  return "http://localhost:9001/api";
 }
 
 // Two clear axios clients, one per namespace

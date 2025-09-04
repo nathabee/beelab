@@ -47,7 +47,7 @@
           "description": "All services started and reachable.",
           "expected": "`docker compose ps` shows beelab-api, beelab-web, and db running (or up).",
           "state": "",
-          "details": "Check container state:\n  docker compose --profile dev ps\nPorts bound on host:\n  ss -lntp | grep -E ':8001|:8080' || true\nQuick endpoint checks:\n  curl -sS http://localhost:8001/health || true\n  curl -sS -I http://localhost:8080 || true\nLogs (brief):\n  docker compose logs --no-color --tail=50 django\n  docker compose logs --no-color --tail=50 web"
+          "details": "Check container state:\n  docker compose --profile dev ps\nPorts bound on host:\n  ss -lntp | grep -E ':9001|:9080' || true\nQuick endpoint checks:\n  curl -sS http://localhost:9001/health || true\n  curl -sS -I http://localhost:9080 || true\nLogs (brief):\n  docker compose logs --no-color --tail=50 django\n  docker compose logs --no-color --tail=50 web"
         }
       ]
     },
@@ -57,23 +57,23 @@
         {
           "test": "Welcome page",
           "description": "Open the static welcome route.",
-          "expected": "GET http://localhost:8080/welcome returns 200 and HTML with 'Welcome'.",
+          "expected": "GET http://localhost:9080/welcome returns 200 and HTML with 'Welcome'.",
           "state": "",
-          "details": "HTTP status and content:\n  curl -i http://localhost:8080/welcome | head -n 20\n  curl -s http://localhost:8080/welcome | grep -i 'welcome'\nContainer logs while hitting page (separate terminal):\n  docker compose logs -f web"
+          "details": "HTTP status and content:\n  curl -i http://localhost:9080/welcome | head -n 20\n  curl -s http://localhost:9080/welcome | grep -i 'welcome'\nContainer logs while hitting page (separate terminal):\n  docker compose logs -f web"
         },
         {
           "test": "Hello from backend on home page",
           "description": "Home page fetches `/api/hello` from Django.",
-          "expected": "GET http://localhost:8080 shows text like 'Hello from Django (service: django)'.",
+          "expected": "GET http://localhost:9080 shows text like 'Hello from Django (service: django)'.",
           "state": "",
-          "details": "Hit home page:\n  curl -sS http://localhost:8080 | grep -Ei 'hello.*django' || echo 'If client-side render, open in browser to verify.'\nAlternatively hit the same backend API the page calls:\n  curl -sS http://localhost:8001/api/hello\nVerify web can reach backend from inside web container:\n  docker compose exec web curl -sS http://django:8000/api/hello"
+          "details": "Hit home page:\n  curl -sS http://localhost:9080 | grep -Ei 'hello.*django' || echo 'If client-side render, open in browser to verify.'\nAlternatively hit the same backend API the page calls:\n  curl -sS http://localhost:9001/api/hello\nVerify web can reach backend from inside web container:\n  docker compose exec web curl -sS http://django:8000/api/hello"
         },
         {
           "test": "Login form present",
           "description": "Check that username/password form is rendered.",
           "expected": "Form fields and submit button visible; POST goes to /api/login.",
           "state": "",
-          "details": "Check static HTML (might be minimal if client-side rendered):\n  curl -sS http://localhost:8080/login | grep -Ei '(username|password|<form)'\nIf JS-driven, open browser:\n  xdg-open http://localhost:8080/login\nConfirm form target (view source):\n  curl -sS http://localhost:8080/login | grep -E 'action=|/api/login' || echo 'Check in browser DevTools > Network'"
+          "details": "Check static HTML (might be minimal if client-side rendered):\n  curl -sS http://localhost:9080/login | grep -Ei '(username|password|<form)'\nIf JS-driven, open browser:\n  xdg-open http://localhost:9080/login\nConfirm form target (view source):\n  curl -sS http://localhost:9080/login | grep -E 'action=|/api/login' || echo 'Check in browser DevTools > Network'"
         }
       ]
     },
@@ -83,16 +83,16 @@
         {
           "test": "Health endpoint",
           "description": "Simple health probe.",
-          "expected": "GET http://localhost:8001/health returns 200 and `{ \"status\": \"ok\" }`.",
+          "expected": "GET http://localhost:9001/health returns 200 and `{ \"status\": \"ok\" }`.",
           "state": "",
-          "details": "Status + body:\n  curl -i http://localhost:8001/health\n  curl -s http://localhost:8001/health | jq . || curl -s http://localhost:8001/health"
+          "details": "Status + body:\n  curl -i http://localhost:9001/health\n  curl -s http://localhost:9001/health | jq . || curl -s http://localhost:9001/health"
         },
         {
           "test": "Hello endpoint",
           "description": "Basic API response.",
-          "expected": "GET http://localhost:8001/api/hello returns 200 and `{ \"service\": \"django\", \"message\": \"Hello from Django\" }`.",
+          "expected": "GET http://localhost:9001/api/hello returns 200 and `{ \"service\": \"django\", \"message\": \"Hello from Django\" }`.",
           "state": "",
-          "details": "Status + body:\n  curl -i http://localhost:8001/api/hello\n  curl -s http://localhost:8001/api/hello | jq . || curl -s http://localhost:8001/api/hello"
+          "details": "Status + body:\n  curl -i http://localhost:9001/api/hello\n  curl -s http://localhost:9001/api/hello | jq . || curl -s http://localhost:9001/api/hello"
         },
         {
           "test": "Create test user",
@@ -104,16 +104,16 @@
         {
           "test": "JWT login",
           "description": "Obtain tokens from SimpleJWT.",
-          "expected": "POST http://localhost:8001/api/auth/login with JSON `{ \"username\":\"u\",\"password\":\"p\" }` returns 200 and `{ access, refresh }`.",
+          "expected": "POST http://localhost:9001/api/auth/login with JSON `{ \"username\":\"u\",\"password\":\"p\" }` returns 200 and `{ access, refresh }`.",
           "state": "",
-          "details": "Login with curl:\n  curl -sS -X POST http://localhost:8001/api/auth/login \\\n    -H 'Content-Type: application/json' \\\n    -d '{\"username\":\"admin\",\"password\":\"admin\"}' | tee /tmp/jwt.json\nExtract access token (jq optional):\n  ACCESS=$(jq -r .access /tmp/jwt.json 2>/dev/null || python3 - <<'PY'\nimport json,sys;print(json.load(open('/tmp/jwt.json')).get('access',''))\nPY\n)\n  echo \"ACCESS len: ${#ACCESS}\"\nExpect non-empty token."
+          "details": "Login with curl:\n  curl -sS -X POST http://localhost:9001/api/auth/login \\\n    -H 'Content-Type: application/json' \\\n    -d '{\"username\":\"admin\",\"password\":\"admin\"}' | tee /tmp/jwt.json\nExtract access token (jq optional):\n  ACCESS=$(jq -r .access /tmp/jwt.json 2>/dev/null || python3 - <<'PY'\nimport json,sys;print(json.load(open('/tmp/jwt.json')).get('access',''))\nPY\n)\n  echo \"ACCESS len: ${#ACCESS}\"\nExpect non-empty token."
         },
         {
           "test": "Protected route with Bearer token",
           "description": "Access /api/me using Authorization header.",
-          "expected": "GET http://localhost:8001/api/me with `Authorization: Bearer <access>` returns 200 and user payload JSON.",
+          "expected": "GET http://localhost:9001/api/me with `Authorization: Bearer <access>` returns 200 and user payload JSON.",
           "state": "",
-          "details": "Use token from previous step:\n  curl -sS http://localhost:8001/api/me -H \"Authorization: Bearer $ACCESS\" | jq . || curl -sS http://localhost:8001/api/me -H \"Authorization: Bearer $ACCESS\""
+          "details": "Use token from previous step:\n  curl -sS http://localhost:9001/api/me -H \"Authorization: Bearer $ACCESS\" | jq . || curl -sS http://localhost:9001/api/me -H \"Authorization: Bearer $ACCESS\""
         }
       ]
     },
@@ -151,7 +151,7 @@
           "description": "Bring stack down and up again.",
           "expected": "`docker compose down` then `docker compose up -d`; containers start cleanly.",
           "state": "",
-          "details": "Restart stack:\n  docker compose down\n  docker compose --profile dev up -d\nVerify status:\n  docker compose ps\nCheck quick health:\n  curl -sS http://localhost:8001/health && echo\n  curl -sS -I http://localhost:8080 | head -n 1"
+          "details": "Restart stack:\n  docker compose down\n  docker compose --profile dev up -d\nVerify status:\n  docker compose ps\nCheck quick health:\n  curl -sS http://localhost:9001/health && echo\n  curl -sS -I http://localhost:9080 | head -n 1"
         },
         {
           "test": "DB data persists",
@@ -163,9 +163,9 @@
         {
           "test": "Web + API still OK",
           "description": "Re-test key endpoints.",
-          "expected": "GET /welcome (8080), GET /api/hello (8001) both 200; login flow still works.",
+          "expected": "GET /welcome (9080), GET /api/hello (9001) both 200; login flow still works.",
           "state": "",
-          "details": "Web endpoints:\n  curl -sS -o /dev/null -w '%{http_code}\\n' http://localhost:8080/welcome\n  curl -sS http://localhost:8080 | head -n 1\nAPI endpoints:\n  curl -sS http://localhost:8001/api/hello | jq . || curl -sS http://localhost:8001/api/hello\nJWT re-check (optional):\n  curl -sS -X POST http://localhost:8001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin\"}' | jq . || true"
+          "details": "Web endpoints:\n  curl -sS -o /dev/null -w '%{http_code}\\n' http://localhost:9080/welcome\n  curl -sS http://localhost:9080 | head -n 1\nAPI endpoints:\n  curl -sS http://localhost:9001/api/hello | jq . || curl -sS http://localhost:9001/api/hello\nJWT re-check (optional):\n  curl -sS -X POST http://localhost:9001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin\"}' | jq . || true"
         }
       ]
     },
@@ -191,7 +191,7 @@
           "description": "Rebuild without cache.",
           "expected": "`docker compose build --no-cache` succeeds; stack still runs.",
           "state": "",
-          "details": "Stop stack:\n  docker compose down\nRebuild:\n  docker compose --profile dev build --no-cache\nStart:\n  docker compose --profile dev up -d\nVerify:\n  docker compose ps\n  curl -sS http://localhost:8001/health && echo OK || true"
+          "details": "Stop stack:\n  docker compose down\nRebuild:\n  docker compose --profile dev build --no-cache\nStart:\n  docker compose --profile dev up -d\nVerify:\n  docker compose ps\n  curl -sS http://localhost:9001/health && echo OK || true"
         }
       ]
     }

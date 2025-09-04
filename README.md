@@ -1,6 +1,6 @@
 <a href="https://nathabee.github.io/beelab/index.html">
   <img src="./docs/beelab.svg" alt="BeeLab Logo" width="300" style="vertical-align:middle; margin-right:20px;">
-  <img src="./docs/visitgithubpage.svg" alt="BeeLab Docs" width="200" style="vertical-align:middle;">
+  <img src="./docs/visitgithubpage.svg" alt="BeeLab Docs" width="300" style="vertical-align:middle;">
 </a>
 
 
@@ -40,9 +40,9 @@ flowchart LR
 
   subgraph Host["Host (localhost)"]
     direction TB
-    H8080["localhost:8080 Web"]:::host
-    H8001["localhost:8001 Django API"]:::host
-    H8082["localhost:8082 WordPress"]:::host
+    H9080["localhost:9080 Web"]:::host
+    H9001["localhost:9001 Django API"]:::host
+    H9082["localhost:9082 WordPress"]:::host
   end
 
   subgraph Docker["Docker (default bridge network)"]
@@ -69,9 +69,9 @@ flowchart LR
     WP --- BPL["bind: ./wordpress/wp-content/plugins/pomolobee -> /var/www/html/wp-content/plugins/pomolobee"]:::vol
   end
 
-  H8080 -->|"8080 -> 3000"| Web
-  H8001 -->|"8001 -> 8000"| Django
-  H8082 -->|"8082 -> 80"| WP
+  H9080 -->|"9080 -> 3000"| Web
+  H9001 -->|"9001 -> 8000"| Django
+  H9082 -->|"9082 -> 80"| WP
 ```
 
 ## Quickstart (dev)
@@ -89,16 +89,16 @@ chmod +x scripts/total-reset.sh
 ```
 
 When prompted: confirm the reset and create the Django superuser.
-Then open WordPress at `http://localhost:8082` and finish the initial setup.
+Then open WordPress at `http://localhost:9082` and finish the initial setup.
 
 Service URLs:
 
-* Django API: `http://localhost:8001`  (health: `/health`)
-* Web (Next.js): `http://localhost:8080`
-* WordPress: `http://localhost:8082`
+* Django API: `http://localhost:9001`  (health: `/health`)
+* Web (Next.js): `http://localhost:9080`
+* WordPress: `http://localhost:9082`
 
  
-to connect tpo WordPress admin : `http://localhost:8082/wp-admin` use the wordpress login created precedently
+to connect tpo WordPress admin : `http://localhost:9082/wp-admin` use the wordpress login created precedently
 activate the plugin you want ("competence WP" , "pomolobee WP") 
 ```bash
 # for pomolobee plugin
@@ -106,10 +106,10 @@ docker compose exec django python manage.py changepassword pomofarmer
 # for competence plugin
 docker compose exec django python manage.py changepassword nathaprof
 ```
-to test the plugins go to WordPress: `http://localhost:8082/`, choose in the menu the plugin you want and enter login/password
+to test the plugins go to WordPress: `http://localhost:9082/`, choose in the menu the plugin you want and enter login/password
  
 
-to change some data in Django  `http://localhost:8001/admin` use the django login created precedently
+to change some data in Django  `http://localhost:9001/admin` use the django login created precedently
 
 
 ## Screenshots
@@ -205,9 +205,9 @@ You will be prompted to:
 
 #### Services after install
 
-* **Django API**: [http://localhost:8001](http://localhost:8001)  (health: `/health`, example: `/api/user/hello`)
-* **Next.js frontend**: [http://localhost:8080](http://localhost:8080)
-* **WordPress**: [http://localhost:8082](http://localhost:8082)
+* **Django API**: [http://localhost:9001](http://localhost:9001)  (health: `/health`, example: `/api/user/hello`)
+* **Next.js frontend**: [http://localhost:9080](http://localhost:9080)
+* **WordPress**: [http://localhost:9082](http://localhost:9082)
 
 ## What the script does (expanded)
 
@@ -235,12 +235,12 @@ Starts: Postgres, Django (dev server), Next.js (dev server), MariaDB (wpdb), and
 
 ```bash
 docker compose ps
-curl -s http://localhost:8001/health
+curl -s http://localhost:9001/health
 ```
 
 ### 3.5 Complete WordPress installer (first run)
 
-Open [http://localhost:8082](http://localhost:8082) and create the initial admin user.
+Open [http://localhost:9082](http://localhost:9082) and create the initial admin user.
 
 ### 3.6 Initialize Django data (first DB install)
 
@@ -263,9 +263,9 @@ This script sets permissions, activates the theme, updates permalinks, applies l
 
 ## health check
 
-* Django admin : [http://localhost:8001/admin](http://localhost:8001/admin) 
-* Wordpress admin:  [http://localhost:8082/wp-admin](http://localhost:8082/wp-admin) 
-* Wordpress: Log into [http://localhost:8082](http://localhost:8082) and verify the site loads.
+* Django admin : [http://localhost:9001/admin](http://localhost:9001/admin) 
+* Wordpress admin:  [http://localhost:9082/wp-admin](http://localhost:9082/wp-admin) 
+* Wordpress: Log into [http://localhost:9082](http://localhost:9082) and verify the site loads.
 
 
 * Run:
@@ -362,11 +362,11 @@ Installation:
 ./install_plugin.sh
 ```
 
-Then in WP Admin ([http://localhost:8082](http://localhost:8082)):
+Then in WP Admin ([http://localhost:9082](http://localhost:9082)):
 
 * Go to **Plugins**, verify the plugin is present, and activate it.
 * Go to **Settings → Competence Settings** to configure the API endpoint.
-  In this dev stack, Django is at `http://localhost:8001/api`.
+  In this dev stack, Django is at `http://localhost:9001/api`.
 
 ## Project structure
 

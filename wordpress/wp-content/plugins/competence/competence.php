@@ -15,7 +15,7 @@ if ( function_exists( 'wp_register_block_types_from_metadata_collection' ) ) {
     });
 }
 
-
+ 
 // FIRST INIT
 register_activation_hook(__FILE__, 'competence_wp_create_pages');
 
@@ -158,7 +158,7 @@ function competence_register_settings() {
 
 // ✅ Renders the input box in the admin settings form
 function competence_api_url_render() {
-    $value = get_option('competence_api_url', 'http://localhost:8001/api/');
+    $value = get_option('competence_api_url', 'http://localhost:9001/api/');
     echo "<input type='text' name='competence_api_url' value='" . esc_attr($value) . "' size='50'>";
 }
 
@@ -192,7 +192,7 @@ add_action('enqueue_block_assets', function () {
     );
 
     // Inject the API URL into the frontend script
-    $api_url = get_option('competence_api_url', 'http://localhost:8001/api/');
+    $api_url = get_option('competence_api_url', 'http://localhost:9001/api/');
  
 
     wp_localize_script($handle, 'competenceSettings', [

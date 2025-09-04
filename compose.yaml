@@ -32,8 +32,8 @@ x-wp-env: &wp_env
   WORDPRESS_CONFIG_EXTRA: |
     define('WP_DEBUG', true);
     define('WP_DEBUG_LOG', true);
-    define('WP_HOME', 'http://localhost:8082');
-    define('WP_SITEURL', 'http://localhost:8082');
+    define('WP_HOME', 'http://localhost:9082');
+    define('WP_SITEURL', 'http://localhost:9082');
 
 x-wpdb-env: &wpdb_env
   MYSQL_DATABASE: ${WP_DB_NAME:-wordpress}
@@ -54,7 +54,7 @@ services:
       db:
         condition: service_started
     ports:
-      - "8001:8000"
+      - "9001:8000"
     volumes:
       - ./django:/app:delegated
       # bind mount instead of named volume
@@ -78,7 +78,7 @@ services:
     environment:
       <<: *web_env
     ports:
-      - "8080:3000"
+      - "9080:3000"
     depends_on:
       django:
         condition: service_healthy
@@ -128,7 +128,7 @@ services:
     environment:
       <<: *wp_env
     ports:
-      - "8082:80"
+      - "9082:80"
     volumes:
       - wp_data:/var/www/html
       - ./wordpress/wp-content:/var/www/html/wp-content

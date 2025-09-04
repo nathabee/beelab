@@ -18,7 +18,9 @@
 
 ```bash
 # Update system
-sudo apt-get update -y && sudo apt-get upgrade -y
+sudo apt-get update --allow-releaseinfo-change
+sudo apt-get upgrade -y
+
 
 # Useful base tools
 sudo apt-get install -y ca-certificates curl gnupg lsb-release git ufw
@@ -70,7 +72,14 @@ Verify:
 
 ```bash
 docker --version
+
 docker compose version
+systemctl status docker --no-pager     
+# should be active (running)
+
+groups                               
+  # should include: docker
+
 ```
 
 > If `docker` requires sudo, log out/in (or reboot) so the group change applies.
@@ -79,12 +88,28 @@ docker compose version
 
 ## 3) Hetzner firewall / OS firewall
 
+### port check
+* 22 (SSH)
+* 9080 (Next.js), 9001 (Django API), 9082 (WordPress) — temporary for testing
+* Optionally 80/443 if you’ll add a reverse proxy later
+
+
+check port are free
+sudo ss -tulpn | grep -E ':9001|:9080|:9082' || echo "9001/9080/9082 appear free"
+if not change the reference into some free port
+impact in :
+this installation manual
+compose.yaml 
+php in the wordpress plugin : reference to django api app  (is also configurable in wordpress settings)
+
 ### Option A — Use **Hetzner Cloud Firewall** (preferred)
+
+ 
 
 Allow inbound TCP from 0.0.0.0/0 to:
 
 * 22 (SSH)
-* 8080 (Next.js), 8001 (Django API), 8082 (WordPress) — temporary for testing
+* 9080 (Next.js), 9001 (Django API), 9082 (WordPress) — temporary for testing
 * Optionally 80/443 if you’ll add a reverse proxy later
 
 ### Option B — Use **UFW** on the VPS
@@ -93,9 +118,9 @@ Allow inbound TCP from 0.0.0.0/0 to:
 # Keep SSH open
 sudo ufw allow 22/tcp
 # Open app ports for testing
-sudo ufw allow 8001/tcp   # Django API
-sudo ufw allow 8080/tcp   # Next.js web
-sudo ufw allow 8082/tcp   # WordPress
+sudo ufw allow 9001/tcp   # Django API
+sudo ufw allow 9080/tcp   # Next.js web
+sudo ufw allow 9082/tcp   # WordPress
 # (Optional) future reverse proxy
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
@@ -104,15 +129,16 @@ sudo ufw enable
 sudo ufw status
 ```
 
-> You can later close 8001/8080/8082 and put everything behind 80/443 via Nginx/Caddy.
+> You can later close 9001/9080/9082 and put everything behind 80/443 via Nginx/Caddy.
 
+If you do enable the Hetzner firewall, then you’ll also need to add those ports in the Hetzner console (otherwise even if UFW allows, packets never reach the machine).
 ---
 
 ## 4) Get BeeLab code & prepare
 
 ```bash
 # Choose a working directory
-mkdir -p ~/apps && cd ~/apps
+# mkdir -p ~/apps && cd ~/apps
 
 # Clone (SSH requires your GitHub key; HTTPS is fine too)
 git clone https://github.com/nathabee/beelab.git
@@ -129,7 +155,7 @@ mkdir -p django/{media,staticfiles}
 
 ## 5) Port bindings (public access from your VPS IP)
 
-BeeLab defaults map services to host ports **8080 / 8001 / 8082**. On Linux, Compose publishes on **all interfaces** by default (0.0.0.0). If the compose file uses loopback bindings like `127.0.0.1:8082:80`, change them to `8082:80` so they’re reachable from outside.
+BeeLab defaults map services to host ports **9080 / 9001 / 9082**. On Linux, Compose publishes on **all interfaces** by default (0.0.0.0). If the compose file uses loopback bindings like `127.0.0.1:9082:80`, change them to `9082:80` so they’re reachable from outside.
 
 Example inside `compose.yaml` (edit only if you see `127.0.0.1`):
 
@@ -137,16 +163,19 @@ Example inside `compose.yaml` (edit only if you see `127.0.0.1`):
 services:
   web:
     ports:
-      - "8080:3000"   # was "127.0.0.1:8080:3000"
+      - "9080:3000" 
   django:
     ports:
-      - "8001:8000"
+      - "9001:8000"
   wordpress:
     ports:
-      - "8082:80"
+      - "9082:80"
 ```
 
 > After edits, save the file.
+
+
+
 
 ---
 
@@ -168,9 +197,9 @@ When prompted:
 
 **Service URLs (from your laptop browser):**
 
-* Django API: `http://<VPS_IP>:8001`  (health: `/health`)
-* Next.js web: `http://<VPS_IP>:8080`
-* WordPress: `http://<VPS_IP>:8082`
+* Django API: `http://<VPS_IP>:9001`  (health: `/health`)
+* Next.js web: `http://<VPS_IP>:9080`
+* WordPress: `http://<VPS_IP>:9082`
 
 > Replace `<VPS_IP>` with your Hetzner server’s public IP.
 
@@ -178,7 +207,7 @@ When prompted:
 
 ## 7) WordPress + plugins
 
-* Admin: `http://<VPS_IP>:8082/wp-admin` — log in with the admin you created during setup.
+* Admin: `http://<VPS_IP>:9082/wp-admin` — log in with the admin you created during setup.
 * Activate desired plugins: **Competence WP**, **PomoloBee WP**.
 
 Update Django passwords used by the plugins (examples):
@@ -190,13 +219,13 @@ docker compose exec django python manage.py changepassword pomofarmer
 docker compose exec django python manage.py changepassword nathaprof
 ```
 
-Test plugins on the WP site menu at `http://<VPS_IP>:8082/`.
+Test plugins on the WP site menu at `http://<VPS_IP>:9082/`.
 
 ---
 
 ## 8) Django admin
 
-`http://<VPS_IP>:8001/admin` — log in with the Django superuser you created.
+`http://<VPS_IP>:9001/admin` — log in with the Django superuser you created.
 
 ---
 
@@ -218,7 +247,7 @@ docker compose down
 docker compose up -d --build
 
 # Health checks
-curl -s http://<VPS_IP>:8001/health
+curl -s http://<VPS_IP>:9001/health
 ./scripts/health-check.sh
 ```
 
@@ -228,7 +257,7 @@ curl -s http://<VPS_IP>:8001/health
 
 **Port already in use**
 
-* Find the process: `sudo lsof -i :8082` (change port) and stop it or change the mapping in `compose.yaml`.
+* Find the process: `sudo lsof -i :9082` (change port) and stop it or change the mapping in `compose.yaml`.
 
 **Docker permission denied**
 
@@ -236,7 +265,7 @@ curl -s http://<VPS_IP>:8001/health
 
 **Can’t reach services from the Internet**
 
-* Check UFW/Hetzner Cloud firewall rules for ports 8001/8080/8082.
+* Check UFW/Hetzner Cloud firewall rules for ports 9001/9080/9082.
 * If `compose.yaml` had `127.0.0.1:PORT:...`, change to `PORT:...` and `docker compose up -d` again.
 
 **Slow builds / low RAM**
@@ -259,7 +288,7 @@ Later we can:
 
 * Install Caddy or Nginx, issue free TLS with Let’s Encrypt, and serve everything at
   `https://api.example.com` → Django, `https://app.example.com` → web, `https://wp.example.com` → WP.
-* Then **close** 8001/8080/8082 on the firewall and keep only 80/443.
+* Then **close** 9001/9080/9082 on the firewall and keep only 80/443.
 
 ---
 
