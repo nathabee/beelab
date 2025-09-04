@@ -2,16 +2,20 @@
 'use client';
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getToken } from '@utils/jwt';
+// import { getToken } from '@utils/jwt';
+
+import { useAuth } from '@context/AuthContext';
 
 export const useProtectedPage = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { logout, token } = useAuth();
 
   useEffect(() => {
-    const token = getToken();  //token is null if expired
+    // const token = getToken();  //token is null if expired
     console.log('[useProtectedPage] Current token:', token);
     if (  !token) {
+      logout();
       console.warn('[useProtectedPage] No valid token found → redirecting to login in pomolobee_login');
       navigate('/pomolobee_login');
     }

@@ -1,6 +1,6 @@
 <img src="./docs/beelab.svg" alt="BeeLab Logo" width="512">
- 
-[View documentation](https://nathabee.github.io/beelab/index.html)
+
+
 
 
 > [!WARNING]
@@ -10,6 +10,9 @@
 [![status: work in progress](https://img.shields.io/badge/status-work_in_progress-orange)](#)
 
 
+<a href="https://nathabee.github.io/beelab/index.html">
+  <img src="./docs/visitgithubpage.svg" alt="BeeLab Docs" width="512">
+</a>
 
 
 # BeeLab: Dockerized Multiservice (Django + Next.js plugins + WordPress + databases)

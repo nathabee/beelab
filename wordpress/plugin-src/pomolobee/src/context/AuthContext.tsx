@@ -192,14 +192,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setFarmsState([]);
     setFieldsState([]);
+    setRowsState([]);   
     setFruitsState([]);
     setActiveFarmState(null);
     setActiveFieldState(null);
-    if (typeof window !== "undefined") {
-      localStorage.clear(); // simple reset for MVP
-    }
-    console.log('[AuthProvider] logout called');
-  };
+
+      if (typeof window !== 'undefined') {
+    [
+      'authToken',
+      'userInfo',
+      'farms',
+      'fields',
+      'fruits',
+      'rows',
+      'activeFarm',
+      'activeField',
+    ].forEach(k => localStorage.removeItem(k));
+  }
+
+  console.log('[AuthProvider] logout called');
+};
 
   const setToken = (t: Maybe<string>) => setTokenState(t);
   const setFarms = (f: FarmWithFields[]) => setFarmsState(f);

@@ -1,13 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>beelab  Project Portal</title>
+  <title>beelab Project Portal</title>
   <link rel="icon" type="image/svg+xml" href="beelab.svg">
-  
+
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -16,31 +15,30 @@
     mermaid.initialize({ startOnLoad: false });
     window.mermaid = mermaid;
   </script>
-  
+
 </head>
 
 <body>
   <div class="container">
     <div class="header">
       <div class="header-left">
-        <svg id="logo" xmlns="http://www.w3.org/2000/svg"
-            width="512" height="160" viewBox="0 0 512 160" aria-label="DJANGO ML">
-        <rect width="100%" height="100%" fill="none"/>
-        <g id="wordmark" transform="translate(256,70)">
+        <svg id="logo" xmlns="http://www.w3.org/2000/svg" width="512" height="160" viewBox="0 0 512 160"
+          aria-label="DJANGO ML">
+          <rect width="100%" height="100%" fill="none" />
+          <g id="wordmark" transform="translate(256,70)">
             <text text-anchor="middle" dominant-baseline="central"
-            font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif"
-            font-size="64" font-weight="800" letter-spacing="1.5">
-            <tspan class="django">Bee</tspan>
-            <tspan class="ml">Lab</tspan>
+              font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif"
+              font-size="64" font-weight="800" letter-spacing="1.5">
+              <tspan class="django">Bee</tspan>
+              <tspan class="ml">Lab</tspan>
             </text>
-        </g>
-        <g id="tagline" transform="translate(256,120)">
-            <text text-anchor="middle" dominant-baseline="central"
-            font-family="Inter, system-ui, sans-serif"
-            font-size="28" font-weight="600" letter-spacing="1">
-            <tspan class="powered">Powered by Docker</tspan>
+          </g>
+          <g id="tagline" transform="translate(256,120)">
+            <text text-anchor="middle" dominant-baseline="central" font-family="Inter, system-ui, sans-serif"
+              font-size="28" font-weight="600" letter-spacing="1">
+              <tspan class="powered">Powered by Docker</tspan>
             </text>
-        </g>
+          </g>
         </svg>
 
       </div>
@@ -71,53 +69,58 @@
 
     <h2>📚 Project Documentation</h2>
     <div class="doc-list">
-    
+
       <details>
         <summary><strong>🧭 Overview</strong></summary>
         <ul>
-          <li><a href="presentation.md">Project Presentation</a></li>
-          <li><a href="workflow.md">Developer Workflow</a></li>
-        </ul>
-      </details>
-    
- 
-      <details>
-        <summary><strong>🔌 Docker  </strong></summary>
-        <ul>
-          <li><a href="docker-build.md">Docker container build</a></li> 
+          <li><a href="presentation.md">📖 Project Presentation</a></li>
+          <li><a href="workflow.md">⚙️ Developer Workflow</a></li>
         </ul>
       </details>
 
       <details>
-        <summary><strong>🔌 WORDPRESS service</strong></summary>
+        <summary><strong>💻 Installation</strong></summary>
         <ul>
-          
-          <li><a href="wordpress.md">Overview of wordpress in BeeLab</a></li> 
-          <li><a href="wordpress-beelab-theme.md">Customized BeeLab Theme</a></li> 
-          <li><a href="wordpress-plugins.md">Rebuilding WordPress Plugins in BeeLab</a></li> 
-          <li><a href="wordpress-plugins-php.md">Role of PHP in the WordPress Plugin</a></li> 
-          <li><a href="wordpress-plugins-tree.md">WordPress Plugin Structure</a></li>  
-          
+          <li><a href="installation-vps.md">☁️ Installation on a VPS</a></li>
         </ul>
       </details>
- 
+
       <details>
-        <summary><strong>🔌 django service Overviews</strong></summary>
+        <summary><strong>🐳 Docker</strong></summary>
         <ul>
-          <li><a href="django.md">Overview</a></li> 
-          <li><a href="django-swagger.md">Schema documentation in Swagger</a></li> 
+          <li><a href="docker-build.md">🔨 Docker container build</a></li>
         </ul>
       </details>
- 
+
       <details>
-        <summary><strong>🔌 web service Overviews</strong></summary>
+        <summary><strong>📰 WordPress Service</strong></summary>
         <ul>
-          <li><a href="web.md">List of all Webpages</a></li> 
+          <li><a href="wordpress.md">🌐 Overview of WordPress in BeeLab</a></li>
+          <li><a href="wordpress-beelab-theme.md">🎨 Customized BeeLab Theme</a></li>
+          <li><a href="wordpress-plugins.md">🔌 Rebuilding WordPress Plugins</a></li>
+          <li><a href="wordpress-plugins-php.md">💻 Role of PHP in Plugins</a></li>
+          <li><a href="wordpress-plugins-tree.md">🌲 Plugin Structure</a></li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>🐍 Django Service</strong></summary>
+        <ul>
+          <li><a href="django.md">📘 Overview</a></li>
+          <li><a href="django-swagger.md">📑 Swagger Schema Docs</a></li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>🌐 Web Service</strong></summary>
+        <ul>
+          <li><a href="web.md">📄 List of all Webpages</a></li>
         </ul>
       </details>
 
     </div>
-    
+
+
 
     <div class="menu">
       <button onclick="loadChecklist()">✅ App Test Checklist</button>
@@ -129,7 +132,7 @@
 
   <script src="main.js"></script>
 
- 
+
 
 
 </body>

@@ -17,6 +17,9 @@ const FieldSelection: React.FC = () => {
     return f?.fields ?? [];
   }, [farmFilter, farmOptions, activeFarm]);
 
+
+  console.log('[FieldSelection] component called');
+
   const onPickFarm = (farmIdStr: string) => {
     const id = farmIdStr ? Number(farmIdStr) : undefined;
     const farm = id ? farms.find(f => f.farm_id === id) || null : null;

@@ -1,8 +1,7 @@
 // src/utils/jwt.ts
 
 import { jwtDecode } from 'jwt-decode';
-
- 
+import { useAuth } from '@context/AuthContext';
 
 /**
  * Interface for JWT Payload
@@ -19,6 +18,9 @@ interface JwtPayload {
  * @param {string} token - The JWT token string.
  * @returns {boolean} - True if the token is expired or invalid, false otherwise.
  */
+
+ 
+
 export function isTokenExpired(token: string): boolean {
   if (!token) return true;
 
@@ -34,13 +36,14 @@ export function isTokenExpired(token: string): boolean {
 }
 
 /**
- * Extracts the 'authToken' from the cookies string.
+ * Extracts the 'authToken' from the cookies string. ++++changed take it from context
  *  
  * @returns {string | null} - The 'authToken' if found and valid, or null if not present or expired.
  */
 export function getToken(): string | null {
+  const { token } = useAuth();
   if (typeof window === 'undefined') return null;
 
-  const token = localStorage.getItem('authToken');
+  //const token = localStorage.getItem('authToken');
   return token && !isTokenExpired(token) ? token : null;
 }

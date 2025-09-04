@@ -6,6 +6,11 @@ import { useAuth } from '@context/AuthContext';
 const ActiveContextCard: React.FC = () => {
   const { user, activeFarm, activeField } = useAuth();
 
+
+  console.log('[ActiveContextCard] component called');
+
+
+
   return (
     <div className="card p-3">
       <h3>🔎 Active Context</h3>
