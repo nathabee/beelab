@@ -30,17 +30,7 @@ sudo adduser beelab
 sudo usermod -aG sudo beelab
 # Re-login as that user (or use 'su - beelab')
 ```
-
-### (NOT TESTED Optional) Swap file — for small VPS flavors
-
-```bash
-# Create 2G swap if RAM is tight (adjust size as needed)
-#sudo fallocate -l 2G /swapfile
-#sudo chmod 600 /swapfile
-#sudo mkswap /swapfile
-#sudo swapon /swapfile
-#echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-```
+ 
 
 ---
 
@@ -93,41 +83,22 @@ groups
 * 9080 (Next.js), 9001 (Django API), 9082 (WordPress) — temporary for testing
 * Optionally 80/443 if you’ll add a reverse proxy later
 
-
-check port are free
+check port are free :
 sudo ss -tulpn | grep -E ':9001|:9080|:9082' || echo "9001/9080/9082 appear free"
-if not change the reference into some free port
-impact in :
-this installation manual
-compose.yaml 
-php in the wordpress plugin : reference to django api app  (is also configurable in wordpress settings)
+if not use free port, this has an impact on compose.yaml ,  wordpress plugin : php : reference to django api  ( also configurable in wordpress settings)
 
-### Option A — Use **Hetzner Cloud Firewall** (preferred)
 
+###  Use **Hetzner Cloud Firewall**  
  
-
-Allow inbound TCP from 0.0.0.0/0 to:
-
+Allow : 
+INBOUND TRAFFIC  from any IPv4 and AnyIPv6 to:
 * 22 (SSH)
 * 9080 (Next.js), 9001 (Django API), 9082 (WordPress) — temporary for testing
 * Optionally 80/443 if you’ll add a reverse proxy later
+OUTBOUND TRAFFIC:
+* 53 (UDP) for docker image retrieve
+* 53 (TCP) fallback for docker image retrieve
 
-### Option B — Use **UFW** on the VPS
-
-```bash
-# Keep SSH open
-sudo ufw allow 22/tcp
-# Open app ports for testing
-sudo ufw allow 9001/tcp   # Django API
-sudo ufw allow 9080/tcp   # Next.js web
-sudo ufw allow 9082/tcp   # WordPress
-# (Optional) future reverse proxy
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-
-sudo ufw enable
-sudo ufw status
-```
 
 > You can later close 9001/9080/9082 and put everything behind 80/443 via Nginx/Caddy.
 

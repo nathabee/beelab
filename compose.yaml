@@ -12,6 +12,7 @@ x-django-env: &django_env
   DATABASE_HOST: db
   DATABASE_PORT: "5432"
   BYPASS_MEDIA: ${BYPASS_MEDIA:-1}  
+
 x-web-env: &web_env
   BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://django:8000}
   PORT: ${WEB_PORT:-3000}
@@ -43,7 +44,7 @@ x-wpdb-env: &wpdb_env
  
 services:
   django:
-    user: "1000:1000"          # write as host user 1000
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     build:
       context: ./django
       target:  ${DJANGO_BUILD_TARGET:-dev}
