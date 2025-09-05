@@ -118,6 +118,8 @@ cd beelab
 # Env + runtime folders
 cp .env.example .env
 mkdir -p django/{media,staticfiles}
+
+openssl rand -base64 48 | tr -d '\n'
 ```
 
 > Tip: set a strong Django `SECRET_KEY` in `.env` (e.g. output of `openssl rand -base64 48 | tr -d '\n'`).

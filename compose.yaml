@@ -22,19 +22,18 @@ x-db-env: &db_env
   POSTGRES_USER: ${POSTGRES_USER:-app}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
 
-x-wp-env: &wp_env
+x-wp-env: &wp_env 
   WORDPRESS_DB_HOST: wpdb:3306
   WORDPRESS_DB_USER: ${WP_DB_USER:-wp}
   WORDPRESS_DB_PASSWORD: ${WP_DB_PASSWORD:-wp}
   WORDPRESS_DB_NAME: ${WP_DB_NAME:-wordpress}
-  # optional nice-to-haves:
   WORDPRESS_TABLE_PREFIX: ${WP_TABLE_PREFIX:-wp_}
-  # Make WP aware of its URL in dev:
   WORDPRESS_CONFIG_EXTRA: |
     define('WP_DEBUG', true);
     define('WP_DEBUG_LOG', true);
-    define('WP_HOME', 'http://localhost:9082');
-    define('WP_SITEURL', 'http://localhost:9082');
+    define('WP_HOME', '${WP_BASE_URL}');
+    define('WP_SITEURL', '${WP_BASE_URL}');
+
 
 x-wpdb-env: &wpdb_env
   MYSQL_DATABASE: ${WP_DB_NAME:-wordpress}

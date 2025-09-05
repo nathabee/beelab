@@ -147,7 +147,7 @@ docker exec -it beelab-api bash -lc "python manage.py collectstatic --noinput"
  
 # --- WordPress init ---------------------------------------------
 echo "Run WordPress init script activate theme, permalinks, logo?"
-echo "📋 Open WordPress installer at: http://localhost:9082"
+echo "📋 Open WordPress installer at:  http://<VPS_IP>:9082/wp-admin"
 echo "   Create the initial admin user, then return here."
 if yes_no "Ready?" default_no; then
   #  wp-perms.sh is called in wp-init.sh
@@ -195,6 +195,6 @@ fi
 
 echo
 echo "✅ Done."
-echo "🖥  Web:     http://localhost:9080"
-echo "🔌 Django:  http://localhost:9001 health, /api/user/hello"
-echo "📝 WP:      http://localhost:9082"
+echo "🖥  Web:     http://<VPS_IP>:9080"
+echo "🔌 Django:  http://<VPS_IP>:9001 health, /api/user/hello"
+echo "📝 WP:      http://<VPS_IP>:9082"

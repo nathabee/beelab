@@ -2,6 +2,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# load .env so $WP_BASE_URL is available
+set -a; source ./.env; set +a
+
 # Make sure the theme init script is executable (host-side)
 # chmod +x wordpress/wp-content/themes/pomolobee-theme/scripts/init-site.sh
 
@@ -38,3 +41,16 @@ EOF
 
 # Run the in-container initializer (activates theme, permalinks, writes .htaccess, imports logo)
 docker compose run --rm wpcli bash /var/www/html/wp-content/themes/beelab-theme/scripts/init-site.sh
+
+export COMPOSE_PROFILES=dev
+
+# See current values
+docker compose run --rm wpcli wp option get siteurl
+docker compose run --rm wpcli wp option get home
+
+# Set siteurl/home from .env
+docker compose run --rm wpcli wp option update siteurl "${WP_BASE_URL}"
+docker compose run --rm wpcli wp option update home    "${WP_BASE_URL}"
+
+docker compose up -d wordpress
+
