@@ -195,7 +195,43 @@ When prompted:
 * Create the **Django superuser**.
 * After containers are up: open WordPress in a browser and finish its initial setup.
 
-**Service URLs (from your laptop browser):**
+
+
+
+### IN CASE OF CONNECTION ERROR BY INSTALL : Tell Docker which DNS to use (daemon-wide)
+
+if this error comes:
+```bash
+37.57   Unable to connect to deb.debian.org:http:
+37.57 Err:1 http://deb.debian.org/debian trixie InRelease
+37.57   Could not connect to debian.map.fastlydns.net:80 (146.75.122.132), connection timed out Unable to connect to deb.debian.org:http:
+```
+
+```bash
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json >/dev/null <<'JSON'
+{
+  "dns": ["1.1.1.1", "8.8.8.8"]
+}
+JSON
+
+sudo systemctl restart docker
+```
+
+Sanity test from a throwaway container:
+
+```bash
+docker run --rm alpine sh -c "wget -qO- http://deb.debian.org/ | head -n1" \
+  || echo "still cannot reach deb.debian.org"
+```
+
+If you see HTML, DNS is good.
+
+---
+
+
+
+### TEST : **Service URLs (from your laptop browser):**
 
 * Django API: `http://<VPS_IP>:9001`  (health: `/health`)
 * Next.js web: `http://<VPS_IP>:9080`
