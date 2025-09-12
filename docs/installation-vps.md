@@ -75,35 +75,231 @@ groups
 > If `docker` requires sudo, log out/in (or reboot) so the group change applies.
 
 ---
+### 3) Security & networking
 
-## 3) Hetzner firewall / OS firewall
+**Inbound (Hetzner Cloud Firewall ):**
+Use the Hetzner Console  to set allow ports:
 
-### port check
-* 22 (SSH)
-* 9080 (Next.js), 9001 (Django API), 9082 (WordPress) — temporary for testing
-* Optionally 80/443 if you’ll add a reverse proxy later
+* Allow: `22/tcp` (SSH), `80/tcp`, `443/tcp` 
 
-check port are free :
-sudo ss -tulpn | grep -E ':9001|:9080|:9082' || echo "9001/9080/9082 appear free"
-if not use free port, this has an impact on compose.yaml ,  wordpress plugin : php : reference to django api  ( also configurable in wordpress settings)
+**Outbound:**
 
+Use the Hetzner Console  to set allow ports:
+* Allow: `53/udp` (DNS), `53/tcp` (DNS fallback), **`443/tcp` (HTTPS pulls)**, **`80/tcp` (HTTP pulls)**
+* Simpler: allow **all outbound**.
 
-###  Use **Hetzner Cloud Firewall**  
- 
-Allow : 
-INBOUND TRAFFIC  from any IPv4 and AnyIPv6 to:
-* 22 (SSH)
-* 9080 (Next.js), 9001 (Django API), 9082 (WordPress) — temporary for testing
-* Optionally 80/443 if you’ll add a reverse proxy later
-OUTBOUND TRAFFIC:
-* 53 (UDP) for docker image retrieve
-* 53 (TCP) fallback for docker image retrieve
+**Check ports are free:**
+
+```bash
+sudo ss -tulpn | grep -E ':(9001|9080|9082)' || echo "9001/9080/9082 appear free"
+```
 
 
-> You can later close 9001/9080/9082 and put everything behind 80/443 via Nginx/Caddy.
-
-If you do enable the Hetzner firewall, then you’ll also need to add those ports in the Hetzner console (otherwise even if UFW allows, packets never reach the machine).
 ---
+
+## Fill in your “install certbot” section like this
+
+### Certbot (webroot on host Apache)
+
+1. Install Certbot (Ubuntu 22.04/24.04):
+
+```bash
+sudo snap install core && sudo snap refresh core
+sudo snap install --classic certbot
+sudo ln -sf /snap/bin/certbot /usr/bin/certbot
+```
+
+2. Create ACME webroot and the HTTP vhost:
+
+```bash
+sudo mkdir -p /var/www/certbot/.well-known/acme-challenge
+sudo chown -R www-data:www-data /var/www/certbot
+```
+
+`/etc/apache2/sites-available/00-acme-redirects.conf`
+
+```apache
+<VirtualHost *:80>
+    ServerName nathabee.de
+    ServerAlias beelab-wp.nathabee.de beelab-api.nathabee.de beelab-web.nathabee.de
+
+    Alias /.well-known/acme-challenge/ /var/www/certbot/.well-known/acme-challenge/
+    <Directory "/var/www/certbot/.well-known/acme-challenge/">
+        Options None
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</VirtualHost>
+```
+
+Enable modules & the HTTP site, then reload:
+
+```bash
+sudo a2enmod ssl headers proxy proxy_http proxy_wstunnel rewrite
+sudo a2ensite 00-acme-redirects.conf
+sudo apachectl configtest
+sudo systemctl reload apache2
+```
+
+3. Issue certs (one cert per hostname):
+
+```bash
+sudo certbot certonly --webroot -w /var/www/certbot -d beelab-api.nathabee.de -m admin@nathabee.de --agree-tos --no-eff-email
+sudo certbot certonly --webroot -w /var/www/certbot -d beelab-web.nathabee.de -m admin@nathabee.de --agree-tos --no-eff-email
+sudo certbot certonly --webroot -w /var/www/certbot -d beelab-wp.nathabee.de  -m admin@nathabee.de --agree-tos --no-eff-email
+# (Optional apex)
+# sudo certbot certonly --webroot -w /var/www/certbot -d nathabee.de -m admin@nathabee.de --agree-tos --no-eff-email
+```
+
+4. Auto-reload Apache after renew:
+
+```bash
+sudo install -d /etc/letsencrypt/renewal-hooks/deploy
+sudo tee /etc/letsencrypt/renewal-hooks/deploy/reload-apache.sh >/dev/null <<'SH'
+#!/usr/bin/env bash
+systemctl reload apache2
+SH
+sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-apache.sh
+```
+
+Certbot’s systemd timers handle the periodic `renew` automatically.
+
+---
+
+## Apache vhosts  
+ 
+
+**New Files to create:**
+
+```
+/etc/apache2/sites-available/
+  beelab-api-ssl.conf
+  beelab-web-ssl.conf
+  beelab-wp-ssl.conf
+  00-acme-redirects.conf    # already created above
+ 
+```
+  
+in this example we will use apache2 to make the 4 files :
+cd /etc/apache2/sites-available
+    sudo touch beelab-api-ssl.conf 
+    sudo touch beelab-wp-ssl.conf
+    sudo touch beelab-web-ssl.conf
+    sudo touch beelab-api-ssl.conf 
+
+
+please make the next example extentable not to have too much info
+fill the files with the contentsimilar to :
+  
+::::::::::::::
+beelab-api-ssl.conf
+::::::::::::::
+<VirtualHost *:443>
+    ServerName beelab-api.nathabee.de
+
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/beelab-api.nathabee.de/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/beelab-api.nathabee.de/privkey.pem
+    Include /etc/letsencrypt/options-ssl-apache.conf
+
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port  "443"
+
+    ProxyPass        / http://127.0.0.1:9001/
+    ProxyPassReverse / http://127.0.0.1:9001/
+
+    ErrorLog  ${APACHE_LOG_DIR}/beelab-api-ssl-error.log
+    CustomLog ${APACHE_LOG_DIR}/beelab-api-ssl-access.log combined
+</VirtualHost>
+::::::::::::::
+beelab-web-ssl.conf
+::::::::::::::
+<VirtualHost *:443>
+    ServerName beelab-web.nathabee.de
+
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/beelab-web.nathabee.de/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/beelab-web.nathabee.de/privkey.pem
+    Include /etc/letsencrypt/options-ssl-apache.conf
+
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port  "443"
+
+    # WS upgrade
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule /(.*) ws://127.0.0.1:9080/$1 [P,L]
+
+    ProxyPass        / http://127.0.0.1:9080/
+    ProxyPassReverse / http://127.0.0.1:9080/
+
+    ErrorLog  ${APACHE_LOG_DIR}/beelab-web-ssl-error.log
+    CustomLog ${APACHE_LOG_DIR}/beelab-web-ssl-access.log combined
+</VirtualHost>
+::::::::::::::
+beelab-wp-ssl.conf
+::::::::::::::
+<VirtualHost *:443>
+    ServerName beelab-wp.nathabee.de
+
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/beelab-wp.nathabee.de/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/beelab-wp.nathabee.de/privkey.pem
+    Include /etc/letsencrypt/options-ssl-apache.conf
+
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port  "443"
+
+    ProxyPass        / http://127.0.0.1:9082/ connectiontimeout=5 timeout=60
+    ProxyPassReverse / http://127.0.0.1:9082/
+
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+
+    ErrorLog  ${APACHE_LOG_DIR}/beelab-wp-ssl-error.log
+    CustomLog ${APACHE_LOG_DIR}/beelab-wp-ssl-access.log combined
+</VirtualHost>
+::::::::::::::
+  00-acme-redirects.conf
+
+
+<VirtualHost *:80>
+    ServerName nathabee.de
+    ServerAlias beelab-wp.nathabee.de beelab-api.nathabee.de beelab-web.nathabee.de
+
+    # ACME webroot for all names
+    Alias /.well-known/acme-challenge/ /var/www/certbot/.well-known/acme-challenge/
+    <Directory "/var/www/certbot/.well-known/acme-challenge/">
+        Options None
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+    ErrorLog  ${APACHE_LOG_DIR}/http-error.log
+    CustomLog ${APACHE_LOG_DIR}/http-access.log combined
+</VirtualHost>
+
+activate the conf
+   a2ensite 00-acme-redirects.conf 
+   a2ensite beelab-wp-ssl.conf
+   a2ensite beelab-api-ssl.conf
+   a2ensite beelab-web-ssl.conf
+
+check the configuration and load it:
+sudo apachectl configtest
+sudo systemctl reload apache2
+
 
 ## 4) Get BeeLab code & prepare
 
@@ -128,7 +324,7 @@ openssl rand -base64 48 | tr -d '\n'
 
 ## 5) Port bindings (public access from your VPS IP)
 
-BeeLab defaults map services to host ports **9080 / 9001 / 9082**. On Linux, Compose publishes on **all interfaces** by default (0.0.0.0). If the compose file uses loopback bindings like `127.0.0.1:9082:80`, change them to `9082:80` so they’re reachable from outside.
+BeeLab defaults map services to host ports **9080 / 9001 / 9082**. On Linux, Compose publishes on **all interfaces** by default (0.0.0.0).  
 
 Example inside `compose.yaml` (edit only if you see `127.0.0.1`):
 
@@ -136,13 +332,13 @@ Example inside `compose.yaml` (edit only if you see `127.0.0.1`):
 services:
   web:
     ports:
-      - "9080:3000" 
+      - "127.0.0.1:9080:3000" 
   django:
     ports:
-      - "9001:8000"
+      - "127.0.0.1:9001:8000"
   wordpress:
     ports:
-      - "9082:80"
+      - "127.0.0.1:9082:80"
 ```
 
 > After edits, save the file.
@@ -206,18 +402,25 @@ If you see HTML, DNS is good.
 
 ### TEST : **Service URLs (from your laptop browser):**
 
-* Django API: `http://<VPS_IP>:9001`  (health: `/health`)
-* Next.js web: `http://<VPS_IP>:9080`
-* WordPress: `http://<VPS_IP>:9082`
+call the subdomains associated to your 
+in this example :
 
-> Replace `<VPS_IP>` with your Hetzner server’s public IP.
+* Django API: `https://beelab-api.nathabee.de`  (health: `/health`)
+* Next.js web: `https://beelab-web.nathabee.de`
+* WordPress: `https://beelab-wp.nathabee.de`
+
+ 
+> Replace `nathabee.de` with your Hetzner server’s public IP.
 
 ---
 
 ## 7) WordPress + plugins
 
-* Admin: `http://<VPS_IP>:9082/wp-admin` — log in with the admin you created during setup.
+* Admin: `https://beelab-wp.nathabee.de/wp-admin` — log in with the admin you created during setup.
 * Activate desired plugins: **Competence WP**, **PomoloBee WP**.
+
+* in the competence settings: change the API adresse from localhost to your VPS: `https://beelab-api.nathabee.de`
+
 
 Update Django passwords used by the plugins (examples):
 
@@ -228,14 +431,15 @@ docker compose exec django python manage.py changepassword pomofarmer
 docker compose exec django python manage.py changepassword nathaprof
 ```
 
-Test plugins on the WP site menu at `http://<VPS_IP>:9082/`.
+Test plugins on the WP site menu at `https://beelab-wp.nathabee.de/`.
 
 ---
 
 ## 8) Django admin
 
-`http://<VPS_IP>:9001/admin` — log in with the Django superuser you created.
+`https://beelab-api.nathabee.de/admin` — log in with the Django superuser you created.
 
+ 
 ---
 
 ## 9) Useful ops commands
@@ -256,7 +460,7 @@ docker compose down
 docker compose up -d --build
 
 # Health checks
-curl -s http://<VPS_IP>:9001/health
+curl -s https://beelab-api.nathabee.de/health
 ./scripts/health-check.sh
 ```
 
@@ -290,20 +494,4 @@ sudo setfacl -R -d -m u:"$USER":rwx wordpress
 ```
 
 ---
-
-## 11) (Optional) Put behind a reverse proxy (next step)
-
-Later we can:
-
-* Install Caddy or Nginx, issue free TLS with Let’s Encrypt, and serve everything at
-  `https://api.example.com` → Django, `https://app.example.com` → web, `https://wp.example.com` → WP.
-* Then **close** 9001/9080/9082 on the firewall and keep only 80/443.
-
----
-
-## 12) What I need from you to verify
-
-* Your VPS OS version (`lsb_release -a`)
-* Whether you’re using Hetzner Cloud Firewall or UFW (or both)
-* The public IP you’ll test from (just to confirm reachability, no need to share here)
  

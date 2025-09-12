@@ -19,6 +19,9 @@ logging.getLogger("PIL").setLevel(logging.WARNING)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+def env_csv(name, default=""):
+    return [x.strip() for x in os.getenv(name, default).split(",") if x.strip()]
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -34,8 +37,24 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 #DEBUG = os.getenv('DEBUG', 'False') == 'True'
 DEBUG = True
 
-ALLOWED_HOSTS =  os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
+
+ALLOWED_HOSTS = env_csv("ALLOWED_HOSTS", "*") 
 print ( "ALLOWED_HOSTS=", ALLOWED_HOSTS)
+ 
+# CORS
+CORS_ALLOWED_ORIGINS = env_csv("CORS_ALLOWED_ORIGINS")
+CORS_ALLOW_CREDENTIALS = True  # allow cookies/auth headers if you use them
+
+# CSRF
+CSRF_TRUSTED_ORIGINS = env_csv("CSRF_TRUSTED_ORIGINS")
+
+# Cookies (read from env above)
+SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "None")
+CSRF_COOKIE_SAMESITE    = os.getenv("CSRF_COOKIE_SAMESITE", "None")
+SESSION_COOKIE_SECURE   = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
+CSRF_COOKIE_SECURE      = os.getenv("CSRF_COOKIE_SECURE", "False") == "True"
+
+
 
 AUTH_USER_MODEL = "usercore.CustomUser"  #small because it must be label
 
@@ -55,7 +74,7 @@ INSTALLED_APPS = [
     'UserCore.apps.UserCoreConfig',
     'PomoloBeeCore.apps.PomoloBeeCoreConfig',  # main app  
     'CompetenceCore.apps.CompetenceCoreConfig',  # main app  
-    'corsheaders',   #DEV ONLY 
+    'corsheaders',   
 ]
  
 REST_FRAMEWORK = {
@@ -69,7 +88,7 @@ REST_FRAMEWORK = {
 }
 
 
-MIDDLEWARE = [
+MIDDLEWARE = [ 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -138,10 +157,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Dev-only: allow WP origin
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:9082",
-]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

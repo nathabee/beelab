@@ -6,16 +6,29 @@ x-django-env: &django_env
   DEBUG: ${DEBUG:-1}
   ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
   # add these if keeping the old settings.py style:
-  DATABASE_NAME: ${POSTGRES_DB:-app}
-  DATABASE_USER: ${POSTGRES_USER:-app}
-  DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-app}
+  DATABASE_NAME: ${POSTGRES_DB:-appdb}
+  DATABASE_USER: ${POSTGRES_USER:-appuser}
+  DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-apppwd}
   DATABASE_HOST: db
   DATABASE_PORT: "5432"
   BYPASS_MEDIA: ${BYPASS_MEDIA:-1}  
+  WP_BASE_URL: ${WP_BASE_URL:-http://localhost:9082}
+  DJANGO_BASE_URL: ${DJANGO_BASE_URL:-http://localhost:9001}
+  WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:9080} 
+  CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:9082,http://localhost:9080}
+  CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:9082,http://localhost:9080}
+  SESSION_COOKIE_SAMESITE: ${SESSION_COOKIE_SAMESITE:-None}
+  CSRF_COOKIE_SAMESITE: ${CSRF_COOKIE_SAMESITE:-None}
+  SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-False}
+  CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE:-False}
+ 
+
 
 x-web-env: &web_env
   BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://django:8000}
+  NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:9001}
   PORT: ${WEB_PORT:-3000}
+
 
 x-db-env: &db_env
   POSTGRES_DB: ${POSTGRES_DB:-app}
@@ -29,11 +42,30 @@ x-wp-env: &wp_env
   WORDPRESS_DB_NAME: ${WP_DB_NAME:-wordpress}
   WORDPRESS_TABLE_PREFIX: ${WP_TABLE_PREFIX:-wp_}
   WORDPRESS_CONFIG_EXTRA: |
-    define('WP_DEBUG', true);
-    define('WP_DEBUG_LOG', true);
-    define('WP_HOME', '${WP_BASE_URL}');
-    define('WP_SITEURL', '${WP_BASE_URL}');
+    // Only define if not already set (avoid "already defined" warnings)
+    if (!defined('WP_DEBUG'))        define('WP_DEBUG', true);
+    if (!defined('WP_DEBUG_LOG'))    define('WP_DEBUG_LOG', true);
 
+    // Canonical public URLs (no port)
+    if (!defined('WP_HOME'))         define('WP_HOME',    '${WP_BASE_URL}');
+    if (!defined('WP_SITEURL'))      define('WP_SITEURL', '${WP_BASE_URL}');
+
+    // Admin must be HTTPS
+    if (!defined('FORCE_SSL_ADMIN')) define('FORCE_SSL_ADMIN', false);
+
+    // Tell WP it’s HTTPS when coming via Apache TLS proxy
+    if (isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) && $$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+      $$_SERVER['HTTPS']            = 'on';
+      $$_SERVER['SERVER_PORT']      = 443;
+      $$_SERVER['REQUEST_SCHEME']   = 'https';
+      $$_SERVER['HTTP_X_FORWARDED_PORT'] = 443;
+    }
+
+    // (Optional) keep cookie domain/path simple in proxy setups
+    if (!defined('COOKIE_DOMAIN'))   define('COOKIE_DOMAIN', '');
+    if (!defined('COOKIEPATH'))      define('COOKIEPATH', '/');
+    if (!defined('SITECOOKIEPATH'))  define('SITECOOKIEPATH', '/');
+    if (!defined('ADMIN_COOKIE_PATH')) define('ADMIN_COOKIE_PATH', '/');
 
 x-wpdb-env: &wpdb_env
   MYSQL_DATABASE: ${WP_DB_NAME:-wordpress}
@@ -48,13 +80,14 @@ services:
       context: ./django
       target:  ${DJANGO_BUILD_TARGET:-dev}
     container_name: beelab-api
+    env_file: [.env]
     environment:
       <<: *django_env
     depends_on:
       db:
         condition: service_started
     ports:
-      - "9001:8000"
+      - "127.0.0.1:9001:8000"
     volumes:
       - ./django:/app:delegated
       # bind mount instead of named volume
@@ -75,10 +108,11 @@ services:
       context: ./web
       target: ${WEB_BUILD_TARGET:-dev}
     container_name: beelab-web
+    env_file: [.env]
     environment:
       <<: *web_env
     ports:
-      - "9080:3000"
+      - "127.0.0.1:9080:3000"
     depends_on:
       django:
         condition: service_healthy
@@ -101,6 +135,7 @@ services:
 
   wpdb:
     image: mariadb:11
+    env_file: [.env]
     environment:
       MARIADB_DATABASE: ${WP_DB_NAME:-wordpress}
       MARIADB_USER: ${WP_DB_USER:-wp}
@@ -125,10 +160,11 @@ services:
     depends_on:
       wpdb:
         condition: service_healthy
+    env_file: [.env]
     environment:
       <<: *wp_env
     ports:
-      - "9082:80"
+      - "127.0.0.1:9082:80"
     volumes:
       - wp_data:/var/www/html
       - ./wordpress/wp-content:/var/www/html/wp-content
@@ -143,6 +179,7 @@ services:
     depends_on:
       wordpress:
         condition: service_started
+    env_file: [.env]
     environment:
       WORDPRESS_DB_HOST: wpdb:3306
       WORDPRESS_DB_USER: ${WP_DB_USER:-wp}
@@ -162,5 +199,3 @@ volumes:
   wp_data: 
 
 
-
- 
