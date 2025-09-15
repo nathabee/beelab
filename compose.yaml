@@ -117,7 +117,10 @@ services:
     depends_on:
       db-prod: { condition: service_started }
     ports: ["9001:8000"]
-    volumes: []                          # no bind mounts in prod
+    #  persist media/static and keep them outside the image
+    volumes:
+      - django_media_prod:/app/media
+      - django_static_prod:/app/staticfiles
     healthcheck:
       test: ["CMD-SHELL","curl -fsS http://localhost:8000/ready || exit 1"]
       interval: 10s
@@ -276,5 +279,7 @@ volumes:
   wp_db_data_prod:
   wp_data:
   wp_data_prod:
+  django_media_prod:      
+  django_static_prod:    
 
  

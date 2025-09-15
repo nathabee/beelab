@@ -119,6 +119,18 @@ fi
 echo "🚀 Starting $ENV stack"
 compose up -d --build
 
+# after: compose up -d --build
+if [[ "$ENV" == "prod" ]]; then
+  echo "🔧 Fixing Django volume ownership in prod..."
+  compose exec -u 0 "$DJANGO_SVC" bash -lc "
+    install -d -m 775 -o ${HOST_UID:-1000} -g ${HOST_GID:-1000} /app/media /app/staticfiles &&
+    chown -R ${HOST_UID:-1000}:${HOST_GID:-1000} /app/media /app/staticfiles &&
+    find /app/media /app/staticfiles -type d -exec chmod 775 {} \; &&
+    find /app/media /app/staticfiles -type f -exec chmod 664 {} \;
+  "
+fi
+
+
 # --- wait for Django health ---
 API_URL="${DJANGO_BASE_URL:-http://localhost:9001}"
 wait_http_200 "${API_URL%/}/health" 90 || true
