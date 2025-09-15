@@ -72,13 +72,14 @@ x-wpdb-env: &wpdb_env
   MYSQL_USER: ${WP_DB_USER:-wp}
   MYSQL_PASSWORD: ${WP_DB_PASSWORD:-wp}
   MYSQL_ROOT_PASSWORD: ${WP_DB_ROOT_PASSWORD:-root}
- 
+  
 services:
   django:
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     build:
       context: ./django
-      target:  ${DJANGO_BUILD_TARGET:-dev}
+      # dev uses "dev" stage, prod will override
+      target: ${DJANGO_BUILD_TARGET:-dev}
     container_name: beelab-api
     env_file: [.env]
     environment:
@@ -89,12 +90,8 @@ services:
     ports:
       - "127.0.0.1:9001:8000"
     volumes:
+      # dev only (bind mount)
       - ./django:/app:delegated
-      # bind mount instead of named volume
-      #- ./data/media:/app/media    
-      #- ./data/static:/app/staticfiles 
-    #command: > 
-    #  bash -lc "python manage.py runserver 0.0.0.0:8000"
     healthcheck:
       test: ["CMD-SHELL","curl -fsS http://localhost:8000/ready || exit 1"]
       interval: 10s
@@ -102,7 +99,17 @@ services:
       retries: 10
     profiles: ["dev"]
 
- 
+  django-prod:
+    extends: django   # reuse config
+    container_name: beelab-api-prod
+    build:
+      context: ./django
+      target: prod     # final image stage
+    ports:
+      - "9001:8000"    # open to all, not just localhost
+    volumes: []        # no bind mounts in prod
+    profiles: ["prod"]
+
   web:
     build:
       context: ./web
@@ -122,6 +129,18 @@ services:
     command: "npx next dev -H 0.0.0.0 -p 3000"
     profiles: ["dev"]
 
+  web-prod:
+    extends: web
+    container_name: beelab-web-prod
+    build:
+      context: ./web
+      target: prod
+    command: "npx next start -H 0.0.0.0 -p 3000"
+    ports:
+      - "9080:3000"
+    volumes: [] # no bind mounts
+    profiles: ["prod"]
+
   db:
     image: postgres:16
     container_name: beelab-db
@@ -129,8 +148,40 @@ services:
       <<: *db_env
     volumes:
       - db_data:/var/lib/postgresql/data
+    profiles: ["dev", "prod"]
+
+  # same idea for wordpress + wpdb
+  wordpress:
+    image: beelab/wordpress:${WP_IMAGE_TAG:-dev}
+    build:
+      context: ./wordpress
+    container_name: beelab-wp
+    depends_on:
+      wpdb:
+        condition: service_healthy
+    env_file: [.env]
+    environment:
+      <<: *wp_env
+    ports:
+      - "127.0.0.1:9082:80"
+    volumes:
+      - wp_data:/var/www/html
+      - ./wordpress/wp-content:/var/www/html/wp-content
+      - ./django/media:/var/www/html/media:ro
+      - ./django/staticfiles:/var/www/html/static:ro
     profiles: ["dev"]
- 
+
+  wordpress-prod:
+    extends: wordpress
+    container_name: beelab-wp-prod 
+    pull_policy: never   
+    ports:
+      - "9082:80"
+    build:
+      context: ./wordpress
+    volumes: [] # prod shouldn’t rely on host bind mounts
+    profiles: ["prod"]
+
 
 
   wpdb:
@@ -150,27 +201,7 @@ services:
     volumes:
       - wp_db_data:/var/lib/mysql
     profiles: ["dev"]
-  
-  wordpress:
-    #image: wordpress:6-php8.3-apache
-    image: beelab/wordpress:dev
-    build:
-      context: ./wordpress
-    container_name: beelab-wp
-    depends_on:
-      wpdb:
-        condition: service_healthy
-    env_file: [.env]
-    environment:
-      <<: *wp_env
-    ports:
-      - "127.0.0.1:9082:80"
-    volumes:
-      - wp_data:/var/www/html
-      - ./wordpress/wp-content:/var/www/html/wp-content
-      - ./django/media:/var/www/html/media:ro
-      - ./django/staticfiles:/var/www/html/static:ro
-    profiles: ["dev"]
+   
 
   wpcli:
     # service to export wordpress

@@ -18,3 +18,19 @@ class CustomUser(AbstractUser):
         choices=LANGUAGE_CHOICES,
         default='en',  # Default to English
     )
+
+ 
+class DemoAccount(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="demo_account",
+    )
+    sid = models.CharField(max_length=64, unique=True, db_index=True)  # opaque cookie id
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(db_index=True)
+    active = models.BooleanField(default=True)
+
+    @property
+    def expired(self) -> bool:
+        return not self.active or timezone.now() >= self.expires_at

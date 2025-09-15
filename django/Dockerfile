@@ -4,7 +4,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 RUN set -eux; \
-    # Switch to HTTPS no matter which format is present
+    # Force HTTPS apt sources
     if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
       sed -i 's|URIs: http://|URIs: https://|g' /etc/apt/sources.list.d/debian.sources; \
     else \
@@ -21,16 +21,22 @@ RUN set -eux; \
 
 COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+
+# copy app code
 COPY . .
 
-# dev
+# ---------- dev ----------
 FROM base AS dev
 EXPOSE 8000
+# hot-reload for local development
 ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8000 --workers=2 --reload"
 CMD ["gunicorn","config.wsgi:application"]
 
-# prod
+# ---------- prod ----------
 FROM base AS prod
 EXPOSE 8000
+# tuned for prod
 ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8000 --workers=2 --timeout=30 --max-requests=1000 --max-requests-jitter=100"
+# Optional (uncomment if you want to bake static files into the image):
+# RUN python manage.py collectstatic --noinput || true
 CMD ["gunicorn","config.wsgi:application"]
