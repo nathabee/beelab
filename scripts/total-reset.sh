@@ -1,101 +1,108 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROFILE=${PROFILE:-dev}
+# usage: ./scripts/total-reset.sh [dev|prod]
+ENV="${1:-undefinedEnv}"                              # dev | prod
+[[ "$ENV" =~ ^(dev|prod)$ ]] || { echo "Usage: $0 [dev|prod]"; exit 1; }
 
-# --- helpers ----------------------------------------------------
+ENV_FILE=".env.${ENV}"
+[[ -f "$ENV_FILE" ]] || { echo "Missing $ENV_FILE"; exit 1; }
+
+PROJECT="beelab_${ENV}"
+PROFILE="$ENV"
+
+# service names per env (match your compose.yaml)
+DJANGO_SVC=$([[ "$ENV" == "prod" ]] && echo "django-prod" || echo "django")
+WEB_SVC=$([[ "$ENV" == "prod" ]] && echo "web-prod" || echo "web")
+WP_SVC=$([[ "$ENV" == "prod" ]] && echo "wordpress-prod" || echo "wordpress")
+WPCLI_SVC=$([[ "$ENV" == "prod" ]] && echo "wpcli-prod" || echo "wpcli")
+DB_SVC=$([[ "$ENV" == "prod" ]] && echo "db-prod" || echo "db")
+WPDB_SVC=$([[ "$ENV" == "prod" ]] && echo "wpdb-prod" || echo "wpdb")
+
 abort() { echo "❌ $*" >&2; exit 1; }
-
-yes_no() {
-  # yes_no "Question?" default_yes|default_no
-  local q="$1" def="${2:-default_no}" ans
-  local prompt="[y/N]"; [[ "$def" == "default_yes" ]] && prompt="[Y/n]"
-  read -r -p "$q $prompt " ans || true
-  ans="${ans,,}"  # to lowercase
-  if [[ -z "$ans" ]]; then
-    [[ "$def" == "default_yes" ]] && return 0 || return 1
-  fi
-  [[ "$ans" =~ ^y(es)?$ ]]
-}
-
 need() { command -v "$1" >/dev/null 2>&1 || abort "Missing dependency: $1"; }
 
+yes_no() {
+  local q="$1" def="${2:-no}" ans prompt="[y/N]"
+  [[ "$def" == "yes" ]] && prompt="[Y/n]"
+  read -r -p "$q $prompt " ans || true
+  ans="${ans,,}"
+  if [[ -z "$ans" ]]; then [[ "$def" == "yes" ]]; else [[ "$ans" =~ ^y(es)?$ ]]; fi
+}
+
 wait_http_200() {
-  # wait_http_200 URL TIMEOUT_SECONDS
-  local url="$1" timeout="${2:-60}" t=0
+  local url="$1" timeout="${2:-90}" t=0
   echo "⏳ Waiting for $url ..."
   until curl -fsS "$url" >/dev/null 2>&1; do
-    sleep 2; t=$((t+2))
-    if (( t >= timeout )); then
-      echo "⚠️  Timed out waiting for $url"; return 1
-    fi
+    sleep 2; t=$((t+2)); (( t >= timeout )) && { echo "⚠️  Timed out: $url"; return 1; }
   done
   echo "✅ $url is up"
 }
 
-# --- sanity & env ------------------------------------------------
-need docker
-need bash
+need docker; need bash
+[[ -f "compose.yaml" || -f "docker-compose.yml" ]] || abort "Run from repo root (compose.yaml)."
 
-# must be repo root (compose file present)
-[[ -f "compose.yaml" || -f "docker-compose.yml" ]] || abort "Run from project root (compose.yaml not found)."
+# load env (for URLs, creds, etc.)
+set -a; source "$ENV_FILE"; set +a
 
-# .env required
-[[ -f .env ]] || abort "Missing .env in project root. First clone repo (e.g. git clone git@github.com:nathabee/ml-django.git) and create .env."
+# Compose helper
+compose() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" --profile "$PROFILE" "$@"; }
 
-# load .env (export all vars temporarily)
-set -a; source ./.env; set +a
-
-echo "ℹ️  Running from repo root: $(pwd)"
-echo "ℹ️  This is a development helper. Do NOT use in production."
+echo "ℹ️  Environment: $ENV  (ENV file: $ENV_FILE, project: $PROJECT)"
+echo "ℹ️  Running from: $(pwd)"
 echo
 
-# --- full reset prompt ------------------------------------------
-if ! yes_no "Are you sure you want a TOTAL RESET of Docker resources (images, containers, *volumes*)? This ERASES all data." default_no; then
-  echo "➡️  Cancelled."
-  exit 0
-fi
+# --- confirm destructive reset ---
+if yes_no "Are you sure you want a TOTAL RESET of containers/images/*volumes* for [$ENV]? This ERASES all data for this env." no; then
+  # --- down & prune ------------------------------------------------
+  if yes_no "Remove containers/images now?" yes; then
+    echo "🧹 containers/images (no volumes)"
+    compose down --rmi local --remove-orphans
+  else
+    echo "➡️  Skipping container/image prune."
+  fi
 
-# --- down & prune ------------------------------------------------
-if yes_no "Remove containers/images/volumes now?" default_yes; then
-  echo "🧹 docker compose --profile $PROFILE down --rmi local --volumes --remove-orphans"
-  docker compose --profile "$PROFILE" down --rmi local --volumes --remove-orphans
+  # --- targeted volume prune --------------------------------------
+  if yes_no "Also remove named volumes for [$ENV]?" no; then
+    # list volumes belonging to this compose project
+    vols=$(docker volume ls -q --filter "label=com.docker.compose.project=$PROJECT")
+    echo "📦 Project volumes: $PROJECT"
+    echo "$vols" | sed 's/^/  - /'
+
+    if [[ "$ENV" == "dev" ]]; then
+      # remove ONLY non-prod-suffixed volumes (dev ones)
+      for v in $vols; do
+        if [[ "$v" =~ _prod$ ]]; then
+          echo "⏭️  keeping prod volume: $v"
+        else
+          echo "🗑️  removing dev volume: $v"; docker volume rm -f "$v" >/dev/null || true
+        fi
+      done
+    else # prod
+      # remove ONLY *_prod volumes (prod ones)
+      for v in $vols; do
+        if [[ "$v" =~ _prod$ ]]; then
+          echo "🗑️  removing prod volume: $v"; docker volume rm -f "$v" >/dev/null || true
+        else
+          echo "⏭️  keeping dev volume: $v"
+        fi
+      done
+    fi
+  fi
 else
-  echo "➡️  Skipping prune."
+  echo "➡️  Cancelled."; exit 0
 fi
 
-# --- seed web deps (1st time) -----------------------------------
-echo "📦 Seeding web/node modules (npm ci in one-off container)..."
-docker compose --profile "$PROFILE" run --rm web npm ci
+# --- seed web deps (dev only) ---
+if [[ "$ENV" == "dev" ]]; then
+  echo "📦 Seeding web/node modules (npm ci in one-off $WEB_SVC)..."
+  compose run --rm "$WEB_SVC" npm ci || true
+fi
 
-
-## migrate
-#docker compose --profile dev exec django bash -lc "
-#python manage.py makemigrations usercore &&
-#python manage.py makemigrations pomolobeecore competencecore &&
-#python manage.py showmigrations &&
-#python manage.py migrate --noinput
-#"
-
-# create and set perms inside the container
-#echo "change permission in media" 
-# 0) Derive your uid/gid so Django writes as you (optional but recommended)
-#export UID=$(id -u)
-#export GID=$(id -g)
-# On the HOST
-#mkdir -p ./data/media
-#chown -R "$UID":"$GID" ./data/media
-#chmod -R 775 ./data/media
-# 1) Ensure the host media and staticfiles dir exists and is owned by you
-
-# On the HOST  
-#mkdir -p ./data/media ./data/static
-#chown -R -R "$UID":"$GID" ./data/media ./data/static
-#chmod -R u+rwX,g+rwX ./data/media ./data/static
-
-
-# 2) Drop a hardened .htaccess (served by Apache via bind mount)
-cat > ./django/media/.htaccess << "EOF"
+# --- harden local media folder (only makes sense with dev bind mount) ---
+if [[ "$ENV" == "dev" ]]; then
+  mkdir -p ./django/media
+  cat > ./django/media/.htaccess << "EOF"
 Options -Indexes
 <FilesMatch "\.(php|phps|phtml|phar)$">
   Require all denied
@@ -105,96 +112,73 @@ Options -Indexes
   ExpiresByType image/* "access plus 30 days"
 </IfModule>
 EOF
-chmod 644 ./django/media/.htaccess
+  chmod 644 ./django/media/.htaccess
+fi
 
+# --- bring stack up ---
+echo "🚀 Starting $ENV stack"
+compose up -d --build
 
-# --- up ----------------------------------------------------------
-echo "🚀 Starting stack"
-docker compose --profile "$PROFILE" up -d --build
+# --- wait for Django health ---
+API_URL="${DJANGO_BASE_URL:-http://localhost:9001}"
+wait_http_200 "${API_URL%/}/health" 90 || true
 
-
-
-
-# --- wait for Django --------------------------------------------
-# Django maps host 9001 -> container 8000
-wait_http_200 "http://localhost:9001/health" 90 || true
-
-# --- load Django Migration if necessary --------------------------------------- 
-
-# --- migrations -------------------------------------------------
-echo "🛠 Running makemigrations..."
-docker compose --profile "$PROFILE"  exec django python manage.py makemigrations --noinput
+# --- migrations ---
+if [[ "$ENV" == "dev" ]]; then
+  echo "🛠 Running makemigrations (dev)..."
+  compose exec "$DJANGO_SVC" python manage.py makemigrations --noinput || true
+fi
 
 echo "🛠 Running migrate..."
-docker compose --profile "$PROFILE"  exec django python manage.py migrate --noinput
+compose exec "$DJANGO_SVC" python manage.py migrate --noinput
 
+# --- createsuperuser (optional) ---
+if yes_no "Create Django superuser now?" no; then
+  compose exec "$DJANGO_SVC" python manage.py createsuperuser
+fi
 
+# --- collectstatic ---
+echo "🧺 collectstatic..."
+compose exec "$DJANGO_SVC" python manage.py collectstatic --noinput || true
 
-
-
-# --- create superuser (optional) --------------------------------
-echo "Create Django superuser now?" 
-docker compose --profile "$PROFILE"  exec django python manage.py createsuperuser
-
-
- 
-
-# --- load Static lib foradmin console ---------------------------------------  
-# it creates the django/staticfiles (host) <- /app/static (container django)
-docker exec -it beelab-api bash -lc "python manage.py collectstatic --noinput"
-
-
- 
-# --- WordPress init ---------------------------------------------
-echo "Run WordPress init script activate theme, permalinks, logo?"
-echo "📋 Open WordPress installer at:  http://<VPS_IP>:9082/wp-admin"
-echo "   Create the initial admin user, then return here."
-if yes_no "Ready?" default_no; then
-  #  wp-perms.sh is called in wp-init.sh
+# --- WordPress init (optional) ---
+WP_URL="${WP_BASE_URL:-http://localhost:9082}"
+echo "📋 Open WordPress installer at:  ${WP_URL%/}/wp-admin"
+if yes_no "Run wp-init script (theme, permalinks, logo) after installer?" no; then
   if [[ -x ./scripts/wp-init.sh ]]; then
-    ./scripts/wp-init.sh
+    ./scripts/wp-init.sh "$ENV"
   else
-    echo "⚠️ ./scripts/wp-init.sh not found or not executable skipping."
+    echo "⚠️  ./scripts/wp-init.sh not found or not executable; skipping."
   fi
 fi
 
-
-
-
-
-# --- load Pomolobee fixtures ---------------------------------------  
-echo "📥 Loading fixtures into Django..."
+# --- load fixtures (best-effort) ---
+echo "📥 Loading Django fixtures (best-effort)..."
 set +e
-docker compose exec django python manage.py seed_pomolobee --clear 
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_groups.json || echo "⚠️ superuser fixture failed"
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_superuser.json || echo "⚠️ superuser fixture failed"
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_farms.json   || echo "⚠️ farms fixture failed"
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_fields.json  || echo "⚠️ fields fixture failed"
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_fruits.json  || echo "⚠️ fruits fixture failed"
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_rows.json    || echo "⚠️ rows fixture failed"
+compose exec "$DJANGO_SVC" python manage.py seed_pomolobee --clear
+compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_groups.json
+compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_superuser.json
+compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_farms.json
+compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_fields.json
+compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_fruits.json
+compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_rows.json
 
-
-# --- load Competence fixtures --------------------------------------- 
-docker compose exec django python manage.py seed_competence --clear  
-docker compose exec django python manage.py populate_data_init || true
-docker compose exec django python manage.py create_groups_and_permissions || true
-docker compose exec django python manage.py populate_teacher || true
-#docker compose exec django python manage.py create_translations_csv || true
-docker compose exec django python manage.py populate_translation || true
+compose exec "$DJANGO_SVC" python manage.py seed_competence --clear
+compose exec "$DJANGO_SVC" python manage.py populate_data_init
+compose exec "$DJANGO_SVC" python manage.py create_groups_and_permissions
+compose exec "$DJANGO_SVC" python manage.py populate_teacher
+compose exec "$DJANGO_SVC" python manage.py populate_translation
 set -e
- 
 
-# --- health checks ----------------------------------------------
-echo "Run health checks now?" 
-if [[ -x ./scripts/health-check.sh ]]; then
-  ./scripts/health-check.sh
+# --- health checks (env-aware) ---
+if [[ -x ./scripts/healthcheck.sh ]]; then
+  ./scripts/healthcheck.sh "$ENV"
 else
-  echo "⚠️ ./scripts/health-check.sh not found or not executable skipping."
+  echo "⚠️  ./scripts/healthcheck.sh not found; skipping."
 fi
- 
 
 echo
 echo "✅ Done."
-echo "🖥  Web:     http://<VPS_IP>:9080"
-echo "🔌 Django:  http://<VPS_IP>:9001 health, /api/user/hello"
-echo "📝 WP:      http://<VPS_IP>:9082"
+echo "🖥  Web:     ${WEB_BASE_URL:-http://localhost:9080}"
+echo "🔌 Django:  ${API_URL%/}   (health: ${API_URL%/}/health)"
+echo "📝 WP:      ${WP_URL}"

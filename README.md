@@ -76,29 +76,42 @@ flowchart LR
 
 ## Quickstart (dev)
 
+<a href="https://github.com/nathabee/beelab/blob/main/docs/installation-vps.md" >
+the exact installation manual on a VPS is available on docs/installation-vps.md
+</a>
+
 ```bash
+
 # 1) Clone and prepare
-git clone git@github.com:nathabee/beelab.git
+git clone https://github.com/nathabee/beelab.git
 cd beelab
 cp .env.example .env
-mkdir -p django/{media,staticfiles}
+mkdir -p django/{media,staticfiles} web/public
 
 # 2) Run the installer (full rebuild)
 chmod +x scripts/total-reset.sh
 ./scripts/total-reset.sh
+
+
 ```
 
+
+
 When prompted: confirm the reset and create the Django superuser.
-Then open WordPress at `http://localhost:9082` and finish the initial setup.
+Then open WordPress at `https://beelab-wp.nathabee.de` and finish the initial setup.
 
 Service URLs:
 
+* Django API: `https://beelab-api.nathabee.de`  (health: `/health`)
+* Web (Next.js): `https://beelab-web.nathabee.de`
+* WordPress: `https://beelab-wp.nathabee.de`
+
+On a local LAN without https, you may have used IP and port instead of subdomains :
 * Django API: `http://localhost:9001`  (health: `/health`)
 * Web (Next.js): `http://localhost:9080`
 * WordPress: `http://localhost:9082`
-
  
-to connect tpo WordPress admin : `http://localhost:9082/wp-admin` use the wordpress login created precedently
+to connect tpo WordPress admin : `https://beelab-wp.nathabee.de/wp-admin` use the wordpress login created precedently
 activate the plugin you want ("competence WP" , "pomolobee WP") 
 ```bash
 # for pomolobee plugin
@@ -106,10 +119,10 @@ docker compose exec django python manage.py changepassword pomofarmer
 # for competence plugin
 docker compose exec django python manage.py changepassword nathaprof
 ```
-to test the plugins go to WordPress: `http://localhost:9082/`, choose in the menu the plugin you want and enter login/password
+to test the plugins go to WordPress: `https://beelab-wp.nathabee.de/`, choose in the menu the plugin you want and enter login/password
  
 
-to change some data in Django  `http://localhost:9001/admin` use the django login created precedently
+to change some data in Django  `https://beelab-api.nathabee.de/admin` use the django login created precedently
 
 
 ## Screenshots
@@ -205,9 +218,9 @@ You will be prompted to:
 
 #### Services after install
 
-* **Django API**: [http://localhost:9001](http://localhost:9001)  (health: `/health`, example: `/api/user/hello`)
-* **Next.js frontend**: [http://localhost:9080](http://localhost:9080)
-* **WordPress**: [http://localhost:9082](http://localhost:9082)
+* **Django API**: [https://beelab-api.nathabee.de](https://beelab-api.nathabee.de)  (health: `/health`, example: `/api/user/hello`)
+* **Next.js frontend**: [https://beelab-web.nathabee.de](https://beelab-web.nathabee.de)
+* **WordPress**: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
 
 ## What the script does (expanded)
 
@@ -235,12 +248,12 @@ Starts: Postgres, Django (dev server), Next.js (dev server), MariaDB (wpdb), and
 
 ```bash
 docker compose ps
-curl -s http://localhost:9001/health
+curl -s https://beelab-api.nathabee.de/health
 ```
 
 ### 3.5 Complete WordPress installer (first run)
 
-Open [http://localhost:9082](http://localhost:9082) and create the initial admin user.
+Open [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de) and create the initial admin user.
 
 ### 3.6 Initialize Django data (first DB install)
 
@@ -263,9 +276,9 @@ This script sets permissions, activates the theme, updates permalinks, applies l
 
 ## health check
 
-* Django admin : [http://localhost:9001/admin](http://localhost:9001/admin) 
-* Wordpress admin:  [http://localhost:9082/wp-admin](http://localhost:9082/wp-admin) 
-* Wordpress: Log into [http://localhost:9082](http://localhost:9082) and verify the site loads.
+* Django admin : [https://beelab-api.nathabee.de/admin](https://beelab-api.nathabee.de/admin) 
+* Wordpress admin:  [https://beelab-wp.nathabee.de/wp-admin](https://beelab-wp.nathabee.de/wp-admin) 
+* Wordpress: Log into [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de) and verify the site loads.
 
 
 * Run:
@@ -362,11 +375,11 @@ Installation:
 ./install_plugin.sh
 ```
 
-Then in WP Admin ([http://localhost:9082](http://localhost:9082)):
+Then in WP Admin ([https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)):
 
 * Go to **Plugins**, verify the plugin is present, and activate it.
 * Go to **Settings → Competence Settings** to configure the API endpoint.
-  In this dev stack, Django is at `http://localhost:9001/api`.
+  In this dev stack, Django is at `https://beelab-api.nathabee.de/api`.
 
 ## Project structure
 

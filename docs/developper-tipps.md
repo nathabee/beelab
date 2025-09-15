@@ -2,15 +2,43 @@
 
 
 ## Environnement variable
+ 
+### .env.dev file for a dev environment 
 
-### .env file
-check that the .env file contains the data you need. 
-originally , the .env.example is giving the data to set.
-- normally on a local LAN (dev) we will use http, IP adresse and port
-- on a VPS: we use https, certbot , domains and subdomains
+  
+initialise the .env.dev.example 
+cp .env.dev.example .env.dev 
  
- change the KEY as metionned in the .env file
+ change values that are necessary (key,port...etc)
+
+
+normally on a local LAN (dev) we will use http, IP adresse and port 
+change the KEY as metionned in the .env file
+adapt to get port and ipadress and port instaead of domains name
  
+
+docker compose -p beelab_dev --env-file .env.dev --profile dev up -d
+
+ 
+
+### .env.prod file for a prod environment
+On a VPS: we use https, certbot , domains and subdomains
+Change the KEY as metionned in the .env.prod file
+ 
+
+initialise the .env.prod.example 
+cp .env.prod.example .prod.dev 
+ 
+ change values that are necessary (key,port...etc)
+
+
+# prod
+docker compose -p beelab_prod --env-file .env.prod --profile prod up -d
+
+
+
+
+
 ### Dev and Prod environment
 
 ****ATTENTION: PROD env not TESTED yet****

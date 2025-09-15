@@ -2,23 +2,46 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# load .env so $WP_BASE_URL is available
-set -a; source ./.env; set +a
+# usage: ./scripts/wp-init.sh [dev|prod]
+ENV="${1:-undefinedEnv}"
+[[ "$ENV" =~ ^(dev|prod)$ ]] || { echo "Usage: $0 [dev|prod]"; exit 1; }
 
-# Make sure the theme init script is executable (host-side)
-# chmod +x wordpress/wp-content/themes/pomolobee-theme/scripts/init-site.sh
+ENV_FILE=".env.${ENV}"
+[[ -f "$ENV_FILE" ]] || { echo "Missing $ENV_FILE"; exit 1; }
 
-# Start DB + WP
-docker compose up -d wpdb wordpress
+PROJECT="beelab_${ENV}"
+PROFILE="$ENV"
 
- 
+# service names per env (must match your compose.yaml)
+WPDB_SVC=$([[ "$ENV" == "prod" ]] && echo "wpdb-prod" || echo "wpdb")
+WP_SVC=$([[ "$ENV" == "prod" ]] && echo "wordpress-prod" || echo "wordpress")
+WPCLI_SVC=$([[ "$ENV" == "prod" ]] && echo "wpcli-prod" || echo "wpcli")
 
-# Ensure bind-mount perms first in host side
-./scripts/wp-perms.sh
+# theme dir inside the container (override with WP_THEME_DIR in your .env.* if needed)
+THEME_DIR="${WP_THEME_DIR:-/var/www/html/wp-content/themes/beelab-theme}"
 
+# helper: docker compose with env/project/profile wired
+compose() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" --profile "$PROFILE" "$@"; }
 
-# run perimission in docekr
-docker compose exec -u 0 wordpress bash -lc '
+# load env for WP_BASE_URL (and any overrides)
+set -a; source "$ENV_FILE"; set +a
+WP_URL="${WP_BASE_URL:-http://localhost:9082}"
+
+echo "ℹ️  Environment: $ENV  (env file: $ENV_FILE, project: $PROJECT)"
+echo "ℹ️  WP URL: ${WP_URL}"
+echo
+
+echo "▶ Starting DB + WordPress..."
+compose up -d "$WPDB_SVC" "$WP_SVC"
+
+# Ensure host-side perms for bind mounts (if your dev uses them)
+if [[ -x ./scripts/wp-perms.sh ]]; then
+  ./scripts/wp-perms.sh "$ENV" || true
+fi
+
+echo "🔧 Fixing permissions and writing .htaccess inside the container..."
+compose exec -u 0 "$WP_SVC" bash -lc '
+  set -e
   install -d -m 775 -o www-data -g www-data /var/www/html/wp-content/uploads
   chown -R www-data:www-data /var/www/html/wp-content
   find /var/www/html/wp-content -type d -exec chmod 775 {} \;
@@ -38,19 +61,23 @@ EOF
   chown www-data:www-data /var/www/html/.htaccess
 '
 
+# Run the in-container site initializer (theme, permalinks, logo, etc.)
+INIT_SCRIPT="${THEME_DIR}/scripts/init-site.sh"
+echo "🎬 Running theme init: ${INIT_SCRIPT}"
+compose run --rm "$WPCLI_SVC" bash "$INIT_SCRIPT" || {
+  echo "⚠️  Theme init script not found/executable: ${INIT_SCRIPT} (skipping)"; true;
+}
 
-# Run the in-container initializer (activates theme, permalinks, writes .htaccess, imports logo)
-docker compose run --rm wpcli bash /var/www/html/wp-content/themes/beelab-theme/scripts/init-site.sh
+# Set siteurl/home from env (no hardcoded ports)
+echo "📝 Setting siteurl/home to ${WP_URL}"
+compose run --rm "$WPCLI_SVC" wp option update siteurl "${WP_URL}"
+compose run --rm "$WPCLI_SVC" wp option update home    "${WP_URL}"
 
-export COMPOSE_PROFILES=dev
+# Show current values
+compose run --rm "$WPCLI_SVC" wp option get siteurl
+compose run --rm "$WPCLI_SVC" wp option get home
 
-# See current values
-docker compose run --rm wpcli wp option get siteurl
-docker compose run --rm wpcli wp option get home
+# Ensure WP is up after changes
+compose up -d "$WP_SVC"
 
-# Set siteurl/home from .env
-docker compose run --rm wpcli wp option update siteurl "${WP_BASE_URL}"
-docker compose run --rm wpcli wp option update home    "${WP_BASE_URL}"
-
-docker compose up -d wordpress
-
+echo "✅ WP init finished for [$ENV]. Open: ${WP_URL%/}/wp-admin"

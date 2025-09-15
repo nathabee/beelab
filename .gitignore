@@ -20,6 +20,8 @@ wordpress/wp-content/uploads/
 
 # Env / secrets
 .env
+.env.prod
+.env.dev
 *.env
 django/.env
 web/.env

@@ -311,15 +311,18 @@ sudo systemctl reload apache2
 git clone https://github.com/nathabee/beelab.git
 cd beelab
 
-# Env + runtime folders
-cp .env.example .env
-mkdir -p django/{media,staticfiles}
+# Env + runtime folders for prod or dev
+cp .env.prod.example .env.prod
+# or
+cp .env.dev.example .env.dev
+mkdir -p django/{media,staticfiles} wweb/public
 
 openssl rand -base64 48 | tr -d '\n'
 ```
 
-> Tip: set a strong Django `SECRET_KEY` in `.env` (e.g. output of `openssl rand -base64 48 | tr -d '\n'`).
+> Tip: set a strong Django `SECRET_KEY` in `.env.prod` or `.env.dev` (e.g. output of `openssl rand -base64 48 | tr -d '\n'`).
 
+change all other necessary env variable
 ---
 
 ## 5) Port bindings (public access from your VPS IP)
@@ -352,7 +355,7 @@ services:
 
 ```bash
 # Make the helper executable
-chmod +x scripts/total-reset.sh
+chmod +x scripts/total-reset.sh <dev/dev>
 
 # Run the full rebuild/installer (interactive)
 ./scripts/total-reset.sh
