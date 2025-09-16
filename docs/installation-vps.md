@@ -358,7 +358,7 @@ services:
 chmod +x scripts/total-reset.sh <dev/dev>
 
 # Run the full rebuild/installer (interactive)
-./scripts/total-reset.sh
+./scripts/total-reset.sh prod
 ```
 
 When prompted:
@@ -428,10 +428,15 @@ in this example :
 Update Django passwords used by the plugins (examples):
 
 ```bash
+# in dev :
+docker compose -p beelab_dev --env-file .env.dev --profile dev exec django python manage.py changepassword pomofarmer
+docker compose -p beelab_dev --env-file .env.dev --profile dev exec django python manage.py changepassword nathaprof
+
+# inprod
 # Pomolobee plugin user
-docker compose exec django python manage.py changepassword pomofarmer
+docker compose -p beelab_prod --env-file .env.prod --profile prod exec django python manage.py changepassword pomofarmer
 # Competence plugin user
-docker compose exec django python manage.py changepassword nathaprof
+docker compose -p beelab_prod --env-file .env.prod --profile prod exec django python manage.py changepassword nathaprof
 ```
 
 Test plugins on the WP site menu at `https://beelab-wp.nathabee.de/`.

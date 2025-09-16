@@ -85,12 +85,18 @@ the exact installation manual on a VPS is available on docs/installation-vps.md
 # 1) Clone and prepare
 git clone https://github.com/nathabee/beelab.git
 cd beelab
-cp .env.example .env
+cp .env.prod.example .env.prod
+# or : cp .env.dev.example .env.dev
+
+# modifiy all the necessary variable in env file. 
+# in this example, we set the nathabee.de domain and beelab-wp, beelab-api , beelab-web subdomains
+# please change the domain for your VPS
 mkdir -p django/{media,staticfiles} web/public
+
 
 # 2) Run the installer (full rebuild)
 chmod +x scripts/total-reset.sh
-./scripts/total-reset.sh
+./scripts/total-reset.sh [prod/dev]
 
 
 ```
@@ -100,13 +106,13 @@ chmod +x scripts/total-reset.sh
 When prompted: confirm the reset and create the Django superuser.
 Then open WordPress at `https://beelab-wp.nathabee.de` and finish the initial setup.
 
-Service URLs:
+Service URLs (prod):
 
 * Django API: `https://beelab-api.nathabee.de`  (health: `/health`)
 * Web (Next.js): `https://beelab-web.nathabee.de`
 * WordPress: `https://beelab-wp.nathabee.de`
 
-On a local LAN without https, you may have used IP and port instead of subdomains :
+On a local LAN (dev), we do not use https, you may have used IP and port instead of subdomains :
 * Django API: `http://localhost:9001`  (health: `/health`)
 * Web (Next.js): `http://localhost:9080`
 * WordPress: `http://localhost:9082`
