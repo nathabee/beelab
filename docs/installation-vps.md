@@ -393,7 +393,17 @@ When prompted:
 * Create the **Django superuser**.
 * After containers are up: open WordPress in a browser and finish its initial setup.
 
+# change api for plugin
 
+open wordpress   : `https://beelab-wp.nathabee.de/wp-admin`
+
+chosose Pomolobee Settings and Competence Settings (settings of activated plugin) and check that it is pointing to the correct django backend: 
+in prod
+https://beelab-api.nathabee.de/api
+
+
+in dev
+http://localhost:9001/api
 
 
 ### IN CASE OF CONNECTION ERROR BY INSTALL : Tell Docker which DNS to use (daemon-wide)
@@ -452,17 +462,21 @@ in this example :
 
 
 Update Django passwords used by the plugins (examples):
+use the helper installed in 4)
 
 ```bash
-# in dev :
-docker compose -p beelab_dev --env-file .env.dev --profile dev exec django python manage.py changepassword pomofarmer
-docker compose -p beelab_dev --env-file .env.dev --profile dev exec django python manage.py changepassword nathaprof
 
-# inprod
-# Pomolobee plugin user
-docker compose -p beelab_prod --env-file .env.prod --profile prod exec django-prod python manage.py changepassword pomofarmer
-# Competence plugin user
-docker compose -p beelab_prod --env-file .env.prod --profile prod exec django-prod python manage.py changepassword nathaprof
+# in dev :
+beelab-dev
+dcdjpwd pomofarmer myNewPassword
+dcdjpwd nathaprof myNewPassword
+
+  
+# in prod :
+beelab-prod
+dcdjpwd pomofarmer myNewPassword
+dcdjpwd nathaprof myNewPassword
+
 ```
 
 Test plugins on the WP site menu at `https://beelab-wp.nathabee.de/`.
@@ -479,23 +493,39 @@ Test plugins on the WP site menu at `https://beelab-wp.nathabee.de/`.
 ## 9) Useful ops commands
 
 ```bash
-# See what’s running
-docker compose ps
+# in dev :
+beelab-dev
+# in prod :
+beelab-prod
+dchelp
 
-# Tail logs for a service
-docker compose logs -f django
-docker compose logs -f web
-docker compose logs -f wordpress
 
-# Stop everything (keeps volumes)
-docker compose down
+###### DOCKER ALIAS ##########
+dcup                # start current env stack
+dcdown              # stop stack (remove orphans)
+dcstop SERVICE      # stop one service
+dcps                # ps
+dclogs [SERVICE]    # follow logs (or use the service-specific ones below)
+dcexec SERVICE CMD  # exec inside a service
 
-# Rebuild + start in background
-docker compose up -d --build
+###### DJANGO ##########
+dcdjango CMD...     # run manage.py, shell, etc.
+dcdjlogs            # follow django logs
+dcdjup / dcdjdown   # start/stop django only
+dcdjpwd USER [NEW]  # change password (interactive if NEW omitted)
 
-# Health checks
-curl -s https://beelab-api.nathabee.de/health
-./scripts/health-check.sh
+###### WORDPRESS ######
+dcwplogs | dcwplog  # follow wordpress logs
+dcwpup / dcwpdown   # start/stop wordpress only
+
+###### WEB (Next.js) ##
+dcweblogs           # follow web logs
+dcwebup / dcwebdown # start/stop web only
+
+###### MISC ##########
+blenv dev|prod      # switch env in this shell
+
+ 
 ```
 
 ---

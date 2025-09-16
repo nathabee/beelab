@@ -2,24 +2,9 @@
 # Usage:  source scripts/alias.sh [dev|prod]
 # Then:   dcdjango python manage.py changepassword pomofarmer
 # Also:   dcup / dcdown / dcps / dclogs / dcexec
-
-
-##############################################
-# 
-# Dev session
-# source scripts/alias.sh dev
-# dcup                    # start dev stack
-# dcdjango python manage.py changepassword pomofarmer
-# dclogs django           # follow django logs
-# dcdown                  # stop dev
-
-# Switch this same shell to prod
-# blenv prod
-# dcup
-# dcdjango python manage.py createsuperuser
-
-###############################################
-
+# Added:  dcdjpwd USER [NEWPWD]   # change Django password (interactive if NEWPWD omitted)
+#         dcdjlogs | dcwplogs | dcweblogs
+#         dcdjup|dcdjdown  dcwpup|dcwpdown  dcwebup|dcwebdown
 
 # must be sourced
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
@@ -45,8 +30,12 @@ _beelab_set_env() {
   # service names differ in prod
   if [[ "$env" == "prod" ]]; then
     export BEELAB_DJANGO_SVC="django-prod"
+    export BEELAB_WP_SVC="wordpress-prod"
+    export BEELAB_WEB_SVC="web-prod"
   else
     export BEELAB_DJANGO_SVC="django"
+    export BEELAB_WP_SVC="wordpress"
+    export BEELAB_WEB_SVC="web"
   fi
 }
 
@@ -79,33 +68,94 @@ dcexec() {
 }
 
 # django-specific: dcdjango [cmd...]
-# (picks django vs django-prod automatically; interactive if you have a TTY)
 dcdjango() {
   local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
   dc exec $tty_flags "$BEELAB_DJANGO_SVC" "$@"
 }
 
- 
+# ---- New helpers you asked for ----
+
+# Change Django password for a user:
+# - Interactive:  dcdjpwd alice
+# - Non-interactive: dcdjpwd alice "NewPass123!"
+dcdjpwd() {
+  local user="${1:-}"; local pwd="${2:-}"
+  if [[ -z "$user" ]]; then
+    echo "Usage: dcdjpwd USER [NEW_PASSWORD]"
+    return 1
+  fi
+  if [[ -z "$pwd" ]]; then
+    # interactive built-in
+    dcdjango python manage.py changepassword "$user"
+  else
+    # set via a tiny Python snippet (non-interactive)
+    local esc_user esc_pwd
+    esc_user=$(printf "%q" "$user")
+    esc_pwd=$(printf "%q" "$pwd")
+    dcdjango bash -lc "
+U=$esc_user P=$esc_pwd python - <<'PY'
+import os, django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE','config.settings')
+django.setup()
+from django.contrib.auth import get_user_model
+User = get_user_model()
+u = User.objects.get(username=os.environ['U'])
+u.set_password(os.environ['P'])
+u.save()
+print('Password updated for', u.username)
+PY"
+  fi
+}
+
+# Logs
+dcdjlogs()  { dclogs "$BEELAB_DJANGO_SVC" "$@"; }
+dcwplogs()  { dclogs "$BEELAB_WP_SVC" "$@"; }
+dcweblogs() { dclogs "$BEELAB_WEB_SVC" "$@"; }
+# singular alias requested
+dcwplog()   { dcwplogs "$@"; }
+
+# Up/Down per service (stop = down-for-that-service)
+dcdjup()    { dc up -d "$BEELAB_DJANGO_SVC"; }
+dcdjdown()  { dc stop  "$BEELAB_DJANGO_SVC"; }
+
+dcwpup()    { dc up -d "$BEELAB_WP_SVC"; }
+dcwpdown()  { dc stop  "$BEELAB_WP_SVC"; }
+
+dcwebup()   { dc up -d "$BEELAB_WEB_SVC"; }
+dcwebdown() { dc stop  "$BEELAB_WEB_SVC"; }
 
 # switch env in the same shell after sourcing: blenv dev|prod
 blenv() { _beelab_set_env "$1" && echo "beelab env -> $BEELAB_ENV"; }
 
-dchelp() { 
-    echo "###### DOCKER ALIAS ##########"
-    echo "dcup"
-    echo "dcdown"
-    echo "dcstop"
-    echo "dcps"
-    echo "dclogs"
-    echo "###### DJANGO ALIAS ##########"
-    echo "dcdjango python manage.py check"
-    echo "dcdjango python manage.py changepassword pomofarmer"
-    echo "###### ALIAS LIST##########"
-    echo "dchelp"
+dchelp() {
+  cat <<EOF
+###### DOCKER ALIAS ##########
+dcup                # start current env stack
+dcdown              # stop stack (remove orphans)
+dcstop SERVICE      # stop one service
+dcps                # ps
+dclogs [SERVICE]    # follow logs (or use the service-specific ones below)
+dcexec SERVICE CMD  # exec inside a service
 
+###### DJANGO ##########
+dcdjango CMD...     # run manage.py, shell, etc.
+dcdjlogs            # follow django logs
+dcdjup / dcdjdown   # start/stop django only
+dcdjpwd USER [NEW]  # change password (interactive if NEW omitted)
+
+###### WORDPRESS ######
+dcwplogs | dcwplog  # follow wordpress logs
+dcwpup / dcwpdown   # start/stop wordpress only
+
+###### WEB (Next.js) ##
+dcweblogs           # follow web logs
+dcwebup / dcwebdown # start/stop web only
+
+###### MISC ##########
+blenv dev|prod      # switch env in this shell
+EOF
 }
 
-
 echo "beelab aliases loaded → env=$BEELAB_ENV project=$BEELAB_PROJECT profile=$BEELAB_PROFILE"
-echo "try: "
+echo "try:"
 dchelp

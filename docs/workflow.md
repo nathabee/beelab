@@ -9,7 +9,9 @@ This document explains the typical workflow when working with the **beelab** pro
 Build and run everything:
 
 ```bash
-docker compose --profile dev up --build
+beelab-prod (or beelab-dev)
+dcbuild
+dcup
 ````
 
 Services:
@@ -37,17 +39,11 @@ This populates `/app/node_modules` in the Docker volume.
 Check schema:
 
 ```bash
-docker exec -it beelab-api bash -lc "python manage.py showmigrations"
-docker exec -it beelab-api bash -lc "python manage.py dbshell"
+dcdjango manage.py showmigrations
+dcdjango manage.py dbshell
 ```
 
-From Postgres side:
-
-```bash
-docker exec -it $(docker ps --filter "name=beelab-db" --format "{{.ID}}") bash
-psql -U app -d app -h localhost
-\dt
-```
+ 
 
 ---
 
@@ -56,7 +52,7 @@ psql -U app -d app -h localhost
 For authentication tests:
 
 ```bash
-docker exec -it beelab-api bash -lc "python manage.py createsuperuser"
+dcdjango manage.py createsuperuser"
 ```
 
 ---
@@ -97,30 +93,25 @@ docker exec -it beelab-api bash -lc "python manage.py createsuperuser"
 * Stop containers:
 
   ```bash
-  docker compose down
+  dcdown
   ```
 * Rebuild everything (clean):
 
   ```bash
-  docker compose build --no-cache
+  dcbuild
   ```
-* Remove DB data (⚠️ wipes all tables):
-
-  ```bash
-  docker volume rm beelab_db_data
-  ```
-
+ 
 ---
 
 ## 7. Development Tips
 
 * **Hot reload** works in both Django and Next.js (mounted volumes).
-* Use `docker compose logs -f <service>` to tail logs.
+* Use `dcdjlogs` to tail logs.
 * If migrations fail because Postgres wasn’t ready → restart Django container:
-
-  ```bash
-  docker compose restart django
-  ```
+```bash
+dcdjdown
+dcdjup
+```
 
 ---
 

@@ -1,192 +1,279 @@
-# Developper Tipps
+# Developer Tips
 
+## 0) One-time setup
 
-## Environnement variable
- 
-### .env.dev file for a dev environment 
+This setup is supposed to be done during the beelab project initialisation (using total-reset.sh)
 
-  
-initialise the .env.dev.example 
-cp .env.dev.example .env.dev 
- 
- change values that are necessary (key,port...etc)
+###  Environment files
 
+#### Dev: `.env.dev`
 
-normally on a local LAN (dev) we will use http, IP adresse and port 
-change the KEY as metionned in the .env file
-adapt to get port and ipadress and port instaead of domains name
- 
-
-docker compose -p beelab_dev --env-file .env.dev --profile dev up -d
-
- 
-
-### .env.prod file for a prod environment
-On a VPS: we use https, certbot , domains and subdomains
-Change the KEY as metionned in the .env.prod file
- 
-
-initialise the .env.prod.example 
-cp .env.prod.example .prod.dev 
- 
- change values that are necessary (key,port...etc)
-
-
-# prod
-docker compose -p beelab_prod --env-file .env.prod --profile prod up -d
-
-
-
-
-
-### Dev and Prod environment
-
-****ATTENTION: PROD env not TESTED yet****
-
-**Big picture**
-- **Dev** = live-editable containers with your source code mounted from the host.
-- **Prod** = immutable images (no code mounts); only data lives in volumes.
-
-**Filesystem / data differences**
-
-| Area | Dev | Prod |
-| --- | --- | --- |
-| **App code (Django / Next.js)** | Bind mounts: `./django:/app`, `./web:/app` → instant reload when you edit files. | **No bind mounts.** Code is baked into the image via the `prod` build stage. Redeploy to change code. |
-| **Database** | Named volume `db_data` (persists across `up/down`). Not wiped unless you run `down --volumes`. | Same named volume `db_data` (persistent). Back it up before upgrades. |
-| **WordPress content** | `wp_data` volume + bind mount `./wordpress/wp-content` for local editing. | **No host bind.** Only `wp_data` volume persists content. |
-| **Static / media files** | Mounted into WP read-only: `./django/media` → `/var/www/html/media:ro`, `./django/staticfiles` → `/var/www/html/static:ro`. | **No host mounts.** Serve from a volume, CDN, or bake/collect into the image (your choice). |
-| **node_modules (web)** | Separate named volume `web_node_modules` to keep installs fast. | Installed during build; not mounted at runtime. |
-| **Permissions** | Containers often run as your host UID/GID to avoid write issues on mounted folders. | Runs as image user; app FS is read-only/immutable in practice (no edits inside container). |
-
-**Commands you’ll use**
-- Keep data: `docker compose down` (volumes stay)  
-- Wipe data (dev only): `docker compose down --volumes`  
-- Rebuild app code in **prod**: change code → `--build` (because code is in the image)
-
-**Env tips**
-- Dev typically uses `DEBUG=1`, localhost + ports, HTTP.
-- Prod flips to `DEBUG=0`, real domains, HTTPS/forwarded-proto headers, stricter cookies.
-
-
-
-
-## Docker files and yaml
-
-if you change a Dockefile or compose.yaml, it culd be necessary to remove the image anmd start the build again
-set -a; source ./.env; set +a
-echo $PROFILE
-cd ~/coding/project/docker/beelab
-docker compose --profile dev down --remove-orphans
-docker compose --profile dev up -d --build
-
-
-
-
-
-## Django Modele and database change
-
-
-if you change the modele (modele.py) , you will need to run the migration on docker again (migrate + makemigration)
-
- 
-
-
-
-### --- migrations -------------------------------------------------
-
-set -a; source ./.env; set +a
-echo $PROFILE
-cd ~/coding/project/docker/beelab
-
-# if necessary : give yourself ownership of the whole app folder (safe in dev)
-# sudo chown -R "$USER":"$USER" django/UserCore
-
-#if necessary : make sure the directory is writable
-# chmod -R u+rwX,g+rwX django/UserCore/migrations
-
-echo "🛠 Running makemigrations..."
-docker compose --profile "$PROFILE"  exec django python manage.py makemigrations --noinput
-
-echo "🛠 Running migrate..."
-docker compose --profile "$PROFILE"  exec django python manage.py migrate --noinput
-
-
- 
-
- 
-
-### --- load Static lib foradmin console ---------------------------------------  
-# it creates the django/staticfiles (host) <- /app/static (container django)
-docker exec -it beelab-api bash -lc "python manage.py collectstatic --noinput"
-
-
- 
-
-
-
-
-### --- load Pomolobee fixtures ---------------------------------------  
-echo "📥 Loading fixtures into Django..."
-set +e
-docker compose exec django python manage.py seed_pomolobee --clear 
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_groups.json || echo "⚠️ superuser fixture failed"
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_superuser.json || echo "⚠️ superuser fixture failed"
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_farms.json   || echo "⚠️ farms fixture failed"
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_fields.json  || echo "⚠️ fields fixture failed"
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_fruits.json  || echo "⚠️ fruits fixture failed"
-docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/initial_rows.json    || echo "⚠️ rows fixture failed"
-
-
-#### --- load Competence fixtures --------------------------------------- 
-docker compose exec django python manage.py seed_competence --clear  
-docker compose exec django python manage.py populate_data_init || true
-docker compose exec django python manage.py create_groups_and_permissions || true
-docker compose exec django python manage.py populate_teacher || true
-#docker compose exec django python manage.py create_translations_csv || true
-docker compose exec django python manage.py populate_translation || true
-set -e
- 
-
-### --- health checks ----------------------------------------------
-echo "Run health checks now?" 
-if [[ -x ./scripts/health-check.sh ]]; then
-  ./scripts/health-check.sh
-else
-  echo "⚠️ ./scripts/health-check.sh not found or not executable skipping."
-fi
- 
-
-## user 
-
- 
-### Create a superuser
+Create it from the template and adjust ports, keys, etc.
 
 ```bash
-docker compose exec django python manage.py createsuperuser
+cp .env.dev.example .env.dev
+# edit .env.dev
 ```
 
-### Change a password
+Dev typically uses `http`, `localhost` + ports.
+
+#### Prod: `.env.prod`
+
+Create it from the template and set real domains, HTTPS, certs, secrets.
 
 ```bash
-docker compose exec django python manage.py changepassword <username>
-
-docker compose exec django python manage.py changepassword pomofarmer
-
-docker compose exec django python manage.py changepassword nathaprof
-
+cp .env.prod.example .env.prod
+# edit .env.prod
+# change SSL key
+# modify subdomains and domain for DNS
 ```
 
-### Inspect users / auth quickly
+### Create Aliases
+
+ make shortcuts in your `~/.bashrc` so you can switch quickly: 
+```bash
+# edit paths to your cloned repo
+alias cdbeelab='cd ~/coding/project/docker/beelab'
+alias beelab-dev='source ~/coding/project/docker/beelab/scripts/alias.sh dev'
+alias beelab-prod='source ~/coding/project/docker/beelab/scripts/alias.sh prod'
+```
+
+Then, when you open a terminal:
 
 ```bash
-docker compose exec django python manage.py shell
-# In shell:
+cdbeelab
+beelab-dev   # or beelab-prod
+```
+You can also switch inside the same shell any time with:
+
+```bash
+blenv dev     # or: blenv prod
+```
+
+
+## 1) load the aliases
+
+When you open a terminal:
+
+```bash
+cdbeelab
+beelab-dev   # or beelab-prod
+```
+
+
+
+---
+
+## 2) Start / stop the stack
+
+### Dev
+
+```bash
+beelab-dev
+dcup              # start dev stack
+dcps              # list services
+dclogs            # follow all logs
+dcdown            # stop stack (keeps volumes)
+```
+
+### Prod
+
+```bash
+beelab-prod
+dcup              # start prod stack
+dcps
+dclogs
+dcdown
+```
+
+**Rebuild after Dockerfile/compose changes:**
+
+```bash
+dcdown
+dcup --build      # rebuild images and start
+# (optional) dcup --build --no-cache
+```
+
+**Service-only start/stop (handy while iterating):**
+
+```bash
+# Django
+dcdjup;   dcdjdown;   dcdjlogs
+
+# WordPress
+dcwpup;   dcwpdown;   dcwplogs
+
+# Web (Next.js)
+dcwebup;  dcwebdown;  dcweblogs
+```
+
+---
+
+## 3) Dev vs Prod (big picture)
+
+| Area                        | Dev                                                                  | Prod                                                      |
+| --------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------- |
+| **Code (Django / Next.js)** | Bind mounts (`./django:/app`, `./web:/app`) for instant reload.      | Baked into image; **no bind mounts**. Redeploy to change. |
+| **DB**                      | Named volume `db_data`.                                              | Named volume `db_data_prod`.                              |
+| **WordPress**               | `wp_data` + bind `./wordpress/wp-content`.                           | `wp_data_prod` only (no host bind).                       |
+| **Static / Media**          | Mounted into WP (ro) from `./django/staticfiles` + `./django/media`. | Served from volumes or baked files; no host binds.        |
+| **Logs**                    | `dcdjlogs`, `dcwplogs`, `dcweblogs`.                                 | Same aliases, different services.                         |
+
+---
+
+## 4) Django: migrations & static files
+
+Make sure you’re in the right env first (`beelab-dev` or `beelab-prod`).
+
+### Migrations
+
+```bash
+echo "🛠 makemigrations"
+dcdjango python manage.py makemigrations --noinput
+
+echo "🛠 migrate"
+dcdjango python manage.py migrate --noinput
+```
+
+### Collect static (admin, etc.)
+
+```bash
+dcdjango python manage.py collectstatic --noinput
+```
+
+---
+
+## 5) Django: fixtures / seeds
+
+### Pomolobee
+
+```bash
+dcdjango python manage.py seed_pomolobee --clear
+dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_groups.json || true
+dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_superuser.json || true
+dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_farms.json   || true
+dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_fields.json  || true
+dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_fruits.json  || true
+dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_rows.json    || true
+```
+
+### Competence
+
+```bash
+dcdjango python manage.py seed_competence --clear
+dcdjango python manage.py populate_data_init || true
+dcdjango python manage.py create_groups_and_permissions || true
+dcdjango python manage.py populate_teacher || true
+# dcdjango python manage.py create_translations_csv || true
+dcdjango python manage.py populate_translation || true
+```
+
+---
+
+## 6) Health checks
+
+If you have the script:
+
+```bash
+./scripts/health-check.sh
+```
+
+Otherwise, quick manual checks 
+### (dev):
+
+* Web (Next.js): [http://localhost:9080](http://localhost:9080)
+* Django API: [http://localhost:9001/health](http://localhost:9001/health)
+* WordPress: [http://localhost:9082](http://localhost:9082)
+
+
+
+### (prod):
+* 🖥  Web:     [https://beelab-web.nathabee.de] (https://beelab-web.nathabee.de)
+* 🔌 Django:  [https://beelab-api.nathabee.de] (https://beelab-api.nathabee.de)   (health: https://beelab-api.nathabee.de/health)
+* 📝 WP:      [https://beelab-wp.nathabee.de] (https://beelab-wp.nathabee.de)
+ 
+---
+
+## 7) Django users & passwords
+
+### Create superuser
+
+```bash
+dcdjango python manage.py createsuperuser
+```
+
+### Change a password (interactive)
+
+```bash
+dcdjango python manage.py changepassword <username>
+```
+
+### Change password (non-interactive helper)
+
+```bash
+# prompts if NEW omitted; otherwise sets directly
+dcdjpwd <username> [NEW_PASSWORD]
+```
+
+### Quick inspect in shell
+
+```bash
+dcdjango python manage.py shell
+# then:
 from django.contrib.auth import get_user_model, authenticate
 User = get_user_model()
 print("USERNAME_FIELD =", User.USERNAME_FIELD)
 print("auth by username:", authenticate(username="pomofarmer", password="DjangoPwd"))
+```
 
+---
 
+## 8) Logs, exec & utilities
+
+```bash
+dclogs                 # follow all services
+dclogs SERVICE         # follow a single service
+
+# shortcuts:
+dcdjlogs               # Django logs
+dcwplogs               # WordPress logs  (alias: dcwplog)
+dcweblogs              # Web logs
+
+# exec inside a container:
+dcexec SERVICE bash
+dcexec SERVICE env
+```
+
+---
+
+## 9) Cleaning up
+
+* Stop and remove current env services:
+
+```bash
+dcdown                  # keeps volumes
+dcdown --remove-orphans
+```
+
+* (Careful) remove dangling images/containers/networks:
+
+```bash
+docker system prune
+# add -a to remove unused images too:
+# docker system prune -a
+```
+
+* (Very careful) wipe **named volumes** for a full reset (data loss):
+  Use your existing reset script or `docker volume rm ...`.
+
+---
+
+## 10) Notes on aliases (what they do)
+
+* `dc*` wrappers always run `docker compose -p beelab_${env} --env-file .env.${env} --profile ${env}` from the repo root.
+* `dcdjango` picks `django` in dev and `django-prod` in prod automatically.
+* Same for WordPress (`wordpress`/`wordpress-prod`) and Web (`web`/`web-prod`).
+* Use `blenv dev|prod` to switch the active env in the same shell.
+
+---
  
-
-

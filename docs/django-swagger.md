@@ -11,13 +11,13 @@ Once the server is up and running, you can access the generated API documentatio
 
    * **Swagger UI** (interactive browser view):
 
-     * [http://localhost:9001/api/docs/](http://localhost:9001/api/docs/)
+     * [https://beelab-api.nathabee.de//api/docs/](https://beelab-api.nathabee.de//api/docs/)
 
      This page provides a **live interface** for testing the API, displaying all available endpoints, HTTP methods, and response schemas grouped by app (e.g., **PomoloBee**, **Competence**, **User**).
 
    * **OpenAPI Schema** (downloadable YAML file):
 
-     * [http://localhost:9001/api/schema/](http://localhost:9001/api/schema/)
+     * [https://beelab-api.nathabee.de//api/schema/](https://beelab-api.nathabee.de//api/schema/)
 
      This endpoint allows you to **download the schema** in YAML format, which can be used with other tools or for documentation purposes.
 
@@ -38,8 +38,8 @@ This will regenerate the **schema.yaml** file based on the latest code in your p
 
 ### **Useful Links**:
 
-* **Swagger UI**: [http://localhost:9001/api/docs/](http://localhost:9001/api/docs/)
-* **Download OpenAPI schema**: [http://localhost:9001/api/schema/](http://localhost:9001/api/schema/)
+* **Swagger UI**: [https://beelab-api.nathabee.de//api/docs/](https://beelab-api.nathabee.de//api/docs/)
+* **Download OpenAPI schema**: [https://beelab-api.nathabee.de//api/schema/](https://beelab-api.nathabee.de//api/schema/)
 
 By following these steps, you will have a **dynamic API documentation** that's always in sync with your Django project, helping both developers and users to easily understand and interact with the APIs.
 

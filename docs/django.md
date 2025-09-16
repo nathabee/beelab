@@ -67,19 +67,19 @@ If you prefer a named volume (e.g. `media_data`) you can switch in compose, but 
 ### Create a superuser
 
 ```bash
-docker compose exec django python manage.py createsuperuser
+dcdjango python  python manage.py createsuperuser
 ```
 
 ### Change a password
 
 ```bash
-docker compose exec django python manage.py changepassword <username>
+dcdjango python  python manage.py changepassword <username>
 ```
 
 ### Inspect users / auth quickly
 
 ```bash
-docker compose exec django python manage.py shell
+dcdjango python  python manage.py shell
 # In shell:
 from django.contrib.auth import get_user_model, authenticate
 User = get_user_model()
@@ -126,8 +126,7 @@ Open **Django admin**: `https://beelab-api.nathabee.de/admin` (login with your D
 * Ensure `ALLOWED_HOSTS=*` (or add `localhost`, `127.0.0.1`) for dev.
 * If your frontend/WordPress call Django from different origins, configure CORS (e.g. `django-cors-headers`) with:
 
-  * `CORS_ALLOW_ALL_ORIGINS=True` (dev) **or** add `http://localhost:9080`, `https://beelab-wp.nathabee.de`.
-* Double-check trailing slashes to avoid `//` in URLs.
+  * `CORS_ALLOW_ALL_ORIGINS=True` (dev) **or** add `http://localhost:9080`, `https://beelab-wp.nathabee.de`. 
 
 ---
  

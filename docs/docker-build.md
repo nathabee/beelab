@@ -2,8 +2,9 @@
 
 
 it is possible to rebuild the containers :
-docker-compose --profile dev build
-docker-compose --profile dev up -d
+beelab-prod (or beelab-dev)
+dcbuild
+dcup
 
 
 BeeLab uses **Docker volumes** and **bind mounts** to store data and code between container rebuilds. Here’s a breakdown of **what persists** and **what may be affected** when rebuilding the containers:
