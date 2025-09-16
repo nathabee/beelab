@@ -202,7 +202,10 @@ services:
     depends_on:
       wpdb-prod: { condition: service_healthy }
     ports: ["9082:80"]
-    volumes: [ wp_data_prod:/var/www/html ]
+    volumes: 
+    - wp_data_prod:/var/www/html      
+    - django_media_prod:/var/www/html/media:ro
+    - django_static_prod:/var/www/html/static:ro
     pull_policy: never
     profiles: ["prod"]
 

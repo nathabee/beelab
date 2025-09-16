@@ -303,6 +303,7 @@ sudo systemctl reload apache2
 
 ## 4) Get BeeLab code & prepare
 
+### retriev the git
 ```bash
 # Choose a working directory
 # mkdir -p ~/apps && cd ~/apps
@@ -323,6 +324,31 @@ openssl rand -base64 48 | tr -d '\n'
 > Tip: set a strong Django `SECRET_KEY` in `.env.prod` or `.env.dev` (e.g. output of `openssl rand -base64 48 | tr -d '\n'`).
 
 change all other necessary env variable
+
+
+### add helpers
+
+```bash
+# edit your user profile bashrc
+nano ~/.bashrc
+```
+
+ add these linesafter changing ~/coding/project/docker/beelab/ with the correct path to the retrieved git repository:
+
+
+```bash
+# beelab project
+alias cdbeelab='cd ~/beelab/'
+alias beelab-dev='source ~/beelab/scripts/alias.sh dev'
+alias beelab-prod='source ~/beelab/scripts/alias.sh prod'
+```
+
+each time you open a new editor call
+
+```bash
+cdbeelab
+beelab-prod 
+``` 
 ---
 
 ## 5) Port bindings (public access from your VPS IP)
@@ -434,9 +460,9 @@ docker compose -p beelab_dev --env-file .env.dev --profile dev exec django pytho
 
 # inprod
 # Pomolobee plugin user
-docker compose -p beelab_prod --env-file .env.prod --profile prod exec django python manage.py changepassword pomofarmer
+docker compose -p beelab_prod --env-file .env.prod --profile prod exec django-prod python manage.py changepassword pomofarmer
 # Competence plugin user
-docker compose -p beelab_prod --env-file .env.prod --profile prod exec django python manage.py changepassword nathaprof
+docker compose -p beelab_prod --env-file .env.prod --profile prod exec django-prod python manage.py changepassword nathaprof
 ```
 
 Test plugins on the WP site menu at `https://beelab-wp.nathabee.de/`.
