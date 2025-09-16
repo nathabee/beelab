@@ -1,10 +1,26 @@
 <?php
-add_action('wp_enqueue_scripts', function() {
-  wp_enqueue_style('beelab-style', get_stylesheet_uri(), [], wp_get_theme()->get('Version'));
-});
+// Enqueue: parent first, then child (child depends on parent)
+add_action('wp_enqueue_scripts', function () {
+    $parent_handle = 'twentytwentyfive-style';
 
- 
- 
+    // Parent CSS
+    wp_enqueue_style(
+        $parent_handle,
+        get_template_directory_uri() . '/style.css',
+        [],
+        wp_get_theme(get_template())->get('Version')
+    );
+
+    // Child CSS (depends on parent, so it loads AFTER it)
+    wp_enqueue_style(
+        'beelab-style',
+        get_stylesheet_uri(),
+        [$parent_handle],
+        wp_get_theme()->get('Version')
+    );
+}, 100);
+
+// Keep your theme supports
 add_action('after_setup_theme', function () {
   add_theme_support('custom-logo', [
     'height'      => 200,

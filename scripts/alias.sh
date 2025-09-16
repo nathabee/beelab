@@ -15,6 +15,8 @@ fi
 # repo root (works no matter where you source from)
 _BEELAB_ROOT="$(cd -- "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+
+
 _beelab_set_env() {
   local env="${1:-dev}"
   case "$env" in
@@ -32,15 +34,25 @@ _beelab_set_env() {
     export BEELAB_DJANGO_SVC="django-prod"
     export BEELAB_WP_SVC="wordpress-prod"
     export BEELAB_WEB_SVC="web-prod"
+    export BEELAB_WPCLI_SVC="wpcli-prod"
   else
     export BEELAB_DJANGO_SVC="django"
     export BEELAB_WP_SVC="wordpress"
     export BEELAB_WEB_SVC="web"
+    export BEELAB_WPCLI_SVC="wpcli"
   fi
 }
 
 # initialize with arg or default dev
 _beelab_set_env "${1:-dev}"
+
+_beelab_ensure_wpcli() {
+  # start wpcli if not running
+  if [[ -z "$(dc ps -q "$BEELAB_WPCLI_SVC")" ]]; then
+    dc up -d "$BEELAB_WPCLI_SVC"
+  fi
+}
+
 
 # core compose wrapper (always runs from repo root)
 dc() {
@@ -52,12 +64,17 @@ dc() {
       "$@" )
 }
 
+ 
+
+
 # handy wrappers
 dcup()   { dc up -d "$@"; }
 dcdown() { dc down --remove-orphans "$@"; }
 dcstop() { dc stop "$@"; }
 dcps()   { dc ps "$@"; }
 dclogs() { dc logs -f "$@"; }
+# build images (optionally specify services, e.g. dcbuild web django)
+dcbuild() { dc build "$@"; }
 
 # generic exec: dcexec SERVICE [cmd...]
 dcexec() {
@@ -120,9 +137,46 @@ dcdjdown()  { dc stop  "$BEELAB_DJANGO_SVC"; }
 
 dcwpup()    { dc up -d "$BEELAB_WP_SVC"; }
 dcwpdown()  { dc stop  "$BEELAB_WP_SVC"; }
+ 
+# Run WP-CLI: dcwp <args...>  e.g.  dcwp plugin list
+dcwp() {
+  _beelab_ensure_wpcli
+  local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
+  dc exec $tty_flags "$BEELAB_WPCLI_SVC" wp "$@"
+}
+
+# Flush WP object cache + clear file cache
+dcwpcachflush() {
+  _beelab_ensure_wpcli
+  local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
+  dc exec $tty_flags "$BEELAB_WPCLI_SVC" bash -lc \
+    'wp cache flush || true; rm -rf /var/www/html/wp-content/cache/* || true; echo "WP cache cleared."'
+}
+
 
 dcwebup()   { dc up -d "$BEELAB_WEB_SVC"; }
 dcwebdown() { dc stop  "$BEELAB_WEB_SVC"; }
+
+# wpcli
+
+dcwpcliup()   { dc up -d "$BEELAB_WPCLI_SVC"; }
+dcwpclidown() { dc stop  "$BEELAB_WPCLI_SVC"; }
+
+
+dcwpfixroutes() {
+  _beelab_ensure_wpcli
+  local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
+  dc exec $tty_flags "$BEELAB_WPCLI_SVC" bash -lc '
+    echo "home:"; wp option get home;
+    echo "siteurl:"; wp option get siteurl;
+    echo "permalink before:"; wp option get permalink_structure;
+    wp option update permalink_structure "/%postname%/" >/dev/null;
+    wp rewrite flush --hard;
+    echo "permalink after:"; wp option get permalink_structure;
+    wp plugin list;
+  '
+}
+
 
 # switch env in the same shell after sourcing: blenv dev|prod
 blenv() { _beelab_set_env "$1" && echo "beelab env -> $BEELAB_ENV"; }
@@ -131,6 +185,7 @@ dchelp() {
   cat <<EOF
 ###### DOCKER ALIAS ##########
 dcup                # start current env stack
+dcbuild             # build
 dcdown              # stop stack (remove orphans)
 dcstop SERVICE      # stop one service
 dcps                # ps
@@ -146,6 +201,11 @@ dcdjpwd USER [NEW]  # change password (interactive if NEW omitted)
 ###### WORDPRESS ######
 dcwplogs | dcwplog  # follow wordpress logs
 dcwpup / dcwpdown   # start/stop wordpress only
+dcwp ARGS...           # run wp-cli (e.g. dcwp plugin list)
+dcwpcachflush          # flush wp cache (object + /wp-content/cache)
+dcwpcliup / dcwpclidown# start/stop wpcli sidecar (optional)
+dcwpfixroutes
+
 
 ###### WEB (Next.js) ##
 dcweblogs           # follow web logs

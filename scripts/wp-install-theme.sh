@@ -128,6 +128,10 @@ else
   echo "ℹ️ dev uses bind-mount; child files already present at ${THEMES_SRC}/${CHILD}"
 fi
 
+# activate the site
+# Run the in-container initializer (activates theme, permalinks, writes .htaccess, imports logo)
+compose run --rm  "$WPCLI_SVC"   bash /var/www/html/wp-content/themes/${CHILD}/scripts/init-site.sh
+
 # Make sure WP detects them (safe no-op if already there)
 compose run --rm "$WPCLI_SVC" wp theme is-installed "$CHILD" || true
 [[ -n "$PARENT" ]] && compose run --rm "$WPCLI_SVC" wp theme is-installed "$PARENT" || true
