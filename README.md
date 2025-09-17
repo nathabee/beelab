@@ -67,21 +67,6 @@ flowchart LR
 ```
 ---
 
-## Quickstart
-
-
-<a href="https://github.com/nathabee/beelab/blob/main/docs/installation-vps.md" >
-the detailled installation manual on a VPS is available on docs/installation-vps.md
-</a>
-
-After installation you have acess to the Service URLs :  
-* Django API: `http://localhost:9001`  or `https://beelab-api.<your domain>`   
-* Web (Next.js): `http://localhost:9080` or `https://beelab-web.<your domain>`
-* WordPress: `http://localhost:9082` or `https://beelab-wp.<your domain>`
-  
----
- 
-
 ## What is this project?
 
 **beelab** explores a hybrid stack where **WordPress provides the site shell + custom apps (plugins)** while **Django** exposes APIs those apps consume. A separate **Next.js** app exists but is not the focus yet.
@@ -94,6 +79,15 @@ Goals:
 * Repeatable scripts/aliases for day-to-day dev ergonomics.
 
  
+---
+
+## Why this project?
+
+* To **learn Docker** with a realistic, multi-container setup.
+* To **build real WP plugins + theme** that talk to a **Python API**.
+* To keep a **clean separation of concerns** while iterating quickly.
+* It’s a **sandbox**, not a production stack—perfect for experimenting.
+
 ---
 
 ## TRY ME
@@ -203,17 +197,20 @@ dcdjango python manage.py migrate
 * **Web**: demo pages, basic fetch from API.
 
 ---
- 
+ ## Quickstart
 
-## Why this project?
 
-* To **learn Docker** with a realistic, multi-container setup.
-* To **build real WP plugins + theme** that talk to a **Python API**.
-* To keep a **clean separation of concerns** while iterating quickly.
-* It’s a **sandbox**, not a production stack—perfect for experimenting.
+<a href="https://github.com/nathabee/beelab/blob/main/docs/installation-vps.md" >
+the detailled installation manual on a VPS is available on docs/installation-vps.md
+</a>
 
+After installation you have acess to the Service URLs :  
+* Django API: `http://localhost:9001`  or `https://beelab-api.<your domain>`   
+* Web (Next.js): `http://localhost:9080` or `https://beelab-web.<your domain>`
+* WordPress: `http://localhost:9082` or `https://beelab-wp.<your domain>`
+  
 ---
- 
+
 
 ## For more information
 
