@@ -76,7 +76,14 @@ flowchart LR
 ---
 
 ## Quickstart
+---
+For more information
 
+Visit the github pages: <a href="https://nathabee.github.io/beelab/index.html"> 
+  <img src="./docs/visitgithubpage.svg" alt="BeeLab Docs" width="300" style="vertical-align:middle;">
+</a>
+
+---
 
 <a href="https://github.com/nathabee/beelab/blob/main/docs/installation-vps.md" >
 the detailled installation manual on a VPS is available on docs/installation-vps.md
@@ -92,26 +99,21 @@ Service URLs (prod) : Example with domain nathabee.de:
  
 ---
 
-For more information, visit the github pages:<a href="https://nathabee.github.io/beelab/index.html"> 
-  <img src="./docs/visitgithubpage.svg" alt="BeeLab Docs" width="300" style="vertical-align:middle;">
-</a>
----
 
 ## TRY ME
 
 After installing this repository on nathabee we get:
-
-* WordPress: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
 * WordPress Pomolobee plugin: [https://beelab-wp.nathabee.de/pomolobee](https://beelab-wp.nathabee.de/pomolobee)
 * WordPress Competence plugin: [https://beelab-wp.nathabee.de/competence](https://beelab-wp.nathabee.de/competence)
+* WordPress: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
 * WordPress admin: [https://beelab-wp.nathabee.de/wp-admin](https://beelab-wp.nathabee.de/wp-admin)
-* Django API: [https://beelab-api.nathabee.de/api] (https://beelab-api.nathabee.de/api)
+* Django API: [https://beelab-api.nathabee.de/api](https://beelab-api.nathabee.de/api)
 * Django Admin: [https://beelab-api.nathabee.de/admin](https://beelab-api.nathabee.de/admin)
-* Django API health : [https://beelab-api.nathabee.de/health] (https://beelab-api.nathabee.de/health)
+* Django API health : [https://beelab-api.nathabee.de/health](https://beelab-api.nathabee.de/health)
 * Swagger UI: [https://beelab-api.nathabee.de/api/docs/](https://beelab-api.nathabee.de/api/docs/)
 * Download OpenAPI schema: [https://beelab-api.nathabee.de/api/schema/](https://beelab-api.nathabee.de/api/schema/)
 * Next.js web: [https://beelab-web.nathabee.de](https://beelab-web.nathabee.de)
-
+---
 
 ## Screenshots
 
@@ -125,6 +127,7 @@ After installing this repository on nathabee we get:
   <img src="./docs/screenshot_competence_plugin.png" alt="Competence plugin screenshot" width="49%">
 </a>
 
+---
 
 ## Exporting Site Editor changes back into the theme
 
@@ -139,6 +142,7 @@ wordpress/wp-content/themes/pomolobee-theme/
 
 * Commit to Git.
 
+---
 
 ## WordPress plugins
 
@@ -163,6 +167,8 @@ Then in WP Admin ([https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
 * Go to **Plugins**, verify the plugin is present, and activate it.
 * Go to **Settings → Competence Settings** to configure the API endpoint.
   In this dev stack, Django is at `https://beelab-api.nathabee.de/api`.
+
+---
 
 ## Project structure
 
