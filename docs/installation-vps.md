@@ -1,6 +1,9 @@
 # BeeLab on Hetzner VPS — Docker Prerequisites & Manual Install
 
-> Target: bring up the **BeeLab** stack (Django + Next.js + WordPress + DBs) on a fresh Hetzner VPS using Docker. This is a **manual** install:
+> Target: bring up the **BeeLab** stack (Django + Next.js + WordPress + DBs) on a fresh Hetzner VPS using Docker. This is a **manual** install.
+
+> We just have tested on Hetzner, put any other hosting is possible. if you want to install in a local LAN, keep dev mod.
+> if you want to rerun the install again go direct to paragraph "4) Get BeeLab code & prepare"
 
 ---
 
@@ -9,6 +12,7 @@
 * VPS: Ubuntu 22.04/24.04 x86\_64 on Hetzner (root or sudo access).
 * DNS required  (subdomains)
 * You’ll log in as a non‑root sudo user  
+* You will replace the reference to domain "nathabee.de" into your own domainname.
 
 ---
 
@@ -76,8 +80,9 @@ groups
 ### 3) Security & networking
 
 DNS and Apache configuration is detailled in a separate doc: 
+<div class="doc-list">
 <li><a href="installation-vps-dns.md">☁️ Installation on a VPS : DNS and Apache</a></li>
-
+</div>
 
 ---
 ## 4) Get BeeLab code & prepare
@@ -117,7 +122,9 @@ nano ~/.bashrc
 ```bash
 # beelab project
 alias cdbeelab='cd ~/beelab/'
-alias beelab-dev='source ~/beelab/scripts/alias.sh dev'
+# on dev
+# alias beelab-dev='source ~/beelab/scripts/alias.sh dev'
+# on prod
 alias beelab-prod='source ~/beelab/scripts/alias.sh prod'
 ```
 
@@ -167,34 +174,9 @@ blenv dev|prod      # switch env in this shell
 
 ---
 
-## 5) Port bindings (public access from your VPS IP)
+## 5) First run — installer script
 
-BeeLab defaults map services to host ports **9080 / 9001 / 9082**. On Linux, Compose publishes on **all interfaces** by default (0.0.0.0).  
-
-Example inside `compose.yaml` (edit only if you see `127.0.0.1`):
-
-```yaml
-services:
-  web:
-    ports:
-      - "127.0.0.1:9080:3000" 
-  django:
-    ports:
-      - "127.0.0.1:9001:8000"
-  wordpress:
-    ports:
-      - "127.0.0.1:9082:80"
-```
-
-> After edits, save the file.
-
-
-
-
----
-
-## 6) First run — installer script
-
+ 
 ```bash
 # Make the helper executable
 chmod +x scripts/total-reset.sh <dev/dev>
@@ -255,14 +237,20 @@ If you see HTML, DNS is good.
 
 
 
-### TEST : **Service URLs (from your laptop browser):**
+
+## 6)  TEST : **Service URLs (from your laptop browser):**
 
 call the subdomains associated to your 
 in this example :
 
-* Django API: `https://beelab-api.nathabee.de`  (health: `/health`)
-* Next.js web: `https://beelab-web.nathabee.de`
 * WordPress: `https://beelab-wp.nathabee.de`
+* WordPress admin: `https://beelab-wp.nathabee.de/wp-admin`
+* Django API: `https://beelab-api.nathabee.de/api` 
+* Django Admin: `https://beelab-api.nathabee.de/admin` 
+* Django API health : `https://beelab-api.nathabee.de/health`  
+* Swagger UI: [https://beelab-api.nathabee.de/api/docs/](https://beelab-api.nathabee.de/api/docs/)
+* Download OpenAPI schema: [https://beelab-api.nathabee.de/api/schema/](https://beelab-api.nathabee.de/api/schema/)
+* Next.js web: `https://beelab-web.nathabee.de`
 
  
 > Replace `nathabee.de` with your Hetzner server’s public IP.
@@ -274,22 +262,17 @@ in this example :
 * Admin: `https://beelab-wp.nathabee.de/wp-admin` — log in with the admin you created during setup.
 * Activate desired plugins: **Competence WP**, **PomoloBee WP**.
 
-* in the competence settings: change the API adresse from localhost to your VPS: `https://beelab-api.nathabee.de`
+* in the plugins settings: on a VPS change the API adresse from localhost to your VPS (in prod) to `https://beelab-api.nathabee.de/api`
 
+ <img src="./wp-plugin-pomolobee-settings" alt="Pomolobee plugin settings screenshot" width="49%">
 
 Update Django passwords used by the plugins (examples):
 use the helper installed in 4)
 
 ```bash
 
-# in dev :
-beelab-dev
-dcdjpwd pomofarmer myNewPassword
-dcdjpwd nathaprof myNewPassword
-
-  
-# in prod :
 beelab-prod
+# in dev : beelab-dev 
 dcdjpwd pomofarmer myNewPassword
 dcdjpwd nathaprof myNewPassword
 

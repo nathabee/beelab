@@ -265,49 +265,130 @@ function loadChecklist() {
   loadStructuredChecklist();
 }
 
+ 
+
 function scrollToContent() {
   const contentDiv = document.getElementById("content");
   contentDiv.scrollIntoView({ behavior: "smooth" });
 }
 
+async function loadMarkdown(filePath, anchor = "") {
+  // Normalize to absolute URL within the site
+  const url = new URL(filePath, window.location.href);
+
+  const res = await fetch(url.pathname + url.search);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch ${url.pathname}: ${res.status}`);
+  }
+  const md = await res.text();
+
+  const container = document.getElementById("content");
+  const html = marked.parse(md);
+  container.innerHTML = `<div class="markdown">${html}</div>`;
+
+  // Re-render mermaid diagrams
+  if (window.mermaid) {
+    const mermaidBlocks = container.querySelectorAll("code.language-mermaid");
+    mermaidBlocks.forEach((block, index) => {
+      const parent = block.closest("pre");
+      const replacement = document.createElement("div");
+      replacement.className = "mermaid";
+      replacement.id = `mermaid-${index}`;
+      replacement.textContent = block.textContent;
+      parent.replaceWith(replacement);
+      window.mermaid.init(undefined, `#${replacement.id}`);
+    });
+  }
+
+  // If there's an anchor (either from the URL or link), scroll to it
+  if (anchor) {
+    // Strip leading '#'
+    const id = anchor.replace(/^#/, "");
+    const target =
+      container.querySelector(`#${CSS.escape(id)}`) ||
+      container.querySelector(`[name="${CSS.escape(id)}"]`);
+    if (target) target.scrollIntoView({ behavior: "smooth" });
+  } else {
+    scrollToContent();
+  }
+}
+
+// Centralized navigation for .md links
+function navigateToMd(href) {
+  const url = new URL(href, window.location.href);
+
+  // Only hijack same-origin .md links
+  if (url.origin === window.location.origin && url.pathname.endsWith(".md")) {
+    // Preserve any #anchor
+    const anchor = url.hash || "";
+    // Update history (use hash to avoid 404s on GH Pages deep links)
+    const hash = `${url.pathname}${url.search}${anchor}`;
+    history.pushState({ md: url.pathname, anchor }, "", `#${hash}`);
+    loadMarkdown(url.pathname + url.search, anchor);
+    return true; // handled
+  }
+  return false; // let the browser do its thing
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  const docLinks = document.querySelectorAll(".doc-list a");
-  docLinks.forEach(link => {
-    if (link.href.endsWith(".md")) {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        const file = link.getAttribute("href");
-        loadMarkdown(file).then(md => {
-          const parsed = marked.parse(md);
-          const container = document.getElementById("content");
-          container.innerHTML = `<div class="markdown">${parsed}</div>`;
-          scrollToContent();
-  
-          // 🚀 Re-render mermaid graphs after inserting the HTML
-          if (window.mermaid) {
-            const mermaidBlocks = container.querySelectorAll("code.language-mermaid");
-            mermaidBlocks.forEach((block, index) => {
-              const parent = block.closest("pre");
-              const containerId = `mermaid-${index}`;
-              const replacement = document.createElement("div");
-              replacement.className = "mermaid";
-              replacement.id = containerId;
-              replacement.textContent = block.textContent;
-              parent.replaceWith(replacement);
-  
-              // 🔁 Render this graph
-              window.mermaid.init(undefined, `#${containerId}`);
-            });
-          }
-        });
-      });
+  // 1) Intercept clicks in the TOC (.doc-list)
+  document.querySelector(".doc-list")?.addEventListener("click", (e) => {
+    const a = e.target.closest("a");
+    if (!a) return;
+    if (navigateToMd(a.getAttribute("href"))) {
+      e.preventDefault();
     }
   });
-  
+
+  // 2) Intercept clicks inside rendered Markdown (#content)
+  document.getElementById("content").addEventListener("click", (e) => {
+    const a = e.target.closest("a");
+    if (!a) return;
+
+    const href = a.getAttribute("href");
+    if (!href) return;
+
+    // Allow external links or non-md links to behave normally (open new tab if target=_blank)
+    if (navigateToMd(href)) {
+      e.preventDefault();
+    }
+  });
+
+  // 3) On first load, if there is a hash that points to an .md, load it
+  //    e.g. https://user.github.io/#/docs/intro.md#section
+  if (location.hash) {
+    // Remove leading '#' and optional leading '/'
+    const raw = location.hash.replace(/^#\/?/, "");
+    // Split path and anchor
+    const [pathAndQuery, anchor = ""] = raw.split("#");
+    // Only auto-load if looks like .md
+    if (pathAndQuery.endsWith(".md")) {
+      loadMarkdown(pathAndQuery, anchor ? `#${anchor}` : "");
+      return;
+    }
+  }
+
+  // Optional: load a default doc on first visit
+ loadMarkdown("presentation.md");
 });
 
-async function loadMarkdown(file) {
-  const res = await fetch(file);
-  return await res.text();
-}
+// 4) Back/Forward support
+window.addEventListener("popstate", (e) => {
+  const state = e.state;
+  if (state?.md) {
+    loadMarkdown(state.md, state.anchor || "");
+  } else if (location.hash) {
+    const raw = location.hash.replace(/^#\/?/, "");
+    const [pathAndQuery, anchor = ""] = raw.split("#");
+    if (pathAndQuery.endsWith(".md")) {
+      loadMarkdown(pathAndQuery, anchor ? `#${anchor}` : "");
+    }
+  }
+});
+
+
+//async function loadMarkdown(file) {
+//  const res = await fetch(file);
+//  return await res.text();
+//}
 

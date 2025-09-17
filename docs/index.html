@@ -9,6 +9,11 @@
 
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <script>
+    // Make sure headings get predictable ids so #anchors work
+    marked.setOptions({ headerIds: true, mangle: false });
+  </script>
 
   <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';

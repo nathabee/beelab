@@ -7,6 +7,27 @@
  
 ## Access
 
+### Port bindings (public access from your VPS IP)
+
+BeeLab defaults map services to host ports **9080 / 9001 / 9082**. On Linux, Compose publishes on **all interfaces** by default (0.0.0.0).  
+
+Example inside `compose.yaml` (edit only if you see `127.0.0.1`):
+
+```yaml
+services:
+  web:
+    ports:
+      - "127.0.0.1:9080:3000" 
+  django:
+    ports:
+      - "127.0.0.1:9001:8000"
+  wordpress:
+    ports:
+      - "127.0.0.1:9082:80"
+```
+
+> After edits, save the file.
+
 ### Check for free Ports
 
 **Inbound (Hetzner Cloud Firewall ):**
