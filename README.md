@@ -73,38 +73,44 @@ flowchart LR
   H9001 -->|"9001 -> 8000"| Django
   H9082 -->|"9082 -> 80"| WP
 ```
+---
 
-## Quickstart (dev)
+## Quickstart
+
 
 <a href="https://github.com/nathabee/beelab/blob/main/docs/installation-vps.md" >
-the exact installation manual on a VPS is available on docs/installation-vps.md
+the detailled installation manual on a VPS is available on docs/installation-vps.md
 </a>
 
 After installation you have acess to :
 
 Service URLs (prod) : Example with domain nathabee.de:
 
-* Django API: `https://beelab-api.nathabee.de`  (health: `/health`)
-* Web (Next.js): `https://beelab-web.nathabee.de`
-* WordPress: `https://beelab-wp.nathabee.de`
-
-On a local LAN (dev), we do not use https, you may have used IP and port instead of subdomains :
-* Django API: `http://localhost:9001`  (health: `/health`)
-* Web (Next.js): `http://localhost:9080`
-* WordPress: `http://localhost:9082`
+* Django API: `http://localhost:9001`  or `https://beelab-api.<your domain>`  (health: `/health`)
+* Web (Next.js): `http://localhost:9080` or `https://beelab-web.<your domain>`
+* WordPress: `http://localhost:9082` or `https://beelab-wp.<your domain>`
  
-to connect tpo WordPress admin : `https://beelab-wp.nathabee.de/wp-admin` use the wordpress login created precedently
-activate the plugin you want ("competence WP" , "pomolobee WP") 
-```bash
-# for pomolobee plugin
-docker compose exec django python manage.py changepassword pomofarmer
-# for competence plugin
-docker compose exec django python manage.py changepassword nathaprof
-```
-to test the plugins go to WordPress: `https://beelab-wp.nathabee.de/`, choose in the menu the plugin you want and enter login/password
- 
+---
 
-to change some data in Django  `https://beelab-api.nathabee.de/admin` use the django login created precedently
+For more information, visit the github pages:<a href="https://nathabee.github.io/beelab/index.html"> 
+  <img src="./docs/visitgithubpage.svg" alt="BeeLab Docs" width="300" style="vertical-align:middle;">
+</a>
+---
+
+## TRY ME
+
+After installing this repository on nathabee we get:
+
+* WordPress: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
+* WordPress Pomolobee plugin: [https://beelab-wp.nathabee.de/pomolobee](https://beelab-wp.nathabee.de/pomolobee)
+* WordPress Competence plugin: [https://beelab-wp.nathabee.de/competence](https://beelab-wp.nathabee.de/competence)
+* WordPress admin: [https://beelab-wp.nathabee.de/wp-admin](https://beelab-wp.nathabee.de/wp-admin)
+* Django API: [https://beelab-api.nathabee.de/api] (https://beelab-api.nathabee.de/api)
+* Django Admin: [https://beelab-api.nathabee.de/admin](https://beelab-api.nathabee.de/admin)
+* Django API health : [https://beelab-api.nathabee.de/health] (https://beelab-api.nathabee.de/health)
+* Swagger UI: [https://beelab-api.nathabee.de/api/docs/](https://beelab-api.nathabee.de/api/docs/)
+* Download OpenAPI schema: [https://beelab-api.nathabee.de/api/schema/](https://beelab-api.nathabee.de/api/schema/)
+* Next.js web: [https://beelab-web.nathabee.de](https://beelab-web.nathabee.de)
 
 
 ## Screenshots
@@ -119,154 +125,6 @@ to change some data in Django  `https://beelab-api.nathabee.de/admin` use the dj
   <img src="./docs/screenshot_competence_plugin.png" alt="Competence plugin screenshot" width="49%">
 </a>
 
-## Getting Started (detailled explanation)
-
-### 0) Prerequisites
-
-* Docker 24+ and Docker Compose v2
-
-
-### 1) Clone the repo
-
-```bash
-git clone git@github.com:nathabee/beelab.git
-cd beelab
-mkdir -p ./django/media ./django/staticfiles
-```
-
-### 2) Configure
-
-#### 2.1 Create `.env` at the project root
-
-Use the provided example and adjust if needed:
-
-```bash
-cp .env.example .env
-```
-
-Tip: generate a strong Django key:
-
-```bash
-openssl rand -base64 48 | tr -d '\n'
-# paste as SECRET_KEY=...
-```
-
-
-#### 2.2 Wordpress Logo (optional)
-
-Put your logo at:
-
-```
-wordpress/wp-content/themes/pomolobee-theme/assets/images/logo.(png|svg)
-```
-
-
-#### 2.3 Skipping services or features (optional)
-
-If you don’t want certain parts:
-
-* Remove or reprofile the service in `compose.yaml` (e.g. move to a different profile).
-* Remove unwanted WordPress plugins from `wordpress/wp-content/plugins` (e.g. `pomolobee`, `competence`).
-* Remove unwanted Django apps (e.g. `PomoloBeeCore`, `CompetenceCore`) from `django/config/settings.py` `INSTALLED_APPS`.
-
-If you do this, also adapt `compose.yaml` and any scripts that reference those components (e.g. `scripts/total-reset.sh`, fixtures, seed commands).
-
-### 3) Run the installation script
-
-```bash
-chmod +x scripts/total-reset.sh
-./scripts/total-reset.sh
-```
-
-This interactive script **fully rebuilds** the dev stack. It:
-
-* Removes existing containers/images/volumes related to BeeLab.
-* Builds images and starts all containers.
-* Runs Django migrations and loads fixtures.
-* Prepares three Django apps:
-
-  * **UserCore** (user management)
-  * **PomoloBeeCore** (orchard management)
-  * **CompetenceCore** (student evaluation)
-* Mounts host directories (code, static, media) for development.
-* Prepares WordPress (theme and plugins are mounted; plugins are not auto-activated).
-* Performs health checks.
-
-You will be prompted to:
-
-* Confirm destructive operations.
-* Create a Django superuser.
-* Complete the initial WordPress setup (superuser).
-
-#### Services after install
-
-* **Django API**: [https://beelab-api.nathabee.de](https://beelab-api.nathabee.de)  (health: `/health`, example: `/api/user/hello`)
-* **Next.js frontend**: [https://beelab-web.nathabee.de](https://beelab-web.nathabee.de)
-* **WordPress**: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
-
-## What the script does (expanded)
-
-### 3.1 Remove old BeeLab Docker environment
-
-You’ll be asked to confirm. This can delete volumes (data loss).
-
-### 3.2 Seed web dependencies (first run)
-
-```bash
-docker compose --profile dev run --rm web npm ci
-```
-
-Django/WordPress dependencies are handled by their images.
-
-### 3.3 Build and start everything
-
-```bash
-docker compose --profile dev up -d --build
-```
-
-Starts: Postgres, Django (dev server), Next.js (dev server), MariaDB (wpdb), and WordPress (after `wpdb` is healthy).
-
-### 3.4 Sanity checks
-
-```bash
-docker compose ps
-curl -s https://beelab-api.nathabee.de/health
-```
-
-### 3.5 Complete WordPress installer (first run)
-
-Open [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de) and create the initial admin user.
-
-### 3.6 Initialize Django data (first DB install)
-
-Use fixtures/commands to seed required data: 
-- createsuperuser
-- execute some commands from  management/commands
-- loaddata PomoloBeeCore/fixtures/initial_*.json
-- load data into CompetenceCore using  management/commands
-- seed image data from CompetenceCore/script_db/competence to upload (for wordpress)
-- seed image data from PomoloBeeCore/script_db/pomolobee to media (for django)  
-
-  
-### 3.7 Apply WordPress site options with wp-cli
- 
-
-```bash
-wordpress/scripts/wp-init.sh
-```
-This script sets permissions, activates the theme, updates permalinks, applies logo, etc.
-
-## health check
-
-* Django admin : [https://beelab-api.nathabee.de/admin](https://beelab-api.nathabee.de/admin) 
-* Wordpress admin:  [https://beelab-wp.nathabee.de/wp-admin](https://beelab-wp.nathabee.de/wp-admin) 
-* Wordpress: Log into [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de) and verify the site loads.
-
-
-* Run:
-```bash
-./scripts/health-check.sh
-```
 
 ## Exporting Site Editor changes back into the theme
 
@@ -281,63 +139,6 @@ wordpress/wp-content/themes/pomolobee-theme/
 
 * Commit to Git.
 
-## Useful commands
-
-### Total dev reset (dangerous)
-
-Deletes containers, images, volumes, then reinstalls:
-
-```bash
-./scripts/total-reset.sh
-```
-
-If WordPress files become owned by `www-data`, restore your user access:
-
-```bash
-sudo setfacl -R -m u:"$USER":rwx wordpress
-sudo setfacl -R -d -m u:"$USER":rwx wordpress
-```
-
-### Logs / status
-
-```bash
-docker compose --profile dev ps -a
-docker compose --profile dev logs -f django
-docker compose --profile dev logs -f web
-docker compose --profile dev logs -f wpdb
-docker compose --profile dev logs -f wordpress
-```
-
-### Stop everything
-
-```bash
-docker compose --profile dev down
-```
-
-### Clean Django DB only (danger)
-
-```bash
-docker compose --profile dev down
-docker volume rm beelab_db_data
-docker compose --profile dev up -d
-```
-
-### Clean WordPress only (danger)
-
-```bash
-docker compose --profile dev stop wordpress wpdb
-docker compose --profile dev rm -f wordpress wpdb
-docker volume rm beelab_wp_db_data beelab_wp_data
-docker compose --profile dev up -d wpdb wordpress
-```
-
-### Back up databases (Django and WordPress)
-
-From the project root:
-
-```bash
-bash scripts/backup.sh
-```
 
 ## WordPress plugins
 
