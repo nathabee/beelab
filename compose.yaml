@@ -127,6 +127,23 @@ services:
       timeout: 3s
       retries: 10
     profiles: ["prod"]
+ 
+
+  django-tests:
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    build: { context: ./django, target: dev }
+    env_file: [.env.dev]
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      # include anything your app needs at runtime (DB creds, etc.)
+      <<: *django_env
+    depends_on:
+      db: { condition: service_started }
+    working_dir: /app
+    command: pytest --cov=UserCore -q
+    volumes:
+      - ./django:/app:delegated
+
 
   # DEV WEB
   web:

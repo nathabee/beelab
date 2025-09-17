@@ -2,18 +2,13 @@
   <img src="./docs/beelab.svg" alt="BeeLab Logo" width="300" style="vertical-align:middle; margin-right:20px;"> 
 </a>
 
+ 
 
+# BeeLab: Dockerized Multiservice (Django + Next.js plugins + WordPress + databases)
 
 > [!WARNING]
 > **Work in progress** — APIs, docs, and structure may change without notice.
  
-
-
-
-
-# BeeLab: Dockerized Multiservice (Django + Next.js plugins + WordPress + databases)
-
-
 
 BeeLab provides a dockerized multi-service development stack:
 
@@ -85,17 +80,7 @@ After installation you have acess to the Service URLs :
 * WordPress: `http://localhost:9082` or `https://beelab-wp.<your domain>`
   
 ---
-# beelab: Project Overview
-
-## TL;DR status
-
-This repo is a Dockerized multi-service playground, but **the majority of the development right now is in WordPress**:
-
-* ✅ **WordPress**: custom child theme, two custom plugins, robust dev tooling (WP-CLI, init scripts, aliases).
-* ✅ **Django API**: stable JWT auth + seeded data that the WP plugins consume.
-* 💤 **Web (Next.js)**: minimal / basic scaffolding only.
-
----
+ 
 
 ## What is this project?
 
@@ -108,19 +93,7 @@ Goals:
 * A clean **Django REST** API with JWT auth for WP apps to talk to.
 * Repeatable scripts/aliases for day-to-day dev ergonomics.
 
---- 
-## Screenshots
-
-### Pomolobee Plugin in WordPress
-<a href="./docs/screenshot_pomolobee_plugin.png">
-  <img src="./docs/screenshot_pomolobee_plugin.png" alt="Pomolobee plugin screenshot" width="49%">
-</a>
-
-### Competence Plugin in WordPress
-<a href="./docs/screenshot_competence_plugin.png">
-  <img src="./docs/screenshot_competence_plugin.png" alt="Competence plugin screenshot" width="49%">
-</a>
-
+ 
 ---
 
 ## TRY ME
@@ -149,7 +122,18 @@ After installing this repository on nathabee we get:
 * **Plugins**:
 
   * `competence` — SPA-style bundle that calls the Django API (`/api` on 9001).
+  <a href="./docs/screenshot_competence_plugin.png">
+  <img src="./docs/screenshot_competence_plugin.png" alt="Competence plugin screenshot" width="49%">
+</a>
+
+
   * `pomolobee` — same pattern, separate app & routes.
+  
+<a href="./docs/screenshot_pomolobee_plugin.png">
+  <img src="./docs/screenshot_pomolobee_plugin.png" alt="Pomolobee plugin screenshot" width="49%">
+</a>
+
+
 * **Tooling**:
 
   * **WP-CLI sidecar** container with handy aliases:

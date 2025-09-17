@@ -27,8 +27,9 @@ COPY . .
 
 # ---------- dev ----------
 FROM base AS dev
+COPY requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements-dev.txt
 EXPOSE 8000
-# hot-reload for local development
 ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8000 --workers=2 --reload"
 CMD ["gunicorn","config.wsgi:application"]
 

@@ -177,6 +177,74 @@ dcwpfixroutes() {
   '
 }
 
+# ---- Tests (pytest) ----
+
+# ensure django service is running before exec'ing into it
+_beelab_ensure_django() {
+  if [[ -z "$(dc ps -q "$BEELAB_DJANGO_SVC")" ]]; then
+    echo "Starting $BEELAB_DJANGO_SVC..."
+    dcdjup
+    # give it a moment to boot (healthcheck will still gate dependent services)
+    sleep 1
+  fi
+}
+
+# dctest [pytest args...]
+# Run the full pytest suite inside the Django container.
+dctest() {
+  _beelab_ensure_django
+  dcdjango pytest -q "$@"
+}
+
+# dctestcov [extra pytest args...]
+# Run tests with coverage across your Django apps.
+dctestcov() {
+  _beelab_ensure_django
+  dcdjango pytest --cov=UserCore --cov=CompetenceCore --cov=PomoloBeeCore --cov-report=term-missing --cov-report=html:/app/media/test-coverage/user --junitxml=/app/media/test-reports/junit_user.xml  -o cache_dir=/app/media/.pytest_cache  -q "$@"
+}
+
+# dctestfile path::node [extra pytest args...]
+# Run a specific file / node, e.g.
+#   dctestfile UserCore/tests/test_demo_auth.py::test_demo_start_sets_cookie
+dctestfile() {
+  local target="${1:-}"
+  shift || true
+  if [[ -z "$target" ]]; then
+    echo "Usage: dctestfile path/to/test.py[::TestClass::test_name]"
+    return 1
+  fi
+  _beelab_ensure_django
+  dcdjango pytest -q "$target" "$@"
+}
+
+# dctestk EXPRESSION [extra pytest args...]
+# Pattern match, e.g. dctestk demo and not throttling
+dctestk() {
+  local expr="${1:-}"
+  shift || true
+  if [[ -z "$expr" ]]; then
+    echo "Usage: dctestk 'pattern'"
+    return 1
+  fi
+  _beelab_ensure_django
+  dcdjango pytest -q -k "$expr" "$@"
+}
+
+# Only UserCore tests
+dctest_usercore() {
+ # dc run --rm django-tests pytest -q UserCore/tests "$@"
+  dc run --rm django-tests pytest -q --ignore=PomoloBeeCore --ignore=CompetenceCore --cov=UserCore -q "$@"
+}
+dctestcov_usercore() { 
+
+  dc run --rm django-tests pytest -q UserCore/tests --cov=UserCore --cov-report=term-missing --cov-report=html:/app/media/test-coverage/user --junitxml=/app/media/test-reports/junit_user.xml  -o cache_dir=/app/media/.pytest_cache -q "$@"
+  echo "result in "
+  echo "- coverage in :  http://localhost:9001/media/test-coverage/user/index.html"
+  echo "- JUnit XML: http://localhost:9001/media/test-reports/junit_user.xml"
+}
+
+ 
+
 
 # switch env in the same shell after sourcing: blenv dev|prod
 blenv() { _beelab_set_env "$1" && echo "beelab env -> $BEELAB_ENV"; }
@@ -211,8 +279,21 @@ dcwpfixroutes
 dcweblogs           # follow web logs
 dcwebup / dcwebdown # start/stop web only
 
+
+###### TESTS (pytest) ###
+dctest [args]        # run full test suite (pytest -q)
+dctestcov [args]     # run with coverage for UserCore/CompetenceCore/PomoloBeeCore
+dctestfile path[..]  # run a specific file/node
+dctestk 'expr'       # run tests matching -k expression
+dctest_usercore      # run usercore tests 
+dctestcov_usercore   # run all usercore tests
 ###### MISC ##########
 blenv dev|prod      # switch env in this shell
+
+### example:
+dcdjango python manage.py makemigrations
+dcdjango python manage.py migrate
+
 EOF
 }
 

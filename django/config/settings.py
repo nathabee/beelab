@@ -14,6 +14,10 @@ import os
 from pathlib import Path
 #from dotenv import load_dotenv
 import logging
+
+from datetime import timedelta
+
+
 logging.getLogger("PIL").setLevel(logging.WARNING)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -85,6 +89,16 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "50/hour",
+        "user": "200/hour",
+        "demo_start": "10/hour",
+    },
 }
 
 
@@ -257,4 +271,14 @@ SPECTACULAR_SETTINGS = {
         'url': 'https://opensource.org/licenses/MIT',
     },
     'SERVE_INCLUDE_SCHEMA': False,  # Don't expose the schema automatically
+}
+
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),  # optional if you use refresh
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY, #env("JWT_SECRET"),
 }

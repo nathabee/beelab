@@ -2,6 +2,7 @@
 
 from django.apps import apps
 from rest_framework.permissions import BasePermission
+from rest_framework.permissions import SAFE_METHODS
 
 #def has_permission(self, request):
 #    print(f"User: {request.user}, is_active: {request.user.is_active}, is_superuser: {request.user.is_superuser}, is_staff: {request.user.is_staff}")
@@ -31,6 +32,26 @@ class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         # General permission check to ensure user is a teacher and authenticated
         return request.user.is_authenticated and request.user.groups.filter(name='admin').exists()
+
+
+
+class IsDemo(BasePermission):
+    """
+    Demo users: restrict to safe methods, or selectively allow specific actions.
+    """
+    def has_permission(self, request, view):
+        u = request.user
+        if not (u and u.is_authenticated and u.groups.filter(name='demo').exists()):
+            return True  # not a demo user; defer to other permission classes
+        # Demo rule: read-only by default
+        if request.method in SAFE_METHODS:
+            return True
+        # (Optional) allow narrowly scoped writes on named views/actions
+        view_name = view.__class__.__name__
+        allow = {
+            # 'SomeDemoSandboxViewSet': {'create'},  # example
+        }
+        return request.method.lower() in allow.get(view_name, set())
 
  
 
@@ -204,3 +225,16 @@ class isAllowedApiView(BasePermission):
         }
 
         return method in allowed_views.get(view_name, [])
+    
+
+class DemoExpiryPermission(BasePermission):
+    """
+    If the user is a demo, ensure it has not expired.
+    """
+    def has_permission(self, request, view):
+        u = request.user
+        if not (u and u.is_authenticated and u.groups.filter(name='demo').exists()):
+            return True
+        # Prefer DB check to prevent client tampering
+        acct = getattr(u, "demo_account", None)
+        return bool(acct and not acct.expired)

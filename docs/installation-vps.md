@@ -99,8 +99,16 @@ cd beelab
 cp .env.prod.example .env.prod
 # or
 cp .env.dev.example .env.dev
+
 mkdir -p django/{media,staticfiles} web/public
 
+# in dev for Testing purpose
+##########################
+# if you wish to use pytest (actually associated to dev in compose.yaml and django Dockerfile)
+mkdir -p django/media/test-coverage django/media/test-reports django/media/test-artifacts
+# to make django app unit test 
+mkdir -p django/media/test-coverage/user django/media/test-coverage/pomolobee django/media/test-coverage/competence
+ 
 openssl rand -base64 48 | tr -d '\n'
 ```
 
@@ -238,7 +246,7 @@ If you see HTML, DNS is good.
 
 
 
-## 6)  TEST : **Service URLs (from your laptop browser):**
+## 6)  **Service URLs (from your laptop browser):**
 
 call the subdomains associated to your 
 in this example :
