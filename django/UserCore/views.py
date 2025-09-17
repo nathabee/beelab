@@ -111,13 +111,13 @@ class DemoStartThrottle(ScopedRateThrottle):
     scope = "demo_start"
 
 @api_view(["POST"])
-@throttle_classes([DemoStartThrottle])   # ← put this right after @api_view
+@throttle_classes([DemoStartThrottle])   
 @permission_classes([AllowAny])
 def demo_start(request):
     return _issue_demo_response(request)
 
 @api_view(["POST"])
-@throttle_classes([DemoStartThrottle])   # ← same here
+@throttle_classes([DemoStartThrottle])   
 @permission_classes([AllowAny])
 def demo_reset(request):
     sid = request.COOKIES.get(DEMO_COOKIE)
