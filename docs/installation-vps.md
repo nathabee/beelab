@@ -1,6 +1,6 @@
 # BeeLab on Hetzner VPS — Docker Prerequisites & Manual Install
 
-> Target: bring up the **BeeLab** stack (Django + Next.js + WordPress + DBs) on a fresh Hetzner VPS using Docker. This is a **manual** install you can run end‑to‑end. Later we can automate with Jenkins/Git.
+> Target: bring up the **BeeLab** stack (Django + Next.js + WordPress + DBs) on a fresh Hetzner VPS using Docker. This is a **manual** install:
 
 ---
 
@@ -75,12 +75,11 @@ groups
 ---
 ### 3) Security & networking
 
-DNS and Apache configuration is detailled in a separate doc:
+DNS and Apache configuration is detailled in a separate doc: 
+<li><a href="installation-vps-dns.md">☁️ Installation on a VPS : DNS and Apache</a></li>
 
-<a href="./installation-vps-dns.md" >
-the exact installation manual on a VPS is available on docs/installation-vps-dns.md
-</a>
 
+---
 ## 4) Get BeeLab code & prepare
 
 ### retriev the git
