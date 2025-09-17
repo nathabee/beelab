@@ -243,14 +243,14 @@ If you see HTML, DNS is good.
 call the subdomains associated to your 
 in this example :
 
-* WordPress: `https://beelab-wp.nathabee.de`
-* WordPress admin: `https://beelab-wp.nathabee.de/wp-admin`
-* Django API: `https://beelab-api.nathabee.de/api` 
-* Django Admin: `https://beelab-api.nathabee.de/admin` 
-* Django API health : `https://beelab-api.nathabee.de/health`  
+* WordPress: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
+* WordPress admin: [https://beelab-wp.nathabee.de/wp-admin](https://beelab-wp.nathabee.de/wp-admin)
+* Django API: [https://beelab-api.nathabee.de/api] (https://beelab-api.nathabee.de/api)
+* Django Admin: [https://beelab-api.nathabee.de/admin](https://beelab-api.nathabee.de/admin)
+* Django API health : [https://beelab-api.nathabee.de/health] (https://beelab-api.nathabee.de/health)
 * Swagger UI: [https://beelab-api.nathabee.de/api/docs/](https://beelab-api.nathabee.de/api/docs/)
 * Download OpenAPI schema: [https://beelab-api.nathabee.de/api/schema/](https://beelab-api.nathabee.de/api/schema/)
-* Next.js web: `https://beelab-web.nathabee.de`
+* Next.js web: [https://beelab-web.nathabee.de](https://beelab-web.nathabee.de)
 
  
 > Replace `nathabee.de` with your Hetzner server’s public IP.

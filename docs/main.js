@@ -387,8 +387,16 @@ window.addEventListener("popstate", (e) => {
 });
 
 
-//async function loadMarkdown(file) {
-//  const res = await fetch(file);
-//  return await res.text();
-//}
+document.getElementById("backToTop").addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 
+// Optional: show button only after scrolling down
+window.addEventListener("scroll", () => {
+  const btn = document.getElementById("backToTop");
+  if (window.scrollY > 200) {
+    btn.style.display = "block";
+  } else {
+    btn.style.display = "none";
+  }
+});

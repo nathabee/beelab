@@ -344,3 +344,26 @@ label {
 @keyframes fill-django { to { fill: #111111; } }
 @keyframes fill-ml     { to { fill: #D50000; } }
 @keyframes tagline     { to { opacity: 1; transform: translate(256,120); } }
+
+
+
+/* go back button */
+#backToTop {
+  position: fixed;
+  left: 10px;
+  bottom: 20px;
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #222;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+
+#backToTop:hover {
+  opacity: 1;
+}
