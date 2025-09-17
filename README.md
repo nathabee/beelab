@@ -1,15 +1,12 @@
 <a href="https://nathabee.github.io/beelab/index.html">
-  <img src="./docs/beelab.svg" alt="BeeLab Logo" width="300" style="vertical-align:middle; margin-right:20px;">
-  <img src="./docs/visitgithubpage.svg" alt="BeeLab Docs" width="300" style="vertical-align:middle;">
+  <img src="./docs/beelab.svg" alt="BeeLab Logo" width="300" style="vertical-align:middle; margin-right:20px;"> 
 </a>
 
 
 
 > [!WARNING]
 > **Work in progress** — APIs, docs, and structure may change without notice.
-
-
-[![status: work in progress](https://img.shields.io/badge/status-work_in_progress-orange)](#)
+ 
 
 
 
@@ -76,45 +73,42 @@ flowchart LR
 ---
 
 ## Quickstart
----
-For more information
 
-Visit the github pages: <a href="https://nathabee.github.io/beelab/index.html"> 
-  <img src="./docs/visitgithubpage.svg" alt="BeeLab Docs" width="300" style="vertical-align:middle;">
-</a>
-
----
 
 <a href="https://github.com/nathabee/beelab/blob/main/docs/installation-vps.md" >
 the detailled installation manual on a VPS is available on docs/installation-vps.md
 </a>
 
-After installation you have acess to :
-
-Service URLs (prod) : Example with domain nathabee.de:
-
-* Django API: `http://localhost:9001`  or `https://beelab-api.<your domain>`  (health: `/health`)
+After installation you have acess to the Service URLs :  
+* Django API: `http://localhost:9001`  or `https://beelab-api.<your domain>`   
 * Web (Next.js): `http://localhost:9080` or `https://beelab-web.<your domain>`
 * WordPress: `http://localhost:9082` or `https://beelab-wp.<your domain>`
- 
+  
+---
+# beelab: Project Overview
+
+## TL;DR status
+
+This repo is a Dockerized multi-service playground, but **the majority of the development right now is in WordPress**:
+
+* ✅ **WordPress**: custom child theme, two custom plugins, robust dev tooling (WP-CLI, init scripts, aliases).
+* ✅ **Django API**: stable JWT auth + seeded data that the WP plugins consume.
+* 💤 **Web (Next.js)**: minimal / basic scaffolding only.
+
 ---
 
+## What is this project?
 
-## TRY ME
+**beelab** explores a hybrid stack where **WordPress provides the site shell + custom apps (plugins)** while **Django** exposes APIs those apps consume. A separate **Next.js** app exists but is not the focus yet.
 
-After installing this repository on nathabee we get:
-* WordPress Pomolobee plugin: [https://beelab-wp.nathabee.de/pomolobee](https://beelab-wp.nathabee.de/pomolobee)
-* WordPress Competence plugin: [https://beelab-wp.nathabee.de/competence](https://beelab-wp.nathabee.de/competence)
-* WordPress: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
-* WordPress admin: [https://beelab-wp.nathabee.de/wp-admin](https://beelab-wp.nathabee.de/wp-admin)
-* Django API: [https://beelab-api.nathabee.de/api](https://beelab-api.nathabee.de/api)
-* Django Admin: [https://beelab-api.nathabee.de/admin](https://beelab-api.nathabee.de/admin)
-* Django API health : [https://beelab-api.nathabee.de/health](https://beelab-api.nathabee.de/health)
-* Swagger UI: [https://beelab-api.nathabee.de/api/docs/](https://beelab-api.nathabee.de/api/docs/)
-* Download OpenAPI schema: [https://beelab-api.nathabee.de/api/schema/](https://beelab-api.nathabee.de/api/schema/)
-* Next.js web: [https://beelab-web.nathabee.de](https://beelab-web.nathabee.de)
----
+Goals:
 
+* Hands-on **Docker Compose** with multiple services and profiles (dev/prod).
+* Realistic **WP theme + plugin** development with local builds, WP-CLI, and scripted setup.
+* A clean **Django REST** API with JWT auth for WP apps to talk to.
+* Repeatable scripts/aliases for day-to-day dev ergonomics.
+
+--- 
 ## Screenshots
 
 ### Pomolobee Plugin in WordPress
@@ -129,77 +123,119 @@ After installing this repository on nathabee we get:
 
 ---
 
-## Exporting Site Editor changes back into the theme
+## TRY ME
 
-If you customize **Appearance → Editor**:
+This git repository was installed on a VPS, you can access it there:
 
-* Use **… → Tools → Export** to download the ZIP.
-* Copy `theme.json`, `templates/`, `parts/` into:
+After installing this repository on nathabee we get:
+* WordPress Pomolobee plugin: [https://beelab-wp.nathabee.de/pomolobee](https://beelab-wp.nathabee.de/pomolobee)
+* WordPress Competence plugin: [https://beelab-wp.nathabee.de/competence](https://beelab-wp.nathabee.de/competence)
+* WordPress: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
+* WordPress admin: [https://beelab-wp.nathabee.de/wp-admin](https://beelab-wp.nathabee.de/wp-admin)
+* Django API: [https://beelab-api.nathabee.de/api](https://beelab-api.nathabee.de/api)
+* Django Admin: [https://beelab-api.nathabee.de/admin](https://beelab-api.nathabee.de/admin)
+* Django API health : [https://beelab-api.nathabee.de/health](https://beelab-api.nathabee.de/health)
+* Swagger UI: [https://beelab-api.nathabee.de/api/docs/](https://beelab-api.nathabee.de/api/docs/)
+* Download OpenAPI schema: [https://beelab-api.nathabee.de/api/schema/](https://beelab-api.nathabee.de/api/schema/)
+* Next.js web: [https://beelab-web.nathabee.de](https://beelab-web.nathabee.de)
+---
+ 
+## WordPress  
 
-```
-wordpress/wp-content/themes/pomolobee-theme/
-```
+* **Theme**: `beelab-theme` (child of Twenty Twenty-Five).
 
-* Commit to Git.
+  * Header/nav integrates links to plugin pages (e.g. `/competence`, `/pomolobee`).
+  * Custom logo/assets + base styling.
+* **Plugins**:
+
+  * `competence` — SPA-style bundle that calls the Django API (`/api` on 9001).
+  * `pomolobee` — same pattern, separate app & routes.
+* **Tooling**:
+
+  * **WP-CLI sidecar** container with handy aliases:
+
+    * `dcwp ...` to run WP-CLI (`dcwp plugin list`, `dcwp option get home`, etc.)
+    * `dcwpcachflush` to flush object/file cache.
+    * `dcwpfixroutes` / sane `.htaccess` + **pretty permalinks** guard.
+  * **Init scripts** to set permalink structure, inject `.htaccess`, install/activate theme & plugins, and set logo.
+* **Routing**:
+
+  * Uses standard WP **pretty permalinks**.
+  * Plugins mount their frontends on pages (`/competence`, `/pomolobee`) and talk to Django via the configured API base URL.
 
 ---
 
-## WordPress plugins
+## Django API 
 
-### pomolobee
+* **Django 5 + Django REST Framework**.
+* JWT authentication endpoints:
 
-From `wordpress/plugin-src/pomolobee/`:
-
-```bash
-npm install
-npm run build
-```
-
-Installation:
-
-```bash
-./build_zip.sh
-./install_plugin.sh
-```
-
-Then in WP Admin ([https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)):
-
-* Go to **Plugins**, verify the plugin is present, and activate it.
-* Go to **Settings → Competence Settings** to configure the API endpoint.
-  In this dev stack, Django is at `https://beelab-api.nathabee.de/api`.
+  * `POST /api/user/auth/login`
+  * `GET /api/user/me`
+* Utility/seed commands to bootstrap data for the plugins.
+* Health endpoint and basic CI-ready layout.
 
 ---
 
-## Project structure
+## Web (Next.js) – minimal (by design, for now)
 
-```text
-beelab/
-├─ compose.yaml
-├─ .env
-├─ django/                      # Django project (config + apps)
-│  ├─ manage.py
-│  ├─ config/
-│  ├─ PomoloBeeCore/            # Orchard app
-│  ├─ CompetenceCore/           # Student evaluation app
-│  └─ UserCore/                 # Auth / user management
-├─ web/                         # Next.js app (dev server)
-│  ├─ app/
-│  └─ package.json
-├─ wordpress/
-│  └─ wp-content/
-│     ├─ themes/
-│     │  └─ pomolobee-theme/    # theme.json, templates, assets, scripts
-│     └─ plugins/
-│        ├─ pomolobee/          # integrates Django PomoloBeeCore
-│        └─ competence/         # integrates Django CompetenceCore
-└─ (volumes managed by Docker)
-   • db_data        (Postgres)
-   • web_node_modules
-   • wp_db_data     (MariaDB)
-   • wp_data        (WordPress files)
-   • media_data     (Django media)
+* TypeScript + Next.js dev server on **9080**.
+* A couple of demo routes (`/`, `/welcome`) and a simple “talk to backend” example.
+* **Status**: intentionally deprioritized while the WP path leads the effort.
+
+---
+
+## Local development
+ 
+```bash
+# 1) Load aliases (choose env)
+source scripts/alias.sh dev      # or: source scripts/alias.sh prod
+
+# 2) Bring up current env
+dcup
+
+# 3) WordPress helpers
+dcwp plugin list
+dcwpcachflush
+dcwp option get home
+dcwpfixroutes    # ensures .htaccess + /%postname%/ and flushes rewrites
+
+# 4) Logs (pick a service)
+dcwplogs | dcdjlogs | dcweblogs
+
+# 5) Exec into services when needed
+dcexec wordpress bash
+dcdjango python manage.py migrate
 ```
 
+> Tip: if routes 404, run `dcwpfixroutes` (restores `.htaccess` + flushes rewrites) and verify permalinks.
+
+---
+
+## Current features
+
+* **WP**: custom theme, two plugins, environment-aware init, WP-CLI workflow, caching & routing helpers.
+* **API**: JWT login and user endpoints, seeds/fixtures used by plugins.
+* **Web**: demo pages, basic fetch from API.
+
+---
+ 
+
+## Why this project?
+
+* To **learn Docker** with a realistic, multi-container setup.
+* To **build real WP plugins + theme** that talk to a **Python API**.
+* To keep a **clean separation of concerns** while iterating quickly.
+* It’s a **sandbox**, not a production stack—perfect for experimenting.
+
+---
+ 
+
+## For more information
+
+Visit the github pages: <a href="https://nathabee.github.io/beelab/index.html"> 
+  <img src="./docs/visitgithubpage.svg" alt="BeeLab Docs" width="300" style="vertical-align:middle;">
+</a>
 
 
 ---

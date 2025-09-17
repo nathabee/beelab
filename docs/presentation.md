@@ -51,9 +51,9 @@ This git repository was installed on a VPS, you can access it there:
 
 * WordPress: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
 * WordPress admin: [https://beelab-wp.nathabee.de/wp-admin](https://beelab-wp.nathabee.de/wp-admin)
-* Django API: [https://beelab-api.nathabee.de/api] (https://beelab-api.nathabee.de/api)
+* Django API: [https://beelab-api.nathabee.de/api](https://beelab-api.nathabee.de/api)
 * Django Admin: [https://beelab-api.nathabee.de/admin](https://beelab-api.nathabee.de/admin)
-* Django API health : [https://beelab-api.nathabee.de/health] (https://beelab-api.nathabee.de/health)
+* Django API health : [https://beelab-api.nathabee.de/health](https://beelab-api.nathabee.de/health)
 * Swagger UI: [https://beelab-api.nathabee.de/api/docs/](https://beelab-api.nathabee.de/api/docs/)
 * Download OpenAPI schema: [https://beelab-api.nathabee.de/api/schema/](https://beelab-api.nathabee.de/api/schema/)
 * Next.js web: [https://beelab-web.nathabee.de](https://beelab-web.nathabee.de)
