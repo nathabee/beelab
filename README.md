@@ -80,33 +80,9 @@ flowchart LR
 the exact installation manual on a VPS is available on docs/installation-vps.md
 </a>
 
-```bash
+After installation you have acess to :
 
-# 1) Clone and prepare
-git clone https://github.com/nathabee/beelab.git
-cd beelab
-cp .env.prod.example .env.prod
-# or : cp .env.dev.example .env.dev
-
-# modifiy all the necessary variable in env file. 
-# in this example, we set the nathabee.de domain and beelab-wp, beelab-api , beelab-web subdomains
-# please change the domain for your VPS
-mkdir -p django/{media,staticfiles} web/public
-
-
-# 2) Run the installer (full rebuild)
-chmod +x scripts/total-reset.sh
-./scripts/total-reset.sh [prod/dev]
-
-
-```
-
-
-
-When prompted: confirm the reset and create the Django superuser.
-Then open WordPress at `https://beelab-wp.nathabee.de` and finish the initial setup.
-
-Service URLs (prod):
+Service URLs (prod) : Example with domain nathabee.de:
 
 * Django API: `https://beelab-api.nathabee.de`  (health: `/health`)
 * Web (Next.js): `https://beelab-web.nathabee.de`

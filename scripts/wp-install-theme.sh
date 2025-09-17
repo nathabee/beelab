@@ -126,11 +126,11 @@ if [[ "$ENV" == "prod" ]]; then
   copy_theme_into_container "$CHILD" || { echo "✗ Child theme folder missing: ${THEMES_SRC}/${CHILD}"; exit 1; }
 else
   echo "ℹ️ dev uses bind-mount; child files already present at ${THEMES_SRC}/${CHILD}"
+  # activate the site
+  # Run the in-container initializer (activates theme, permalinks, writes .htaccess, imports logo)
+  compose run --rm  "$WPCLI_SVC"   bash /var/www/html/wp-content/themes/${CHILD}/scripts/init-site.sh
 fi
 
-# activate the site
-# Run the in-container initializer (activates theme, permalinks, writes .htaccess, imports logo)
-compose run --rm  "$WPCLI_SVC"   bash /var/www/html/wp-content/themes/${CHILD}/scripts/init-site.sh
 
 # Make sure WP detects them (safe no-op if already there)
 compose run --rm "$WPCLI_SVC" wp theme is-installed "$CHILD" || true

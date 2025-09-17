@@ -7,10 +7,8 @@
 ## Assumptions
 
 * VPS: Ubuntu 22.04/24.04 x86\_64 on Hetzner (root or sudo access).
-* DNS not required (you can use the server IP + ports). We’ll open only the ports we need.
-* You’ll log in as a non‑root sudo user (recommended) or `root`.
-
-> If your OS is not Ubuntu/Debian, call it out and we’ll adapt the commands.
+* DNS required  (subdomains)
+* You’ll log in as a non‑root sudo user  
 
 ---
 
@@ -77,236 +75,17 @@ groups
 ---
 ### 3) Security & networking
 
-**Inbound (Hetzner Cloud Firewall ):**
-Use the Hetzner Console  to set allow ports:
+DNS and Apache configuration is detailled in a separate doc:
 
-* Allow: `22/tcp` (SSH), `80/tcp`, `443/tcp` 
-
-**Outbound:**
-
-Use the Hetzner Console  to set allow ports:
-* Allow: `53/udp` (DNS), `53/tcp` (DNS fallback), **`443/tcp` (HTTPS pulls)**, **`80/tcp` (HTTP pulls)**
-* Simpler: allow **all outbound**.
-
-**Check ports are free:**
-
-```bash
-sudo ss -tulpn | grep -E ':(9001|9080|9082)' || echo "9001/9080/9082 appear free"
-```
-
-
----
-
-## Fill in your “install certbot” section like this
-
-### Certbot (webroot on host Apache)
-
-1. Install Certbot (Ubuntu 22.04/24.04):
-
-```bash
-sudo snap install core && sudo snap refresh core
-sudo snap install --classic certbot
-sudo ln -sf /snap/bin/certbot /usr/bin/certbot
-```
-
-2. Create ACME webroot and the HTTP vhost:
-
-```bash
-sudo mkdir -p /var/www/certbot/.well-known/acme-challenge
-sudo chown -R www-data:www-data /var/www/certbot
-```
-
-`/etc/apache2/sites-available/00-acme-redirects.conf`
-
-```apache
-<VirtualHost *:80>
-    ServerName nathabee.de
-    ServerAlias beelab-wp.nathabee.de beelab-api.nathabee.de beelab-web.nathabee.de
-
-    Alias /.well-known/acme-challenge/ /var/www/certbot/.well-known/acme-challenge/
-    <Directory "/var/www/certbot/.well-known/acme-challenge/">
-        Options None
-        AllowOverride None
-        Require all granted
-    </Directory>
-
-    RewriteEngine On
-    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
-    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-</VirtualHost>
-```
-
-Enable modules & the HTTP site, then reload:
-
-```bash
-sudo a2enmod ssl headers proxy proxy_http proxy_wstunnel rewrite
-sudo a2ensite 00-acme-redirects.conf
-sudo apachectl configtest
-sudo systemctl reload apache2
-```
-
-3. Issue certs (one cert per hostname):
-
-```bash
-sudo certbot certonly --webroot -w /var/www/certbot -d beelab-api.nathabee.de -m admin@nathabee.de --agree-tos --no-eff-email
-sudo certbot certonly --webroot -w /var/www/certbot -d beelab-web.nathabee.de -m admin@nathabee.de --agree-tos --no-eff-email
-sudo certbot certonly --webroot -w /var/www/certbot -d beelab-wp.nathabee.de  -m admin@nathabee.de --agree-tos --no-eff-email
-# (Optional apex)
-# sudo certbot certonly --webroot -w /var/www/certbot -d nathabee.de -m admin@nathabee.de --agree-tos --no-eff-email
-```
-
-4. Auto-reload Apache after renew:
-
-```bash
-sudo install -d /etc/letsencrypt/renewal-hooks/deploy
-sudo tee /etc/letsencrypt/renewal-hooks/deploy/reload-apache.sh >/dev/null <<'SH'
-#!/usr/bin/env bash
-systemctl reload apache2
-SH
-sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-apache.sh
-```
-
-Certbot’s systemd timers handle the periodic `renew` automatically.
-
----
-
-## Apache vhosts  
- 
-
-**New Files to create:**
-
-```
-/etc/apache2/sites-available/
-  beelab-api-ssl.conf
-  beelab-web-ssl.conf
-  beelab-wp-ssl.conf
-  00-acme-redirects.conf    # already created above
- 
-```
-  
-in this example we will use apache2 to make the 4 files :
-cd /etc/apache2/sites-available
-    sudo touch beelab-api-ssl.conf 
-    sudo touch beelab-wp-ssl.conf
-    sudo touch beelab-web-ssl.conf
-    sudo touch beelab-api-ssl.conf 
-
-
-please make the next example extentable not to have too much info
-fill the files with the contentsimilar to :
-  
-::::::::::::::
-beelab-api-ssl.conf
-::::::::::::::
-<VirtualHost *:443>
-    ServerName beelab-api.nathabee.de
-
-    SSLEngine on
-    SSLCertificateFile /etc/letsencrypt/live/beelab-api.nathabee.de/fullchain.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/beelab-api.nathabee.de/privkey.pem
-    Include /etc/letsencrypt/options-ssl-apache.conf
-
-    ProxyPreserveHost On
-    RequestHeader set X-Forwarded-Proto "https"
-    RequestHeader set X-Forwarded-Port  "443"
-
-    ProxyPass        / http://127.0.0.1:9001/
-    ProxyPassReverse / http://127.0.0.1:9001/
-
-    ErrorLog  ${APACHE_LOG_DIR}/beelab-api-ssl-error.log
-    CustomLog ${APACHE_LOG_DIR}/beelab-api-ssl-access.log combined
-</VirtualHost>
-::::::::::::::
-beelab-web-ssl.conf
-::::::::::::::
-<VirtualHost *:443>
-    ServerName beelab-web.nathabee.de
-
-    SSLEngine on
-    SSLCertificateFile /etc/letsencrypt/live/beelab-web.nathabee.de/fullchain.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/beelab-web.nathabee.de/privkey.pem
-    Include /etc/letsencrypt/options-ssl-apache.conf
-
-    ProxyPreserveHost On
-    RequestHeader set X-Forwarded-Proto "https"
-    RequestHeader set X-Forwarded-Port  "443"
-
-    # WS upgrade
-    RewriteEngine On
-    RewriteCond %{HTTP:Upgrade} =websocket [NC]
-    RewriteRule /(.*) ws://127.0.0.1:9080/$1 [P,L]
-
-    ProxyPass        / http://127.0.0.1:9080/
-    ProxyPassReverse / http://127.0.0.1:9080/
-
-    ErrorLog  ${APACHE_LOG_DIR}/beelab-web-ssl-error.log
-    CustomLog ${APACHE_LOG_DIR}/beelab-web-ssl-access.log combined
-</VirtualHost>
-::::::::::::::
-beelab-wp-ssl.conf
-::::::::::::::
-<VirtualHost *:443>
-    ServerName beelab-wp.nathabee.de
-
-    SSLEngine on
-    SSLCertificateFile /etc/letsencrypt/live/beelab-wp.nathabee.de/fullchain.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/beelab-wp.nathabee.de/privkey.pem
-    Include /etc/letsencrypt/options-ssl-apache.conf
-
-    ProxyPreserveHost On
-    RequestHeader set X-Forwarded-Proto "https"
-    RequestHeader set X-Forwarded-Port  "443"
-
-    ProxyPass        / http://127.0.0.1:9082/ connectiontimeout=5 timeout=60
-    ProxyPassReverse / http://127.0.0.1:9082/
-
-    Header always set X-Content-Type-Options "nosniff"
-    Header always set X-Frame-Options "SAMEORIGIN"
-    Header always set X-XSS-Protection "1; mode=block"
-
-    ErrorLog  ${APACHE_LOG_DIR}/beelab-wp-ssl-error.log
-    CustomLog ${APACHE_LOG_DIR}/beelab-wp-ssl-access.log combined
-</VirtualHost>
-::::::::::::::
-  00-acme-redirects.conf
-
-
-<VirtualHost *:80>
-    ServerName nathabee.de
-    ServerAlias beelab-wp.nathabee.de beelab-api.nathabee.de beelab-web.nathabee.de
-
-    # ACME webroot for all names
-    Alias /.well-known/acme-challenge/ /var/www/certbot/.well-known/acme-challenge/
-    <Directory "/var/www/certbot/.well-known/acme-challenge/">
-        Options None
-        AllowOverride None
-        Require all granted
-    </Directory>
-
-    RewriteEngine On
-    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
-    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-    ErrorLog  ${APACHE_LOG_DIR}/http-error.log
-    CustomLog ${APACHE_LOG_DIR}/http-access.log combined
-</VirtualHost>
-
-activate the conf
-   a2ensite 00-acme-redirects.conf 
-   a2ensite beelab-wp-ssl.conf
-   a2ensite beelab-api-ssl.conf
-   a2ensite beelab-web-ssl.conf
-
-check the configuration and load it:
-sudo apachectl configtest
-sudo systemctl reload apache2
-
+<a href="./installation-vps-dns.md" >
+the exact installation manual on a VPS is available on docs/installation-vps-dns.md
+</a>
 
 ## 4) Get BeeLab code & prepare
 
 ### retriev the git
 ```bash
 # Choose a working directory
-# mkdir -p ~/apps && cd ~/apps
 
 # Clone (SSH requires your GitHub key; HTTPS is fine too)
 git clone https://github.com/nathabee/beelab.git
@@ -316,7 +95,7 @@ cd beelab
 cp .env.prod.example .env.prod
 # or
 cp .env.dev.example .env.dev
-mkdir -p django/{media,staticfiles} wweb/public
+mkdir -p django/{media,staticfiles} web/public
 
 openssl rand -base64 48 | tr -d '\n'
 ```
@@ -343,12 +122,50 @@ alias beelab-dev='source ~/beelab/scripts/alias.sh dev'
 alias beelab-prod='source ~/beelab/scripts/alias.sh prod'
 ```
 
-each time you open a new editor call
+Run 'beelab-prod' each time you open a new editor call, in order to acess command line helpers:
 
 ```bash
 cdbeelab
 beelab-prod 
 ``` 
+
+ 
+```txt
+New aliases are activated :
+
+###### DOCKER ALIAS ##########
+dcup                # start current env stack
+dcbuild             # build
+dcdown              # stop stack (remove orphans)
+dcstop SERVICE      # stop one service
+dcps                # ps
+dclogs [SERVICE]    # follow logs (or use the service-specific ones below)
+dcexec SERVICE CMD  # exec inside a service
+
+###### DJANGO ##########
+dcdjango CMD...     # run manage.py, shell, etc.
+dcdjlogs            # follow django logs
+dcdjup / dcdjdown   # start/stop django only
+dcdjpwd USER [NEW]  # change password (interactive if NEW omitted)
+
+###### WORDPRESS ######
+dcwplogs | dcwplog  # follow wordpress logs
+dcwpup / dcwpdown   # start/stop wordpress only
+dcwp ARGS...           # run wp-cli (e.g. dcwp plugin list)
+dcwpcachflush          # flush wp cache (object + /wp-content/cache)
+dcwpcliup / dcwpclidown# start/stop wpcli sidecar (optional)
+dcwpfixroutes
+
+
+###### WEB (Next.js) ##
+dcweblogs           # follow web logs
+dcwebup / dcwebdown # start/stop web only
+
+###### MISC ##########
+blenv dev|prod      # switch env in this shell
+
+``` 
+
 ---
 
 ## 5) Port bindings (public access from your VPS IP)
