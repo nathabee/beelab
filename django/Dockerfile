@@ -26,9 +26,17 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # ---------- dev ----------
+# dev image: NO test deps here
 FROM base AS dev
-COPY requirements-dev.txt .
-RUN pip install --no-cache-dir -r requirements-dev.txt
+EXPOSE 8000
+ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8000 --workers=2 --reload"
+CMD ["gunicorn","config.wsgi:application"]
+
+# ---------- test ----------
+# test image: includes pytest stack
+FROM base AS test
+COPY requirements-test.txt .
+RUN pip install --no-cache-dir -r requirements-test.txt
 EXPOSE 8000
 ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8000 --workers=2 --reload"
 CMD ["gunicorn","config.wsgi:application"]
@@ -36,8 +44,5 @@ CMD ["gunicorn","config.wsgi:application"]
 # ---------- prod ----------
 FROM base AS prod
 EXPOSE 8000
-# tuned for prod
 ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8000 --workers=2 --timeout=30 --max-requests=1000 --max-requests-jitter=100"
-# Optional (uncomment if you want to bake static files into the image):
-# RUN python manage.py collectstatic --noinput || true
 CMD ["gunicorn","config.wsgi:application"]

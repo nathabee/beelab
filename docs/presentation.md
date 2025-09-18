@@ -1,6 +1,6 @@
 # beelab: Project Overview
 
-## TL;DR status
+## Status
 
 This repo is a Dockerized multi-service playground, but **the majority of the development right now is in WordPress**:
 
@@ -86,7 +86,7 @@ This git repository was installed on a VPS, you can access it there:
 
 ---
 
-## Django API (solid & serviceable)
+## Django API  
 
 * **Django 5 + Django REST Framework**.
 * JWT authentication endpoints:
@@ -141,7 +141,7 @@ dcdjango python manage.py migrate
 
 ---
 
-## Roadmap (near-term, WP-centric)
+## Roadmap  
 
 * Harden plugin routing (block/shortcode wrappers, guards, 404 fallbacks).
 * Shared UI kit + i18n across `competence` and `pomolobee`.

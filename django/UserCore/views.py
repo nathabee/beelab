@@ -31,7 +31,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.decorators import api_view, permission_classes, throttle_classes 
               
-
+ 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -107,14 +107,26 @@ class UserRolesView(APIView):
 DEMO_COOKIE = "demo_sid"
 DEMO_DAYS = 30
 
+
+
+
+
 class DemoStartThrottle(ScopedRateThrottle):
-    scope = "demo_start"
+    scope = "demo_start"   
+
 
 @api_view(["POST"])
-@throttle_classes([DemoStartThrottle])   
-@permission_classes([AllowAny])
+@throttle_classes([DemoStartThrottle])
+@throttle_scope("demo_start")
 def demo_start(request):
+#    return Response({"ok": True})
     return _issue_demo_response(request)
+ 
+#@api_view(["POST"])
+#@throttle_classes([DemoStartThrottle])   
+#@permission_classes([AllowAny])
+#def demo_start(request):
+#    return _issue_demo_response(request)
 
 @api_view(["POST"])
 @throttle_classes([DemoStartThrottle])   

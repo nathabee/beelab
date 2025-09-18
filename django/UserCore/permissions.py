@@ -190,21 +190,27 @@ class isAllowedApiView(BasePermission):
     def has_permission(self, request, view):
         view_name = view.__class__.__name__
 
-        # Check for analytics permissions
+        # NEW: demo users can GET UserRolesView
+        if request.user.is_authenticated and request.user.groups.filter(name='demo').exists():
+            return self.is_allowed_for_demo(view_name, request.method)
+
         if request.user.groups.filter(name='analytics').exists():
             return self.is_allowed_for_analytics(view_name, request.method)
 
-        # Check for teacher permissions
         if request.user.groups.filter(name='teacher').exists():
             return self.is_allowed_for_teacher(view_name, request.method)
 
-
-        # Check for teacher permissions
         if request.user.groups.filter(name='admin').exists():
             return True
 
-
         return False
+
+    def is_allowed_for_demo(self, view_name, method):
+        allowed_views = {
+            'UserRolesView': ['GET'],
+        }
+        return method in allowed_views.get(view_name, [])
+
 
     def is_allowed_for_analytics(self, view_name, method):
         allowed_views = {

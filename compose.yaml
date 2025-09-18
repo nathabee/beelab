@@ -127,15 +127,13 @@ services:
       timeout: 3s
       retries: 10
     profiles: ["prod"]
- 
 
   django-tests:
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
-    build: { context: ./django, target: dev }
+    build: { context: ./django, target: test }   # <-- use test stage
     env_file: [.env.dev]
     environment:
       DJANGO_SETTINGS_MODULE: config.settings
-      # include anything your app needs at runtime (DB creds, etc.)
       <<: *django_env
     depends_on:
       db: { condition: service_started }
@@ -143,7 +141,7 @@ services:
     command: pytest --cov=UserCore -q
     volumes:
       - ./django:/app:delegated
-
+    profiles: ["test"]      
 
   # DEV WEB
   web:
@@ -182,7 +180,7 @@ services:
     #container_name: beelab-db
     environment: { <<: *db_env }
     volumes: [ db_data:/var/lib/postgresql/data ]
-    profiles: ["dev"]
+    profiles: ["dev","test"]
 
   # PROD DB (separate volume)
   db-prod:

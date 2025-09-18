@@ -20,8 +20,8 @@ _BEELAB_ROOT="$(cd -- "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 _beelab_set_env() {
   local env="${1:-dev}"
   case "$env" in
-    dev|prod) ;;
-    *) echo "env must be 'dev' or 'prod'"; return 1 ;;
+    dev|prod ) ;;    
+    *) echo "env must be 'dev'  or 'prod' (put dev for test)"; return 1 ;;
   esac
 
   export BEELAB_ENV="$env"
@@ -29,7 +29,6 @@ _beelab_set_env() {
   export BEELAB_ENV_FILE=".env.${env}"
   export BEELAB_PROFILE="$env"
 
-  # service names differ in prod
   if [[ "$env" == "prod" ]]; then
     export BEELAB_DJANGO_SVC="django-prod"
     export BEELAB_WP_SVC="wordpress-prod"
@@ -54,7 +53,7 @@ _beelab_ensure_wpcli() {
 }
 
 
-# core compose wrapper (always runs from repo root)
+# core compose wrapper (always runs from repo root) just for dev and prod
 dc() {
   ( cd "$_BEELAB_ROOT" && \
     docker compose \
@@ -63,10 +62,6 @@ dc() {
       --profile "$BEELAB_PROFILE" \
       "$@" )
 }
-
- 
-
-
 # handy wrappers
 dcup()   { dc up -d "$@"; }
 dcdown() { dc down --remove-orphans "$@"; }
@@ -83,14 +78,13 @@ dcexec() {
   local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
   dc exec $tty_flags "$svc" "$@"
 }
-
 # django-specific: dcdjango [cmd...]
 dcdjango() {
   local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
   dc exec $tty_flags "$BEELAB_DJANGO_SVC" "$@"
 }
 
-# ---- New helpers you asked for ----
+ 
 
 # Change Django password for a user:
 # - Interactive:  dcdjpwd alice
@@ -189,61 +183,85 @@ _beelab_ensure_django() {
   fi
 }
 
-# dctest [pytest args...]
-# Run the full pytest suite inside the Django container.
-dctest() {
-  _beelab_ensure_django
-  dcdjango pytest -q "$@"
+###########################################################################
+# TEST
+#############################################################################
+
+dt() {
+  ( cd "$_BEELAB_ROOT" && \
+    docker compose \
+      -p "beelab_test" \
+      --env-file "$BEELAB_ENV_FILE" \
+      --profile "test" \
+      "$@" )
 }
 
-# dctestcov [extra pytest args...]
-# Run tests with coverage across your Django apps.
-dctestcov() {
-  _beelab_ensure_django
-  dcdjango pytest --cov=UserCore --cov=CompetenceCore --cov=PomoloBeeCore --cov-report=term-missing --cov-report=html:/app/media/test-coverage/user --junitxml=/app/media/test-reports/junit_user.xml  -o cache_dir=/app/media/.pytest_cache  -q "$@"
+# handy wrappers
+dtup()   { dt up -d "$@"; }
+dtdown() { dt down   --remove-orphans "$@"; }
+dtstop() { dt stop "$@"; }
+dtps()   { dt ps "$@"; }
+dtlogs() { dt logs -f "$@"; }
+# build images (optionally specify services, e.g. dcbuild web django)
+dtbuild() { dt build "$@"; }
+
+# generic exec: dcexec SERVICE [cmd...]
+dtexec() {
+  local svc="${1:-}"; shift || true
+  [[ -z "$svc" ]] && { echo "Usage: dtexec SERVICE [cmd]"; return 1; }
+  local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
+  dt exec $tty_flags "$svc" "$@"
 }
 
-# dctestfile path::node [extra pytest args...]
-# Run a specific file / node, e.g.
-#   dctestfile UserCore/tests/test_demo_auth.py::test_demo_start_sets_cookie
-dctestfile() {
-  local target="${1:-}"
-  shift || true
-  if [[ -z "$target" ]]; then
-    echo "Usage: dctestfile path/to/test.py[::TestClass::test_name]"
-    return 1
-  fi
-  _beelab_ensure_django
-  dcdjango pytest -q "$target" "$@"
+# django-specific: dcdjango [cmd...]
+dtdjango() {
+  local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
+  dt exec $tty_flags django-tests "$@"
 }
 
-# dctestk EXPRESSION [extra pytest args...]
-# Pattern match, e.g. dctestk demo and not throttling
-dctestk() {
-  local expr="${1:-}"
-  shift || true
-  if [[ -z "$expr" ]]; then
-    echo "Usage: dctestk 'pattern'"
-    return 1
-  fi
-  _beelab_ensure_django
-  dcdjango pytest -q -k "$expr" "$@"
+
+
+# run the full pytest suite (test profile)
+# run the full pytest suite (test profile)
+dttest() {
+  dt run --rm django-tests pytest -q "$@"
 }
 
-# Only UserCore tests
-dctest_usercore() {
- # dc run --rm django-tests pytest -q UserCore/tests "$@"
-  dc run --rm django-tests pytest -q --ignore=PomoloBeeCore --ignore=CompetenceCore --cov=UserCore -q "$@"
-}
-dctestcov_usercore() { 
-
-  dc run --rm django-tests pytest -q UserCore/tests --cov=UserCore --cov-report=term-missing --cov-report=html:/app/media/test-coverage/user --junitxml=/app/media/test-reports/junit_user.xml  -o cache_dir=/app/media/.pytest_cache -q "$@"
-  echo "result in "
-  echo "- coverage in :  http://localhost:9001/media/test-coverage/user/index.html"
-  echo "- JUnit XML: http://localhost:9001/media/test-reports/junit_user.xml"
+dttestcov() {
+  dt run --rm django-tests \
+    pytest --cov=UserCore --cov=CompetenceCore --cov=PomoloBeeCore \
+    --cov-report=term-missing \
+    --cov-report=html:/app/media/test-coverage/user \
+    --junitxml=/app/media/test-reports/junit_user.xml \
+    -o cache_dir=/app/media/.pytest_cache -q "$@"
 }
 
- 
+dttestfile() {
+  local target="${1:-}"; shift || true
+  [[ -z "$target" ]] && { echo "Usage: dctestfile path/to/test.py[::node]"; return 1; }
+  dt run --rm django-tests pytest -q "$target" "$@"
+}
+
+dttestk() {
+  local expr="${1:-}"; shift || true
+  [[ -z "$expr" ]] && { echo "Usage: dctestk 'pattern'"; return 1; }
+  dt run --rm django-tests pytest -q -k "$expr" "$@"
+}
+
+dttest_usercore() {
+  dt run --rm django-tests pytest -q --ignore=PomoloBeeCore --ignore=CompetenceCore --cov=UserCore "$@"
+}
+
+dttestcov_usercore() {
+  dt run --rm django-tests \
+    pytest -q UserCore/tests \
+    --cov=UserCore \
+    --cov-report=term-missing \
+    --cov-report=html:/app/media/test-coverage/user \
+    --junitxml=/app/media/test-reports/junit_user.xml \
+    -o cache_dir=/app/media/.pytest_cache "$@"
+}
+
 
 
 # switch env in the same shell after sourcing: blenv dev|prod
@@ -280,13 +298,21 @@ dcweblogs           # follow web logs
 dcwebup / dcwebdown # start/stop web only
 
 
-###### TESTS (pytest) ###
-dctest [args]        # run full test suite (pytest -q)
-dctestcov [args]     # run with coverage for UserCore/CompetenceCore/PomoloBeeCore
-dctestfile path[..]  # run a specific file/node
-dctestk 'expr'       # run tests matching -k expression
-dctest_usercore      # run usercore tests 
-dctestcov_usercore   # run all usercore tests
+###### TESTS (pytest) ### 
+dtup           # start django-test container 
+dtdown          # run 
+dtstop         # run 
+dtps           # run 
+dtlogs          # run 
+dtbuild         # run 
+dtexec         # run 
+dtdjango          # run 
+dttest [args]        # run full test suite (pytest -q)
+dttestcov [args]     # run with coverage for UserCore/CompetenceCore/PomoloBeeCore
+dttestfile path[..]  # run a specific file/node
+dttestk 'expr'       # run tests matching -k expression
+dttest_usercore      # run usercore tests 
+dttestcov_usercore   # run all usercore tests
 ###### MISC ##########
 blenv dev|prod      # switch env in this shell
 
