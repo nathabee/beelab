@@ -2,9 +2,9 @@
 
 from django.shortcuts import get_object_or_404  # Add this import at the top of your file
 
-from rest_framework import permissions, viewsets
-from UserCore.permissions import isAllowed, isAllowedApiView,IsEleveProfessor
+from rest_framework import  viewsets 
 from rest_framework.permissions import IsAuthenticated
+from .permissions import isAllowedApiView,isAllowed,IsEleveProfessor
 
 from .models import (
     Niveau, Etape, Annee, Matiere, Eleve, Catalogue, GroupageData,MyImage,
@@ -342,6 +342,7 @@ class MyImageViewSet(viewsets.ModelViewSet):
  
 
 class MyImageBase64View(APIView):
+    permission_classes = [IsAuthenticated, isAllowedApiView]
     def get(self, request, myimage_id):
         try:
             my_image = MyImage.objects.get(id=myimage_id)

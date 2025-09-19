@@ -51,5 +51,34 @@ export function useLoginHandler() {
     }
   };
 
-  return { handleLogin, errorMessage };
+
+  // 🔥 Demo start flow (JWT + cookie)
+  const handleDemoStart = async (onSuccess: () => void) => {
+    try {
+      console.warn('[useLoginHandler] handleDemoStart called');
+
+      // issue demo session; cookie set via withCredentials
+      const startResp = await apiUser.post(
+        '/auth/demo/start/',
+        {},
+        { withCredentials: true } // <-- critical to receive HttpOnly cookie
+      );
+
+      const { access: token } = startResp.data;
+
+      // fetch user info from /me/ so we get { is_demo, demo_expires_at }
+      const meResp = await apiUser.get('/me/', { headers: authHeaders(token), withCredentials: true });
+      const userInfo = meResp.data;
+
+      login(token, userInfo);
+      await fetchBootstrapData(token, { force: true });
+
+      onSuccess();
+    } catch (e: any) {
+      setErrorMessage('Could not start demo right now.');
+      console.error('Demo start failed:', e);
+    }
+  };
+
+  return { handleLogin, handleDemoStart, errorMessage };
 }

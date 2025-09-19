@@ -14,6 +14,19 @@ from rest_framework.response import Response
 from .models import Field, background_image_upload_path, svg_upload_path   
 from .serializers import FieldSerializer
 
+from .utils import BaseAPIView 
+from django.db import transaction
+
+from rest_framework.viewsets import ReadOnlyModelViewSet
+ 
+ 
+from rest_framework.permissions import IsAuthenticated
+from .permissions import FarmerOrReadOnlyDemo
+# views.py
+import os
+import logging
+from rest_framework import viewsets, status 
+ 
 
 from .exceptions import APIError, MLUnavailableError
 from PomoloBeeCore.utils import get_object_or_error
@@ -23,50 +36,46 @@ from .serializers import (
     ImageSerializer, ImageUploadSerializer, 
     EstimationSerializer,  FarmWithFieldsSerializer
 )
-from .utils import BaseAPIView 
-from django.db import transaction
 
-from rest_framework.viewsets import ReadOnlyModelViewSet
  
-
-from UserCore.permissions import IsFarmer
-from rest_framework.permissions import IsAuthenticated
-    
-
+ 
 logger = logging.getLogger(__name__)
 
  
 
 # ---------- FARM ---------- 
-class FarmViewSet(ReadOnlyModelViewSet): 
-    permission_classes = [IsAuthenticated, IsFarmer ]
+ 
+
+
+class FarmViewSet(ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     serializer_class = FarmWithFieldsSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_superuser:
-            return Farm.objects.all().prefetch_related('fields')
-        return Farm.objects.filter(owner=user).prefetch_related('fields')
+        u = self.request.user
+        qs = Farm.objects.prefetch_related('fields')
+        if u.is_superuser:
+            return qs
+        if u.groups.filter(name='demo').exists():
+            return qs.filter(is_demo_visible=True)
+        return qs.filter(owner=u)
 
+    
 # ---------- FIELD + FRUIT ---------- 
-# views.py
-import os
-import logging
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
 
-from .models import Field, background_image_upload_path, svg_upload_path
-from .serializers import FieldSerializer
 
-logger = logging.getLogger(__name__)
-
-class FieldViewSet(viewsets.ModelViewSet):
-    queryset = Field.objects.all()
+class FieldViewSet(viewsets.ModelViewSet): 
     serializer_class = FieldSerializer
-    permission_classes = [IsAuthenticated]  # add IsFarmer too if you want owner-only access
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
+
+    def get_queryset(self):
+        u = self.request.user
+        qs = Field.objects.select_related('farm')
+        if u.is_superuser:
+            return qs
+        if u.groups.filter(name='demo').exists():
+            return qs.filter(farm__is_demo_visible=True)
+        return qs.filter(farm__owner=u)
 
     @action(detail=True, methods=['post'], url_path='background', parser_classes=[MultiPartParser, FormParser])
     def upload_background(self, request, pk=None):
@@ -164,18 +173,22 @@ class FieldViewSet(viewsets.ModelViewSet):
 class FruitViewSet(ReadOnlyModelViewSet):
     queryset = Fruit.objects.all()
     serializer_class = FruitSerializer
+    permission_classes = [IsAuthenticated]
 
 
 # ---------- LOCATION ---------- 
 class LocationListView(BaseAPIView):
-    permission_classes = [IsAuthenticated, IsFarmer ]
-    def get(self, request):
-        if request.user.is_superuser:
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
+    def get(self, request): 
+ 
+        u = request.user
+        if u.is_superuser:
             fields = Field.objects.prefetch_related('rows__fruit').all()
+        elif u.groups.filter(name='demo').exists():
+            fields = Field.objects.filter(farm__is_demo_visible=True).prefetch_related('rows__fruit')
         else:
-            fields = Field.objects.filter(
-                farm__owner=request.user
-            ).prefetch_related('rows__fruit')
+            fields = Field.objects.filter(farm__owner=u).prefetch_related('rows__fruit')
+
         if not fields.exists():
             raise APIError("NO_DATA", "No field and row data available.", status.HTTP_404_NOT_FOUND)
         serializer = FieldLocationSerializer(fields, many=True, context={'request': request})
@@ -186,19 +199,28 @@ class LocationListView(BaseAPIView):
 
 
 class ImageDetailView(BaseAPIView):
-    permission_classes = [IsAuthenticated, IsFarmer ]
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     def get(self, request, image_id):
         image = get_object_or_error(Image, id=image_id)
-        if (not request.user.is_superuser
-            and image.row.field.farm.owner_id != request.user.id):
-            raise APIError("FORBIDDEN", "Not allowed", status.HTTP_403_FORBIDDEN)
+
+        u = request.user
+        if u.is_superuser:
+            pass
+        elif u.groups.filter(name='demo').exists():
+            if not image.row.field.farm.is_demo_visible:
+                raise APIError("FORBIDDEN", "Not allowed", status.HTTP_403_FORBIDDEN)
+        else:
+            if image.row.field.farm.owner_id != u.id:
+                raise APIError("FORBIDDEN", "Not allowed", status.HTTP_403_FORBIDDEN)
+
         serializer = ImageSerializer(image, context={'request': request})
         return self.success(serializer.data)
 
 
 
+
 class ImageDeleteView(BaseAPIView):
-    permission_classes = [IsAuthenticated, IsFarmer ]
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     def delete(self, request, image_id):
         image = get_object_or_error(Image, id=image_id)
         if (not request.user.is_superuser
@@ -220,35 +242,26 @@ class ImageDeleteView(BaseAPIView):
             response_data["warning"] = warning
 
         return self.success(response_data)
+    
 
 class ImageListView(BaseAPIView):
-    permission_classes = [IsAuthenticated, IsFarmer ]
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     def get(self, request):
-        user = request.user
-        qs = Image.objects.all().order_by('-upload_date') if user.is_superuser else \
-             Image.objects.filter(row__field__farm__owner=user).order_by('-upload_date')
+        u = request.user
+        if u.is_superuser:
+            qs = Image.objects.all()
+        elif u.groups.filter(name='demo').exists():
+            qs = Image.objects.filter(row__field__farm__is_demo_visible=True)
+        else:
+            qs = Image.objects.filter(row__field__farm__owner=u)
 
-        # optional filters
-        field_id = request.GET.get("field_id")
-        row_id = request.GET.get("row_id")
-        date = request.GET.get("date")
-        if field_id: qs = qs.filter(row__field_id=field_id)
-        if row_id:   qs = qs.filter(row_id=row_id)
-        if date:     qs = qs.filter(date=date)
+        qs = qs.order_by('-upload_date')
+        ...
 
-        total = qs.count()
-        limit = int(request.GET.get("limit", 100))
-        offset = int(request.GET.get("offset", 0))
-        qs = qs[offset:offset+limit]
-
-        serializer = ImageSerializer(qs, many=True, context={"request": request})
-        return self.success({"total": total, "limit": limit, "offset": offset, "images": serializer.data})
-    
- 
 
 
 class ImageView(BaseAPIView):
-    permission_classes = [IsAuthenticated, IsFarmer ]
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     def post(self, request):
         serializer = ImageUploadSerializer(data=request.data)
         if serializer.is_valid():
@@ -325,7 +338,7 @@ class ImageView(BaseAPIView):
 
 
 class RetryProcessingView(BaseAPIView):
-    permission_classes = [IsAuthenticated, IsFarmer ]
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     def post(self, request):
         image_id = request.data.get("image_id")
         image = get_object_or_error(Image, id=image_id)
@@ -352,7 +365,7 @@ class RetryProcessingView(BaseAPIView):
 
 # ---------- ML VERSION ----------
 class MLVersionView(BaseAPIView):
-    permission_classes = [IsAuthenticated, IsFarmer ]
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     def get(self, request):
         try:
             response = requests.get(f"{settings.ML_API_URL}/version", timeout=5)
@@ -368,36 +381,46 @@ class MLVersionView(BaseAPIView):
 # ---------- ESTIMATION ----------  
 
 class FieldEstimationListView(BaseAPIView):
-    permission_classes = [IsAuthenticated, IsFarmer ]
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     def get(self, request, field_id):
         base = Estimation.objects.filter(row__field_id=field_id)
-        estimations = base if request.user.is_superuser else \
-                      base.filter(row__field__farm__owner=request.user)
-        estimations = estimations.order_by('-timestamp')
+        u = request.user
+        if u.is_superuser:
+            estimations = base
+        elif u.groups.filter(name='demo').exists():
+            estimations = base.filter(row__field__farm__is_demo_visible=True)
+        else:
+            estimations = base.filter(row__field__farm__owner=u)
 
+        estimations = estimations.order_by('-timestamp')
         if not estimations.exists():
             raise APIError("404_NOT_FOUND", "No estimation found.", status.HTTP_404_NOT_FOUND)
+        return self.success({"estimations": EstimationSerializer(estimations, many=True).data})
 
-        serializer = EstimationSerializer(estimations, many=True)
-        return self.success({"estimations": serializer.data})
 
 
 class EstimationView(BaseAPIView):
-    permission_classes = [IsAuthenticated, IsFarmer ]
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     def get(self, request, image_id):
+        u = request.user
         q = Estimation.objects.filter(image_id=image_id)
-        if not request.user.is_superuser:
-            q = q.filter(row__field__farm__owner=request.user)
+        if u.is_superuser:
+            pass
+        elif u.groups.filter(name='demo').exists():
+            q = q.filter(row__field__farm__is_demo_visible=True)
+        else:
+            q = q.filter(row__field__farm__owner=u)
+
         estimation = q.first()
         if not estimation:
             raise APIError("404_NOT_FOUND", "Estimation not found.", status.HTTP_404_NOT_FOUND)
-        serializer = EstimationSerializer(estimation)
-        return self.success(serializer.data)
+        return self.success(EstimationSerializer(estimation).data)
+
 
     
  
 class MLResultView(BaseAPIView):  
-    permission_classes = [IsAuthenticated, IsFarmer ]
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     def post(self, request, image_id):
         logger.debug(f"🔍 Incoming ML result POST for image_id={image_id}")
         logger.debug(f"📦 Raw request data: {request.data}")
@@ -455,7 +478,7 @@ class MLResultView(BaseAPIView):
  
 
 class ManualEstimationView(BaseAPIView):
-    permission_classes = [IsAuthenticated, IsFarmer ]
+    permission_classes = [IsAuthenticated, FarmerOrReadOnlyDemo]
     parser_classes = [MultiPartParser]
 
     def post(self, request):

@@ -277,3 +277,85 @@ docker system prune
 
 ---
  
+Here’s a clean, copy-pasteable rewrite for your **Developer Tips** sections.
+
+---
+
+## 11) Django tests (pytest)
+
+We ship a dedicated **test stack** (profile: `test`) that mirrors Django but includes pytest tools. Use the `dt*` aliases.
+
+### Quick start
+
+```bash
+# 1) Load aliases in dev
+source scripts/alias.sh dev
+
+# 2) Build the test images
+dtbuild
+
+# 3) Start the test stack (db + django-tests)
+dtup
+```
+
+### Run tests
+
+```bash
+dttest                  # run full pytest suite (quiet)
+dttestk 'expr'          # run tests matching -k expression
+dttestfile path[..]     # run a specific file/node
+
+# Coverage
+dttestcov               # full suite with coverage (UserCore/CompetenceCore/PomoloBeeCore)
+dttest_usercore         # only UserCore tests
+dttestcov_usercore      # UserCore tests with coverage
+```
+
+### Manage the test stack
+
+```bash
+dtps                    # docker compose ps (test)
+dtlogs                  # follow logs (test)
+dtexec SERVICE CMD      # exec into a test service
+dtdjango CMD...         # run manage.py in django-tests (e.g., dtdjango python manage.py showmigrations)
+dtdown                  # stop test stack (remove orphans)
+```
+
+> Coverage HTML reports are written inside the container under `/app/media/test-coverage/user` (per your aliases).
+
+---
+
+## 12) WordPress plugin
+
+Use the `makeplugin` alias (available in **dev** only) to rebuild and deliver a plugin from `wordpress/plugin-src/<plugin>` into WordPress.
+
+### Quick start
+
+```bash
+# 1) Load aliases in dev
+source scripts/alias.sh dev
+
+# 2) Ensure WordPress is up (optional)
+dcwpup
+
+# 3) Build & install (example: pomolobee)
+makeplugin pomolobee
+```
+
+The plugin files are copied into `wp-content/plugins/<plugin>` (mounted into the container), so you can see them immediately at:
+
+* Site: `http://localhost:8082/pomolobee`
+* Admin: `http://localhost:8082/wp-admin`
+
+If the page shows “unknown content,” first **activate the plugin** in **WP Admin → Plugins**.
+
+### Troubleshooting
+
+```bash
+dcwplogs              # follow WordPress logs
+dcwp plugin list      # list installed/active plugins via WP-CLI
+dcwpcachflush         # flush WP object/file caches
+dcwpfixroutes         # fix home/siteurl, set permalinks, flush rewrites
+```
+
+> Note: `install_plugin.sh` copies without preserving timestamps/ownership to avoid “Operation not permitted” errors when target files are owned by `www-data`.

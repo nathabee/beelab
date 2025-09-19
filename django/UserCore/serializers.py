@@ -11,10 +11,28 @@ from .models import CustomUser
 class UserSerializer(serializers.ModelSerializer):
     roles = serializers.ListField(child=serializers.CharField(), write_only=True)
 
+    is_demo = serializers.SerializerMethodField(read_only=True)
+    demo_expires_at = serializers.SerializerMethodField(read_only=True)
+
+
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'first_name', 'last_name', 'roles', 'password','lang']
+        fields = ['id', 'username', 'first_name', 'last_name', 'roles', 'password','lang', 
+                  'is_demo', 'demo_expires_at',]
         extra_kwargs = {'password': {'write_only': True}}
+
+    def get_is_demo(self, obj):
+        # True if user is in "demo" group
+        return obj.groups.filter(name="demo").exists()
+
+    def get_demo_expires_at(self, obj):
+        # Only return an ISO string if there's an active (non-expired) demo account
+        acct = getattr(obj, "demo_account", None)
+        if not acct:
+            return None
+        if getattr(acct, "expired", True):
+            return None
+        return acct.expires_at.isoformat()
 
     def create(self, validated_data):
         lang = validated_data.pop('lang', None)  # Ensure that lang is correctly popped

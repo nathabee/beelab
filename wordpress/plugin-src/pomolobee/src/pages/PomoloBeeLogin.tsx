@@ -13,12 +13,18 @@ const PomoloBeeLogin = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { handleLogin, errorMessage } = useLoginHandler();
+  const { handleLogin,handleDemoStart, errorMessage } = useLoginHandler();
 
   const submit = async (e: React.FormEvent) => {
     console.log('[PomoloBeeLogin] submit login pressed');
     e.preventDefault();
     await handleLogin(username, password, () => navigate('/pomolobee_dashboard'));
+  };
+
+
+  const tryDemo = async () => {
+    console.log('[PomoloBeeLogin] try demo pressed');
+    await handleDemoStart(() => navigate('/pomolobee_dashboard'));
   };
 
   return (
@@ -40,6 +46,13 @@ const PomoloBeeLogin = () => {
 
         <button type="submit">Login</button>
       </form>
+      <div className="or-sep" style={{ margin: '1rem 0', textAlign: 'center' }}>
+        <span>— or —</span>
+      </div>
+
+      <button type="button" onClick={tryDemo}>
+        🐝 Try the demo
+      </button>
     </div>
   );
 };

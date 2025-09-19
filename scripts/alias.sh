@@ -262,66 +262,216 @@ dttestcov_usercore() {
     -o cache_dir=/app/media/.pytest_cache "$@"
 }
 
+##########################################################
+# DEVELOPPEMENT
+########################################################
+ 
+
+# Build + install a WP plugin from wordpress/plugin-src/<plugin>
+# Usage:
+#   makeplugin <plugin-name>
+# Example:
+#   makeplugin pomolobee
+# Build a WP plugin from wordpress/plugin-src/<plugin>
+# Usage:
+#   compile_plugin <plugin> [host|docker]
+#   makeplugin <plugin> [host|docker]
+#
+# If you omit the mode, we auto-detect:
+#  - use "host" if npm exists
+#  - otherwise fallback to "docker"
+#
+# You can override the Node image with: export BEELAB_NODE_IMAGE=node:20-bullseye
+
+compile_plugin() {
+  local plugin="${1:-}"; local mode="${2:-auto}"
+  [[ -z "$plugin" ]] && { echo "Usage: compile_plugin <plugin> [host|docker]"; return 1; }
+
+  local src="wordpress/plugin-src/$plugin"
+  [[ -d "$src" ]] || { echo "Plugin not found: $src"; return 1; }
+  [[ -f "$src/package.json" ]] || { echo "No package.json in $src — cannot build."; return 1; }
+
+  # decide mode
+  if [[ "$mode" == "auto" ]]; then
+    if command -v npm >/dev/null 2>&1; then mode="host"; else mode="docker"; fi
+  fi
+
+  echo "[compile_plugin] plugin=$plugin mode=$mode"
+
+  if [[ "$mode" == "host" ]]; then
+    (
+      set -euo pipefail
+      cd "$_BEELAB_ROOT/$src"
+      # install deps if needed
+      if [[ -f package-lock.json ]]; then
+        npm ci
+      else
+        npm install
+      fi
+      npm run build
+    )
+  elif [[ "$mode" == "docker" ]]; then
+    local image="${BEELAB_NODE_IMAGE:-node:20-bullseye}"
+    echo "[compile_plugin] using Docker image: $image"
+    docker run --rm \
+      -v "$_BEELAB_ROOT/$src":/app \
+      -w /app \
+      "$image" \
+      bash -lc '
+        set -euo pipefail
+        if [[ -f package-lock.json ]]; then
+          npm ci
+        else
+          npm install
+        fi
+        npm run build
+      '
+  else
+    echo "Unknown mode: $mode (expected host|docker)"
+    return 1
+  fi
+
+  echo "[compile_plugin] build completed for $plugin"
+}
+
+# Build + zip + install into WordPress
+# Usage:
+#   makeplugin <plugin> [host|docker]
+makeplugin() {
+  local plugin="${1:-}"; local mode="${2:-auto}"
+  [[ -z "$plugin" ]] && { echo "Usage: makeplugin <plugin> [host|docker]"; return 1; }
+
+  local src="wordpress/plugin-src/$plugin"
+  [[ -d "$src" ]] || { echo "Plugin not found: $src"; return 1; }
+
+  (
+    set -euo pipefail
+    cd "$_BEELAB_ROOT"
+
+    # 1) compile (host or docker)
+    compile_plugin "$plugin" "$mode"
+
+    # 2) run plugin scripts
+    cd "$src"
+    [[ -x ./build_zip.sh ]]     || chmod +x ./build_zip.sh
+    [[ -x ./install_plugin.sh ]]|| chmod +x ./install_plugin.sh
+
+    ./build_zip.sh
+    ./install_plugin.sh
+  )
+
+  echo "[makeplugin] done: $plugin"
+}
+
+# --- PomoloBee seeding (media + fixtures) ---
+dcdjseed_pomolobee() {
+  _beelab_ensure_django
+  # Media: copy/symlink from script_db -> MEDIA_ROOT
+  dcdjango python manage.py seed_pomolobee --mode copy --clear
+
+  # Fixtures (order matters)
+  dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_groups.json
+  dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_superuser.json
+  dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_farms.json
+  dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_fields.json
+  dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_fruits.json
+  dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_rows.json
+  # optional: demo-visible seed if you have it
+  # dcdjango python manage.py loaddata PomoloBeeCore/fixtures/pomolobee_demo.json
+}
+
+# --- Competence seeding (media + data commands) ---
+dcdjseed_competence() {
+  _beelab_ensure_django
+  dcdjango python manage.py seed_competence --mode copy --clear
+  dcdjango python manage.py populate_data_init
+  dcdjango python manage.py create_groups_and_permissions
+  dcdjango python manage.py populate_teacher
+  dcdjango python manage.py populate_translation
+}
+
+# Reseed everything
+dcdjseed_all() { dcdjseed_pomolobee && dcdjseed_competence; }
+
 
 
 # switch env in the same shell after sourcing: blenv dev|prod
 blenv() { _beelab_set_env "$1" && echo "beelab env -> $BEELAB_ENV"; }
 
 dchelp() {
-  cat <<EOF
+  cat <<'EOF'
 ###### DOCKER ALIAS ##########
-dcup                # start current env stack
-dcbuild             # build
-dcdown              # stop stack (remove orphans)
-dcstop SERVICE      # stop one service
-dcps                # ps
-dclogs [SERVICE]    # follow logs (or use the service-specific ones below)
-dcexec SERVICE CMD  # exec inside a service
+dcup                 # start current env stack
+dcbuild              # build images (optionally: dcbuild web django)
+dcdown               # stop stack (remove orphans)
+dcstop SERVICE       # stop one service
+dcps                 # docker compose ps
+dclogs [SERVICE]     # follow logs for the whole stack or a service
+dcexec SERVICE CMD   # exec inside a service (tty-aware)
 
 ###### DJANGO ##########
-dcdjango CMD...     # run manage.py, shell, etc.
-dcdjlogs            # follow django logs
-dcdjup / dcdjdown   # start/stop django only
-dcdjpwd USER [NEW]  # change password (interactive if NEW omitted)
+dcdjango CMD...      # run manage.py, shell, etc.
+dcdjlogs             # follow django logs
+dcdjup / dcdjdown    # start/stop django only
+dcdjpwd USER [NEW]   # change password (interactive if NEW omitted)
 
 ###### WORDPRESS ######
-dcwplogs | dcwplog  # follow wordpress logs
-dcwpup / dcwpdown   # start/stop wordpress only
-dcwp ARGS...           # run wp-cli (e.g. dcwp plugin list)
-dcwpcachflush          # flush wp cache (object + /wp-content/cache)
-dcwpcliup / dcwpclidown# start/stop wpcli sidecar (optional)
-dcwpfixroutes
-
+dcwplogs | dcwplog   # follow wordpress logs
+dcwpup / dcwpdown    # start/stop wordpress only
+dcwp ARGS...         # run wp-cli (e.g. dcwp plugin list)
+dcwpcachflush        # flush wp cache (object + /wp-content/cache)
+dcwpcliup / dcwpclidown # start/stop wpcli sidecar
+dcwpfixroutes        # fix home/siteurl, permalinks, flush rewrites
 
 ###### WEB (Next.js) ##
-dcweblogs           # follow web logs
-dcwebup / dcwebdown # start/stop web only
+dcweblogs            # follow web logs
+dcwebup / dcwebdown  # start/stop web only
 
-
-###### TESTS (pytest) ### 
-dtup           # start django-test container 
-dtdown          # run 
-dtstop         # run 
-dtps           # run 
-dtlogs          # run 
-dtbuild         # run 
-dtexec         # run 
-dtdjango          # run 
-dttest [args]        # run full test suite (pytest -q)
-dttestcov [args]     # run with coverage for UserCore/CompetenceCore/PomoloBeeCore
+###### TESTS (pytest) ###
+dtup                 # start test stack
+dtdown               # stop test stack (remove orphans)
+dtstop               # stop one service in test stack
+dtps                 # ps (test)
+dtlogs               # logs (test)
+dtbuild              # build (test)
+dtexec SERVICE CMD   # exec (test)
+dtdjango CMD...      # manage.py in django-tests container
+dttest [args]        # run full pytest suite
+dttestcov [args]     # run with coverage (UserCore/CompetenceCore/PomoloBeeCore)
 dttestfile path[..]  # run a specific file/node
 dttestk 'expr'       # run tests matching -k expression
-dttest_usercore      # run usercore tests 
-dttestcov_usercore   # run all usercore tests
-###### MISC ##########
-blenv dev|prod      # switch env in this shell
+dttest_usercore      # run only UserCore tests
+dttestcov_usercore   # run UserCore tests with coverage
 
-### example:
-dcdjango python manage.py makemigrations
-dcdjango python manage.py migrate
+###### MISC ##########
+blenv dev|prod       # switch env in this shell (updates compose flags)
+EOF
+
+if [[ "$BEELAB_ENV" == "dev" ]]; then
+    cat <<'EOF'
+
+################
+###### DEVELOPMENT ##########
+makeplugin <plugin>  # build and install WP plugin from wordpress/plugin-src/<plugin> 
+# Build+install using host npm (if available)
+makeplugin pomolobee
+# Force Dockerized build (ignores host npm completely)
+makeplugin pomolobee docker
+# Just compile (no install/zip), then you can run scripts manually
+compile_plugin pomolobee
+# reseed everything
+dcdjseed_all
+# or only the plugin side
+dcdjseed_pomolobee
+
 
 EOF
+fi
 }
+
+
+
+
 
 echo "beelab aliases loaded → env=$BEELAB_ENV project=$BEELAB_PROJECT profile=$BEELAB_PROFILE"
 echo "try:"

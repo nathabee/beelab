@@ -107,6 +107,56 @@ mkdir -p django/media/test-coverage django/media/test-reports django/media/test-
 
 ``` 
 
+---
+
+## Make changes in Django
+
+
+### 🔧 After changing models
+
+```bash
+# apply schema changes first
+dcdjango python manage.py makemigrations
+dcdjango python manage.py migrate
+```
+
+---
+
+### 📦 After changing fixtures
+
+ 
+You can reseed :
+
+```bash
+  
+# reseed everything
+dcdjseed_all
+
+# or only the plugin side
+dcdjseed_pomolobee
+```
+ 
+### After changing background field picture or SVG
+
+
+You can send in docker all the pictures and SVG :
+
+```bash
+  
+....
+```
+
+
+### ✅ Quick sanity check
+
+```bash
+# demo JWT
+TOKEN=$(curl -s -X POST http://localhost:9001/api/user/auth/demo/start/ | jq -r .access)
+
+# demo-visible endpoints should respond 200 with data
+curl -i -H "Authorization: Bearer $TOKEN" http://localhost:9001/api/pomolobee/farms/
+curl -i -H "Authorization: Bearer $TOKEN" http://localhost:9001/api/pomolobee/locations/
+```
 
 ---
 

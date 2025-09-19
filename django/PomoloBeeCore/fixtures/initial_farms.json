@@ -3,8 +3,18 @@
     "model": "pomolobeecore.farm",
     "pk": 1,
     "fields": {
-      "name": "Abraracoutix Farm",
-      "owner":  ["pomofarmer"]
+      "name": "Abraracourcix Farm",
+      "owner": ["pomofarmer"],
+      "is_demo_visible": true
+    }
+  },
+  {
+    "model": "pomolobeecore.farm",
+    "pk": 2,
+    "fields": {
+      "name": "Clementourix Farm",
+      "owner": ["pomofarmer"],
+      "is_demo_visible": false
     }
   }
 ]
