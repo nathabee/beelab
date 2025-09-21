@@ -40,11 +40,11 @@ const PomoloBeeHome: React.FC = () => {
 
         <div className="d-flex gap-2">
           {!isLoggedIn ? (
-            <button className="btn btn-primary" onClick={() => navigate('/pomolobee_login')}>
+            <button className="btn btn-primary" onClick={() => navigate('/login')}>
               🔐 Log in
             </button>
           ) : (
-            <button className="btn btn-success" onClick={() => navigate('/pomolobee_dashboard')}>
+            <button className="btn btn-success" onClick={() => navigate('/dashboard')}>
               📊 Go to Dashboard
             </button>
           )}
@@ -106,7 +106,7 @@ const PomoloBeeHome: React.FC = () => {
             </div>
 
             <div className="mt-3">
-              <button className="btn btn-outline-primary" onClick={() => navigate('/pomolobee_dashboard')}>
+              <button className="btn btn-outline-primary" onClick={() => navigate('/dashboard')}>
                 Open Dashboard
               </button>
             </div>

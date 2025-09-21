@@ -1,8 +1,8 @@
-// src/components/ErrorBanner.tsx
+// _shared/error/ErrorBanner.tsx
 'use client';
 import React from 'react';
-import { useErrors } from '@context/ErrorContext';
-import { friendlyMessage } from '@utils/errorCopy';
+import { useErrors } from './ErrorContext';
+import { friendlyMessage } from './errorCopy';
 
 const ErrorBanner: React.FC = () => {
   const { last } = useErrors();

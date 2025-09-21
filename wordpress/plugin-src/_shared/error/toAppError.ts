@@ -1,6 +1,6 @@
 // src/utils/toAppError.ts
 import type { AxiosError } from 'axios';
-import type { AppError } from '@mytypes/error';
+import type { AppError } from './types';
 
 let seq = 0;
 

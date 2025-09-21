@@ -18,7 +18,12 @@ module.exports = {
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@assets': path.resolve(__dirname, 'src/assets'),
       '@styles': path.resolve(__dirname, 'src/styles'),
+      '@bee/common': path.resolve(__dirname, '../_shared/error'),
     },
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.png','.css'],
+    modules: [
+      path.resolve(__dirname, 'node_modules'),
+      'node_modules',
+    ],
   }, 
 };

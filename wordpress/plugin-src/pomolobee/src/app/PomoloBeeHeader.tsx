@@ -15,15 +15,15 @@ const PomoloBeeHeader = () => {
     <nav className="navbar sticky-navbar">
       <div className="navbar-container">
         <div className="navbar-active-data">
-          <Link to="/pomolobee_home" className="nav-link">🏠 Home</Link>
+          <Link to="/" className="nav-link">🏠 Home</Link>
 
           {isLoggedIn ? (
             <>
-              <Link to="/pomolobee_dashboard" className="nav-link">📊 Dashboard</Link>
+              <Link to="/dashboard" className="nav-link">📊 Dashboard</Link>
               {canAccessFarm ? (
                 <>
-                  <Link to="/pomolobee_farm" className="nav-link">Farm Statistic</Link> 
-                  <Link to="/pomolobee_farmmgt" className="nav-link">Farm Management</Link> 
+                  <Link to="/farm" className="nav-link">Farm Statistic</Link> 
+                  <Link to="/farmmgt" className="nav-link">Farm Management</Link> 
                 </>
               ) : (
                 <>
@@ -34,7 +34,7 @@ const PomoloBeeHeader = () => {
               <button className="navbar-button" onClick={logout}>🔓 Logout</button>
             </>
           ) : (
-            <Link to="/pomolobee_login" className="nav-link">🔓 Login</Link>
+            <Link to="/login" className="nav-link">🔓 Login</Link>
           )}
         </div>
       </div>
@@ -44,3 +44,4 @@ const PomoloBeeHeader = () => {
 
 export default PomoloBeeHeader;
 
+ 

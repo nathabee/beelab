@@ -18,13 +18,13 @@ const PomoloBeeLogin = () => {
   const submit = async (e: React.FormEvent) => {
     console.log('[PomoloBeeLogin] submit login pressed');
     e.preventDefault();
-    await handleLogin(username, password, () => navigate('/pomolobee_dashboard'));
+    await handleLogin(username, password, () => navigate('/dashboard'));
   };
 
 
   const tryDemo = async () => {
     console.log('[PomoloBeeLogin] try demo pressed');
-    await handleDemoStart(() => navigate('/pomolobee_dashboard'));
+    await handleDemoStart(() => navigate('/dashboard'));
   };
 
   return (

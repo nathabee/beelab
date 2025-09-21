@@ -1,176 +1,185 @@
 <?php
 /**
  * Plugin Name:       PomoloBee WP
- * Description:       FSE blocks integrating with Django backend.
+ * Description:       FSE block hosting a React SPA that talks to Django.
  * Version:           1.0.0
  * Author:            Nathabee
  */
 
+/**
+ * 1) Register blocks from build/
+ */
 if ( function_exists( 'wp_register_block_types_from_metadata_collection' ) ) {
     add_action( 'init', function () {
         wp_register_block_types_from_metadata_collection(
             __DIR__ . '/build',
             __DIR__ . '/build/blocks-manifest.php'
         );
-    });
+    } );
 }
 
-// --- CPT registration ----
+/**
+ * 2) Register a CPT to host the SPA (one post with slug "pomolobee")
+ *    We drive permalinks via our rewrite rule, so set rewrite => false.
+ */
 function pomolobee_register_cpt() {
-    register_post_type('pomolobee_page', [
+    register_post_type( 'pomolobee_page', [
         'label'               => 'Pomolobee Pages',
         'public'              => true,
+        'publicly_queryable'  => true,
         'show_ui'             => true,
         'show_in_rest'        => true,
         'has_archive'         => false,
-        'rewrite'             => ['slug' => 'pomolobee'], // /pomolobee/...
-        'supports'            => ['title', 'editor'],
+        'rewrite'             => false,
+        'supports'            => [ 'title', 'editor' ],
         'show_in_nav_menus'   => false,
         'exclude_from_search' => true,
         'menu_position'       => 20,
         'menu_icon'           => 'dashicons-chart-line',
-    ]);
+    ] );
 }
-add_action('init', 'pomolobee_register_cpt');
+add_action( 'init', 'pomolobee_register_cpt' );
 
-
-
-// FIRST INIT
-// --- Activation: create pages ---- 
-register_activation_hook(__FILE__, 'pomolobee_wp_create_pages');
-function pomolobee_wp_create_pages() {
-    // Ensure CPT exists
+/**
+ * 3) Activation: create the container post (slug = pomolobee) and flush rules
+ */
+function pomolobee_activate() {
     pomolobee_register_cpt();
 
-    $pages = [
-        ['title' => 'PomoloBee Login', 'slug' => 'pomolobee',           'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'page'],
-        ['title' => 'Home',            'slug' => 'pomolobee_home',      'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'pomolobee_page'],
-        ['title' => 'Dashboard',       'slug' => 'pomolobee_dashboard', 'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'pomolobee_page'],
-        ['title' => 'Farm',            'slug' => 'pomolobee_farm',      'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'pomolobee_page'],
-        ['title' => 'Farm Management', 'slug' => 'pomolobee_farmmgt',   'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'pomolobee_page'],
-        ['title' => 'Error',           'slug' => 'pomolobee_error',     'block' => '<!-- wp:pomolobee/pomolobee-app /-->', 'type' => 'pomolobee_page'],
-    ];
+    $slug  = 'pomolobee';
+    $type  = 'pomolobee_page';
+    $title = 'PomoloBee';
+    $block = '<!-- wp:pomolobee/pomolobee-app /-->';
 
-    foreach ($pages as $page) {
-        $existing = get_page_by_path($page['slug'], OBJECT, $page['type']);
-        if ($existing) continue;
-
-        wp_insert_post([
-            'post_title'   => $page['title'],
-            'post_name'    => $page['slug'],
-            'post_content' => $page['block'],
+    if ( ! get_page_by_path( $slug, OBJECT, $type ) ) {
+        wp_insert_post( [
+            'post_title'   => $title,
+            'post_name'    => $slug,
+            'post_content' => $block,
             'post_status'  => 'publish',
-            'post_type'    => $page['type'],
-        ]);
+            'post_type'    => $type,
+        ] );
     }
 
+    // Ensure our rewrite rule below is applied.
     flush_rewrite_rules();
 }
+register_activation_hook( __FILE__, 'pomolobee_activate' );
+register_deactivation_hook( __FILE__, 'flush_rewrite_rules' );
 
+/**
+ * 4) Deep-linking: route /pomolobee and /pomolobee/* to the single CPT post
+ *    One rule is enough.
+ */
+add_action( 'init', function () {
+    add_rewrite_rule(
+        '^pomolobee(?:/.*)?$',
+        'index.php?post_type=pomolobee_page&name=pomolobee',
+        'top'
+    );
+} );
 
-/************************************************************** 
- * 
- * SECTION FOR STYLES
- * 
-*****************************************************************/
-
-
-add_action('wp_enqueue_scripts', function () {
+/**
+ * 5) Front-end styles (Bootstrap)
+ */
+add_action( 'wp_enqueue_scripts', function () {
     wp_enqueue_style(
         'pomolobee-bootstrap',
-        'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
+        'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
+        [],
+        null
     );
-});
+} );
 
+/**
+ * 6) Enqueue + localize the SPA bundle ONLY on the container page.
+ *    (This replaces the enqueue_block_assets localization to avoid duplicates.)
+ */
+add_action( 'wp_enqueue_scripts', function () {
+    if ( ! is_singular( 'pomolobee_page' ) ) {
+        return;
+    }
 
-/************************************************************** 
- * 
- * SECTION FOR SETTINGS : ADMIN MENU AND ENQUEUE FOR VIEW.JS
- * 
-*****************************************************************/
-// 🔧 Register settings page and settings fields
-add_action('admin_menu', 'pomolobee_register_settings_page');
-add_action('admin_init', 'pomolobee_register_settings');
+    // Use the asset file generated by @wordpress/scripts so deps/versions are correct.
+    $asset_path = __DIR__ . '/build/pomolobee-app/view.asset.php';
+    $asset      = file_exists( $asset_path ) ? include $asset_path : ['dependencies' => [], 'version' => null];
 
-// ✅ Adds a new page under "Settings" in WP admin
-function pomolobee_register_settings_page() {
+    wp_enqueue_script(
+        'pomolobee-pomolobee-app-view',
+        plugins_url( 'build/pomolobee-app/view.js', __FILE__ ),
+        $asset['dependencies'],
+        $asset['version'],
+        true
+    );
+
+    $api_url = get_option( 'pomolobee_api_url', 'http://localhost:9001/api' );
+
+    wp_localize_script( 'pomolobee-pomolobee-app-view', 'pomolobeeSettings', [
+        'apiUrl'    => trailingslashit( $api_url ),
+        'basename'  => '/pomolobee', // React Router basename
+        'errorPath' => '/error',     // Route within the SPA (relative to basename)
+    ] );
+}, 20 );
+
+/**
+ * 7) Settings page for API base URL
+ */
+add_action( 'admin_menu', function () {
     add_options_page(
-        'PomoloBee Settings',       // Page title
-        'PomoloBee Settings',       // Menu label
-        'manage_options',            // Required capability
-        'pomolobee-settings',       // Menu slug
-        'pomolobee_settings_page_html' // Function to display the page
+        'PomoloBee Settings',
+        'PomoloBee Settings',
+        'manage_options',
+        'pomolobee-settings',
+        'pomolobee_settings_page_html'
     );
-}
+} );
 
-// ✅ Register the setting, section, and input field
-function pomolobee_register_settings() {
-    register_setting('pomolobee_settings_group', 'pomolobee_api_url');
+add_action( 'admin_init', function () {
+    register_setting( 'pomolobee_settings_group', 'pomolobee_api_url' );
 
     add_settings_section(
-        'pomolobee_main_section',     // Section ID
-        'Main Settings',               // Title
-        null,                          // Callback (none)
-        'pomolobee-settings'          // Page slug
+        'pomolobee_main_section',
+        'Main Settings',
+        null,
+        'pomolobee-settings'
     );
 
     add_settings_field(
-        'pomolobee_api_url',          // Field ID
-        'API Base URL for Pomolobee',                // Label
-        'pomolobee_api_url_render',   // Callback to render the input
-        'pomolobee-settings',         // Page slug
-        'pomolobee_main_section'      // Section ID
+        'pomolobee_api_url',
+        'API Base URL for Pomolobee',
+        'pomolobee_api_url_render',
+        'pomolobee-settings',
+        'pomolobee_main_section'
     );
+} );
 
+function pomolobee_api_url_render() {
+    $value = get_option( 'pomolobee_api_url', 'http://localhost:9001/api' );
+    echo "<input type='text' name='pomolobee_api_url' value='" . esc_attr( $value ) . "' size='50'>";
 }
 
-// ✅ Renders the input box in the admin settings form
-function pomolobee_api_url_render() { 
-    $value = get_option('pomolobee_api_url', 'http://localhost:9001/api');
-    echo "<input type='text' name='pomolobee_api_url' value='" . esc_attr($value) . "' size='50'>";
-}
-
-// ✅ Renders the full admin settings page HTML
-function pomolobee_settings_page_html() {
-    ?>
+function pomolobee_settings_page_html() { ?>
     <div class="wrap">
         <h1>PomoloBee Plugin Settings</h1>
         <form method="post" action="options.php">
             <?php
-            settings_fields('pomolobee_settings_group');
-            do_settings_sections('pomolobee-settings');
+            settings_fields( 'pomolobee_settings_group' );
+            do_settings_sections( 'pomolobee-settings' );
             submit_button();
             ?>
         </form>
     </div>
-    <?php
-}
+<?php }
 
-// ✅ Enqueue your view.js and inject dynamic settings into the frontend
-add_action('enqueue_block_assets', function () {
-    // This handle is auto-registered from block.json "viewScript": "file:view.js"
-    $handle  = 'pomolobee-pomolobee-app-view';
-    $api_url = get_option('pomolobee_api_url', 'http://localhost:9001/api');
-
-    // Only localize; don't enqueue again by URL
-    wp_localize_script($handle, 'pomolobeeSettings', [
-        'apiUrl'   => $api_url,
-        // See Fix 2: use '' so routes like /pomolobee_dashboard match
-        'basename' => '',
-    ]);
-});
-
-
-// 🐞 Optional: debug registered script handles in the frontend
-add_action('wp_print_scripts', function () {
-    if (!is_admin()) {
-        global $wp_scripts;
-        foreach ($wp_scripts->registered as $handle => $script) {
-            if (strpos($handle, 'pomolobee') !== false) {
-                error_log("🧩 PomoloBee script handle found: $handle");
-            }
+/**
+ * 8) Optional: log our script handles for debugging
+ */
+add_action( 'wp_print_scripts', function () {
+    if ( is_admin() ) return;
+    global $wp_scripts;
+    foreach ( $wp_scripts->registered as $handle => $script ) {
+        if ( str_contains( $handle, 'pomolobee' ) ) {
+            error_log( "🧩 PomoloBee script handle: $handle" );
         }
     }
-});
-
- 
+} );

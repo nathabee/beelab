@@ -1,7 +1,7 @@
-// src/components/ErrorBoundary.tsx
+// _shared/error/ErrorBoundary.tsx
 import React from 'react';
-import { errorBus } from '@utils/errorBus';
-import { toAppError } from '@utils/toAppError';
+import { errorBus } from './errorBus';
+import { toAppError } from './toAppError';
 
 type Props = { children: React.ReactNode };
 type State = { hasError: boolean; err?: any };

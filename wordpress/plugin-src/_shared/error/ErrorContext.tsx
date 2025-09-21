@@ -1,9 +1,9 @@
-// src/context/ErrorContext.tsx (or wherever your provider lives)
+// _shared/error/ErrorContext.tsx (or wherever your provider lives)
 'use client';
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { errorBus } from '@utils/errorBus';
-import type { AppError } from '@mytypes/error';
+import { errorBus } from './errorBus';
+import type { AppError } from './types';
 
 type Ctx = {
   last: AppError | null;
@@ -12,7 +12,7 @@ type Ctx = {
 };
 const ErrorCtx = createContext<Ctx | null>(null);
 
-export const ErrorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ErrorProvider: React.FC<{ children: React.ReactNode; errorPath?: string }> = ({ children, errorPath = '/error' }) => {
   const [stack, setStack] = useState<AppError[]>([]);
   const last = stack.at(-1) ?? null;
 
@@ -20,6 +20,7 @@ export const ErrorProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loc = useLocation();
   const unsubRef = useRef<() => void>();
 
+  /*
   useEffect(() => {
     // subscribe once
     unsubRef.current = errorBus.on((e: AppError) => {
@@ -37,7 +38,18 @@ export const ErrorProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
     return () => { unsubRef.current?.(); };
   }, [nav, loc.pathname]);
-
+*/
+  useEffect(() => {
+    unsubRef.current = errorBus.on((e) => {
+      setStack(prev => [...prev, e]);
+      if (e.severity === 'page' || (e.httpStatus && e.httpStatus >= 400)) {
+        setTimeout(() => {
+          nav(errorPath);      // ← no more hardcoded '/pomolobee_error'
+        }, 0);
+      }
+    });
+    return () => unsubRef.current?.();
+  }, [nav, errorPath]);
 
   // inside ErrorProvider
   useEffect(() => {

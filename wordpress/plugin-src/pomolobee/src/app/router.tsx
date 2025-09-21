@@ -1,28 +1,22 @@
-// src/app/router.tsx
- 
-
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+// router.tsx
+import { Routes, Route, Navigate } from 'react-router-dom';
 import PomoloBeeHome from '@pages/PomoloBeeHome';
 import PomoloBeeLogin from '@pages/PomoloBeeLogin';
 import PomoloBeeDashboard from '@pages/PomoloBeeDashboard';
-import PomoloBeeError from '@pages/PomoloBeeError';
 import PomoloBeeFarm from '@pages/PomoloBeeFarm';
 import PomoloBeeFarmMgt from '@pages/PomoloBeeFarmMgt';
+import { ErrorPage } from '@bee/common';
 
-const AppRoutes = () => (
-  <Routes>
-    
-    <Route path="/pomolobee_home/*" element={<PomoloBeeHome />} /> 
-    <Route path="/pomolobee_login/*" element={<PomoloBeeLogin />} />
-    <Route path="/pomolobee_error/*" element={<PomoloBeeError />} /> 
-    <Route path="/pomolobee_dashboard/*" element={<PomoloBeeDashboard />} />
-    <Route path="/pomolobee_farm/*" element={<PomoloBeeFarm />} />
-    <Route path="/pomolobee_farmmgt/*" element={<PomoloBeeFarmMgt />} />
-    <Route path="/"  element={<PomoloBeeHome />} />
-  </Routes>
-);
-
-export default AppRoutes;
- 
-  
+export default function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/"            element={<PomoloBeeHome />} />
+      <Route path="/login/*"     element={<PomoloBeeLogin />} />
+      <Route path="/error/*"     element={<ErrorPage plugin="pomolobee" />} />
+      <Route path="/dashboard/*" element={<PomoloBeeDashboard />} />
+      <Route path="/farm/*"      element={<PomoloBeeFarm />} />
+      <Route path="/farmmgt/*"   element={<PomoloBeeFarmMgt />} />
+      <Route path="*"            element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}

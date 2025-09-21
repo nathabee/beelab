@@ -1,7 +1,7 @@
 // src/utils/api.ts 
 import axios from 'axios';
-import { toAppError } from '@utils/toAppError';
-import { errorBus } from '@utils/errorBus';
+import { toAppError } from '@bee/common';
+import { errorBus } from '@bee/common';
 
 function norm(u: string) {
   return u.replace(/\/+$/, ""); // strip trailing slash

@@ -1,5 +1,5 @@
-// src/utils/errorCopy.ts
-import type { AppError } from '@mytypes/error';
+// _shared/error/errorCopy.ts
+import type { AppError } from './types';
 
 export function friendlyMessage(e: AppError) {
   switch (e.httpStatus) {
