@@ -1,5 +1,7 @@
-// src/utils/api.ts
-import axios from "axios";
+// src/utils/api.ts 
+import axios from 'axios';
+import { toAppError } from '@utils/toAppError';
+import { errorBus } from '@utils/errorBus';
 
 function norm(u: string) {
   return u.replace(/\/+$/, ""); // strip trailing slash
@@ -32,6 +34,7 @@ export function getBaseApi(): string {
 export const apiUser = axios.create({
   baseURL: join(getBaseApi(), "/user"),
   timeout: 15000,
+  withCredentials: true,
 });
 
 export const apiPom = axios.create({
@@ -42,4 +45,22 @@ export const apiPom = axios.create({
 // Optional helper if you don't use interceptors
 export function authHeaders(token: string | null) {
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+ 
+
+// unified response error handling
+for (const [client, service] of [[apiPom, 'pomolobee'], [apiUser, 'user']] as const) {
+  client.interceptors.response.use(
+    (r) => r,
+    (err) => {
+      const appErr = toAppError(err, {
+        service,
+        functionName: 'axios',
+        // component left blank; components may add it if they rethrow
+      });
+      errorBus.emit(appErr);
+      return Promise.reject(appErr); // so local callers can still handle inline if they want
+    }
+  );
 }

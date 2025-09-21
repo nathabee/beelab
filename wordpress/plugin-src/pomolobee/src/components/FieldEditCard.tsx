@@ -30,26 +30,27 @@ const FieldEditCard: React.FC<Props> = ({ field, onSave, onBackgroundSaved }) =>
 
     const [isSvgUploading, setIsSvgUploading] = useState(false);
     const [svgUploadError, setSvgUploadError] = useState<string | null>(null);
-    
+
     const saveSvgToServer = async (svgOverride?: string) => {
-    setSvgUploadError(null);
-    const fid = resolved?.field_id || (field as any)?.field_id;
-    if (!fid) { setSvgUploadError('Missing field_id.'); return; }
+        setSvgUploadError(null);
+        const fid = resolved?.field_id || (field as any)?.field_id;
+        if (!fid) { setSvgUploadError('Missing field_id.'); return; }
 
-    const svgMarkup = svgOverride ?? savedSvg ?? buildSvgMarkup();
-    if (!svgMarkup) { setSvgUploadError('No closed contour to save.'); return; }
+        const svgMarkup = svgOverride ?? savedSvg ?? buildSvgMarkup();
+        if (!svgMarkup) { setSvgUploadError('No closed contour to save.'); return; }
 
-    try {
-        setIsSvgUploading(true);
-        const base = resolved?.short_name || (field as any)?.short_name || `field_${fid}`;
-        const blob = new Blob([svgMarkup], { type: 'image/svg+xml' });
-        const file = new File([blob], `${base}_map.svg`, { type: 'image/svg+xml' });
-        await uploadSvg(fid, file); // your hook can patch AuthContext internally
-    } catch (e: any) {
-        setSvgUploadError(e?.message || 'SVG upload failed.');
-    } finally {
-        setIsSvgUploading(false);
-    }
+        try {
+            setIsSvgUploading(true);
+            const base = resolved?.short_name || (field as any)?.short_name || `field_${fid}`;
+            const blob = new Blob([svgMarkup], { type: 'image/svg+xml' });
+            const file = new File([blob], `${base}_map.svg`, { type: 'image/svg+xml' });
+            await uploadSvg(fid, file); // your hook can patch AuthContext internally
+
+        } catch (e: any) {
+            setSvgUploadError(e?.message || 'SVG upload failed.');
+        } finally {
+            setIsSvgUploading(false);
+        }
     };
 
     const resolved: Field | null = useMemo(() => {
@@ -241,14 +242,14 @@ const FieldEditCard: React.FC<Props> = ({ field, onSave, onBackgroundSaved }) =>
     };
 
     const saveContour = async () => {
-    const svg = buildSvgMarkup();
-    if (!svg) return;
-    setSavedSvg(svg);
-    setShowPreview(true);
-    onSave?.(svg);
+        const svg = buildSvgMarkup();
+        if (!svg) return;
+        setSavedSvg(svg);
+        setShowPreview(true);
+        onSave?.(svg);
 
-    // auto-upload
-    await saveSvgToServer(svg);
+        // auto-upload
+        await saveSvgToServer(svg);
     };
 
     const canSee = isClosed && points.length >= 3;
@@ -354,13 +355,18 @@ const FieldEditCard: React.FC<Props> = ({ field, onSave, onBackgroundSaved }) =>
                     <div className="col-12 col-lg-6">
                         <div className="border rounded overflow-hidden position-relative" style={{ background: '#f8f9fa', minHeight: 300 }}>
                             <img
-                                ref={imgRef}
-                                src={effectiveBgUrl}
-                                alt="Field background"
-                                className="w-100"
-                                style={{ display: 'block', objectFit: 'contain' }}
-                                onLoad={handleImageLoad}
+                            ref={imgRef}
+                            src={effectiveBgUrl || ''}
+                            onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = '/static/fallback.png';
+                            }}
+                            alt="Field background"
+                            className="w-100"
+                            style={{ display: 'block', objectFit: 'contain' }}
+                            onLoad={handleImageLoad}
                             />
+
 
                             <div
                                 ref={svgWrapRef}

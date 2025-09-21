@@ -171,6 +171,28 @@ dcwpfixroutes() {
   '
 }
 
+# List MEDIA inside containers (defaults to the root of media)
+dcdjlsmedia() {
+  local sub="${1:-}"
+  dcexec "$BEELAB_DJANGO_SVC" bash -lc "ls -lAh --group-directories-first /app/media/${sub}"
+}
+dcwplsmedia() {
+  local sub="${1:-}"
+  dcexec "$BEELAB_WP_SVC" bash -lc "ls -lAh --group-directories-first /var/www/html/media/${sub}"
+}
+
+# Quick HTTP check from host
+dcwpcurlmedia() {
+  local path="${1:-/media}"
+  curl -I "http://localhost:9082${path}"
+}
+
+
+
+
+###########################################################################
+# TEST
+#############################################################################
 # ---- Tests (pytest) ----
 
 # ensure django service is running before exec'ing into it
@@ -182,10 +204,6 @@ _beelab_ensure_django() {
     sleep 1
   fi
 }
-
-###########################################################################
-# TEST
-#############################################################################
 
 dt() {
   ( cd "$_BEELAB_ROOT" && \
@@ -356,6 +374,7 @@ makeplugin() {
     [[ -x ./build_zip.sh ]]     || chmod +x ./build_zip.sh
     [[ -x ./install_plugin.sh ]]|| chmod +x ./install_plugin.sh
 
+    npm run build
     ./build_zip.sh
     ./install_plugin.sh
   )
@@ -395,6 +414,7 @@ dcdjseed_all() { dcdjseed_pomolobee && dcdjseed_competence; }
 
 
 
+
 # switch env in the same shell after sourcing: blenv dev|prod
 blenv() { _beelab_set_env "$1" && echo "beelab env -> $BEELAB_ENV"; }
 
@@ -414,6 +434,7 @@ dcdjango CMD...      # run manage.py, shell, etc.
 dcdjlogs             # follow django logs
 dcdjup / dcdjdown    # start/stop django only
 dcdjpwd USER [NEW]   # change password (interactive if NEW omitted)
+dcdjlsmedia          # List MEDIA inside containers (defaults to the root of media)
 
 ###### WORDPRESS ######
 dcwplogs | dcwplog   # follow wordpress logs
@@ -422,6 +443,7 @@ dcwp ARGS...         # run wp-cli (e.g. dcwp plugin list)
 dcwpcachflush        # flush wp cache (object + /wp-content/cache)
 dcwpcliup / dcwpclidown # start/stop wpcli sidecar
 dcwpfixroutes        # fix home/siteurl, permalinks, flush rewrites
+dcwplsmedia          # List MEDIA inside containers (defaults to the root of media)
 
 ###### WEB (Next.js) ##
 dcweblogs            # follow web logs

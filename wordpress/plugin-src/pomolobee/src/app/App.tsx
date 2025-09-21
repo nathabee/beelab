@@ -1,7 +1,10 @@
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import PomoloBeeHeader from '@app/PomoloBeeHeader';
 import AppRoutes from '@app/router';
+import { ErrorProvider } from '@context/ErrorContext';
+import ErrorBanner from '@components/ErrorBanner';
+import { ErrorBoundary } from '@components/ErrorBoundary';
 
 // Redirect if at root
 //if (window.location.pathname === '/') {
@@ -38,7 +41,7 @@ const App = () => {
 
     }
   }, []);
- 
+
 
 
 
@@ -50,7 +53,7 @@ const App = () => {
       setSidebarOpen(false);
     }
   }, []);
- 
+
   return (
     <div className="pomolobee-app-container">
       <BrowserRouter basename={window.pomolobeeSettings?.basename || '/'}>
@@ -72,7 +75,12 @@ const App = () => {
 
           {/* Main Content */}
           <div className="content-container">
-            <AppRoutes />
+            <ErrorProvider>
+              <ErrorBanner />
+              <ErrorBoundary>
+                <AppRoutes />
+              </ErrorBoundary>
+            </ErrorProvider>
           </div>
         </div>
       </BrowserRouter>
@@ -84,31 +92,3 @@ export default App;
 
 
 
-
-
-
-
-
-/*
-// src/app/App.tsx
-import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import PomoloBeeHeader from '@app/PomoloBeeHeader';
-import AppRoutes from '@app/router';
-
-
-// Redirect to /pomolobee_home if current URL is exactly '/'
-if (window.location.pathname === '/') {
-  window.history.replaceState({}, '', '/pomolobee_home');
-}
-
-
-const App = () => (
-  <BrowserRouter basename={window.pomolobeeSettings?.basename || '/'}>
-    <PomoloBeeHeader />
-    <AppRoutes />
-  </BrowserRouter>
-);
-
-export default App;
-*/

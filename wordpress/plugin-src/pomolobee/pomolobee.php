@@ -148,23 +148,18 @@ function pomolobee_settings_page_html() {
 
 // ✅ Enqueue your view.js and inject dynamic settings into the frontend
 add_action('enqueue_block_assets', function () {
-    $handle = 'pomolobee-pomolobee-app-view';
-
-    wp_enqueue_script(
-        $handle,
-        plugins_url('build/pomolobee-app/view.js', __FILE__),
-        ['wp-element', 'wp-blocks'],
-        '1.0.0',
-        true
-    );
-
+    // This handle is auto-registered from block.json "viewScript": "file:view.js"
+    $handle  = 'pomolobee-pomolobee-app-view';
     $api_url = get_option('pomolobee_api_url', 'http://localhost:9001/api');
 
+    // Only localize; don't enqueue again by URL
     wp_localize_script($handle, 'pomolobeeSettings', [
         'apiUrl'   => $api_url,
-        'basename' => '/pomolobee', // <- fixed base for SPA routes
+        // See Fix 2: use '' so routes like /pomolobee_dashboard match
+        'basename' => '',
     ]);
 });
+
 
 // 🐞 Optional: debug registered script handles in the frontend
 add_action('wp_print_scripts', function () {

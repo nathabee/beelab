@@ -3,7 +3,6 @@
 
 import React from "react";
 import { useProtectedPage } from "@hooks/useProtectedPage";
-import FieldSelection from "@components/FieldSelection";
 import ActiveContextCard from "@components/ActiveContextCard";
 
 const Dashboard: React.FC = () => {
@@ -12,7 +11,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-      <h1>📊 Dashboard NATHALIE</h1> 
+      <h1>📊 Dashboard</h1> 
       <ActiveContextCard />
     </>
   );

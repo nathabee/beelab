@@ -1,7 +1,10 @@
 // src/hooks/useFieldSvgUpload.ts
 'use client';
-import { useAuth } from '@context/AuthContext';
 import { apiPom, authHeaders } from '@utils/api';
+import type { AppError } from '@mytypes/error';
+import { toAppError } from '@utils/toAppError';
+import { errorBus } from '@utils/errorBus';
+import { useAuth } from '@context/AuthContext';
 
 type UploadResult = { svg_map_url?: string; [k: string]: any };
 
@@ -10,26 +13,37 @@ export default function useFieldSvgUpload() {
 
   async function uploadSvg(fieldId: number, file: File): Promise<string> {
     if (!token) throw new Error('No auth token');
-
     const form = new FormData();
     form.append('svg_map', file, file.name);
 
-    const res = await apiPom.post<UploadResult>(`/fields/${fieldId}/svg/`, form, {
-      headers: { ...authHeaders(token) }, // let the browser set multipart boundary
-    });
+    try {
+      const res = await apiPom.post<UploadResult>(`/fields/${fieldId}/svg/`, form, {
+        headers: { ...authHeaders(token) },
+      });
+      const url =
+        res.data?.svg_map_url ??
+        (res.data as any)?.field?.svg_map_url ??
+        (typeof res.data === 'string' ? res.data : null);
+      if (!url) throw new Error('Upload succeeded but no svg_map_url returned');
+      const cacheBusted = `${url}${url.includes('?') ? '&' : '?'}v=${Date.now()}`;
+      patchField(fieldId, { svg_map_url: cacheBusted });
+      return cacheBusted;
+    } catch (e) {
+      const appErr: AppError = toAppError(e, {
+        functionName: 'useFieldSvgUpload.uploadSvg',
+        service: 'pomolobee',
+      });
 
-    const url =
-      res.data?.svg_map_url ??
-      (res.data as any)?.field?.svg_map_url ??
-      (typeof res.data === 'string' ? res.data : null);
+      if (appErr.httpStatus === 401 || appErr.httpStatus === 403) {
+        appErr.severity = 'page';
+        errorBus.emit(appErr);
+        // IMPORTANT: don't rethrow here; the provider will handle the redirect.
+        return Promise.reject(appErr);
+      }
 
-    if (!url) throw new Error('Upload succeeded but no svg_map_url returned');
-
-    // Cache-bust in UI so the user doesn’t see a stale file with same path
-    const cacheBusted = `${url}${url.includes('?') ? '&' : '?'}v=${Date.now()}`;
-    patchField(fieldId, { svg_map_url: cacheBusted });
-
-    return cacheBusted;
+      // For non-page errors, let the caller show inline feedback
+      return Promise.reject(appErr);
+    }
   }
 
   return { uploadSvg };
