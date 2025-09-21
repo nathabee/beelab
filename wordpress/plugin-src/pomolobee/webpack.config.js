@@ -1,13 +1,25 @@
-const webpack = require('webpack'); 
+// webpack.config.js
+const webpack = require('webpack');
 const defaultConfig = require('@wordpress/scripts/config/webpack.config');
 const path = require('path');
 
 module.exports = {
   ...defaultConfig,
+
+  // ✅ externals at top-level (not under 'resolve')
+  externals: {
+    ...(defaultConfig.externals || {}),
+    react: 'React',
+    'react-dom': 'ReactDOM',
+    'react-dom/client': 'ReactDOM',
+    'react/jsx-runtime': 'ReactJSXRuntime',
+  },
+
   resolve: {
     ...defaultConfig.resolve,
     alias: {
       ...defaultConfig.resolve.alias,
+
       '@components': path.resolve(__dirname, 'src/components'),
       '@hooks': path.resolve(__dirname, 'src/hooks'),
       '@context': path.resolve(__dirname, 'src/context'),
@@ -18,12 +30,11 @@ module.exports = {
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@assets': path.resolve(__dirname, 'src/assets'),
       '@styles': path.resolve(__dirname, 'src/styles'),
-      '@bee/common': path.resolve(__dirname, '../_shared/error'),
+
+      // point to shared root so you can also use widgets
+      '@bee/common': path.resolve(__dirname, '../_shared'),
     },
-    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.png','.css'],
-    modules: [
-      path.resolve(__dirname, 'node_modules'),
-      'node_modules',
-    ],
-  }, 
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.png', '.css'],
+    modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
+  },
 };

@@ -1,4 +1,4 @@
-# developer-wordpress-plugin-shared.md
+# Wordpress Developer Tipps: shared library in plugin-src : shared Error 
 
 This note explains how our **shared React error system** (in `wordpress/plugin-src/_shared/error`) works and how **any plugin** living under `wordpress/plugin-src/<plugin>` can use it.
 

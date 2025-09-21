@@ -1,4 +1,5 @@
 import ReactDOM from 'react-dom/client';
+import * as React from 'react';
 import App from '@app/App';
 import { AuthProvider } from '@context/AuthContext';
 import './style.css';
@@ -9,6 +10,9 @@ nodes.forEach((el) => {
   // prevent double mounting if script somehow runs twice
   if ((el as any).__pbMounted) return;
   (el as any).__pbMounted = true;
+
+  console.log('[diag] React === window.React ?', React === (window as any).React);
+  console.log('[diag] ReactDOM === window.ReactDOM ?', ReactDOM === (window as any).ReactDOM);
 
   const root = ReactDOM.createRoot(el);
   root.render(

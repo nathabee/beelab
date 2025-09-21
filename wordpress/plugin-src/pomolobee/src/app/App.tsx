@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+// src/app/App.tsx
+import React, { useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import PomoloBeeHeader from '@app/PomoloBeeHeader';
 import AppRoutes from '@app/router';
-import { ErrorProvider, ErrorBanner, ErrorBoundary } from '@bee/common';
+import { ErrorProvider, ErrorBanner, ErrorBoundary, TranslateBox } from '@bee/common';
 
-// robust fallback if WP failed to inject settings
 function detectBasename() {
   const injected = (window as any)?.pomolobeeSettings?.basename;
   if (injected) return injected;
@@ -16,32 +16,22 @@ function detectErrorPath() {
 }
 
 const App = () => {
-  useEffect(() => {
-    if (!document.getElementById('google-translate-script')) {
-      const s = document.createElement('script');
-      s.id = 'google-translate-script';
-      s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-      document.body.appendChild(s);
-      (window as any).googleTranslateElementInit = () => {
-        new (window as any).google.translate.TranslateElement(
-          { pageLanguage: 'en', includedLanguages: 'fr,en', autoDisplay: false, default: 'fr' },
-          'google_translate_element'
-        );
-      };
-    }
-  }, []);
-
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
-
-  const basename  = detectBasename();   // '/pomolobee'
-  const errorPath = detectErrorPath();  // '/error'
+  const basename  = detectBasename();
+  const errorPath = detectErrorPath();
 
   return (
     <div className="pomolobee-app-container">
       <BrowserRouter basename={basename}>
-        <div className="translate-box" style={{ padding: 10, textAlign: 'right' }}>
-          🌐 Translate : <span id="google_translate_element"></span>
-        </div>
+        {/* Shared translate widget */}
+        <TranslateBox
+          className="translate-box"
+          style={{ padding: 10, textAlign: 'right' }}
+          languages="fr,en"
+          pageLanguage="en"
+          // optional: give a deterministic id per plugin to avoid clashes
+          containerId="pb_google_translate"
+        />
 
         <div className="app-layout">
           <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -62,4 +52,5 @@ const App = () => {
     </div>
   );
 };
+
 export default App;

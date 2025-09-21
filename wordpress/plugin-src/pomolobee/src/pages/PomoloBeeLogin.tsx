@@ -36,7 +36,7 @@ const PomoloBeeLogin = () => {
         <input
                 type="password"
                 name="password"
-                placeholder="Mot de passe VERSION1"
+                placeholder="Mot de passe"
                 autoComplete="current-password"
                 required
                 value={password}
