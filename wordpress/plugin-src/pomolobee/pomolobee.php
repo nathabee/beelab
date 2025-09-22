@@ -1,9 +1,10 @@
 <?php
+define('POMOLOBEE_VERSION', 'v1.0.11');
 
 /**
  * Plugin Name:       PomoloBee WP
  * Description:       FSE block hosting a React SPA that talks to Django.
- * Version:           1.0.0
+ * Version:           v1.0.11
  * Author:            Nathabee
  */
 
@@ -37,24 +38,6 @@ add_action('init', function () {
     ]);
 });
 
-/**
- * 3) Deep-link refreshes need a catch-all rewrite
- * 
- * With only the CPT rewrite, WordPress will serve /pomolobee fine, 
- * but a hard refresh (or direct hit) on /pomolobee/dashboard, /pomolobee/login, etc. will 404, 
- * because WP tries to resolve those as real paths.
- * 
- * Your SPA navigation (client-side) works, but browser refresh on nested routes won’t—
- * unless you add a catch-all rewrite that maps /pomolobee/* back to the single CPT post.
- */
-
-add_action('init', function () {
-    add_rewrite_rule(
-        '^pomolobee(?:/.*)?$',
-        'index.php?post_type=pomolobee_page&name=pomolobee',
-        'top'
-    );
-});
 
 
 
@@ -191,27 +174,41 @@ function pomolobee_settings_page_html()
 }
 
 // ✅ Enqueue your view.js and inject dynamic settings into the frontend
-add_action('enqueue_block_assets', function () {
-    // This is the handle WP generates from block.json:
-    $handle = 'pomolobee-pomolobee-app-view-script';
-    //$handle = 'pomolobee-pomolobee-app-view';
+// Replace your current enqueue_block_assets localizer with this:
+add_action('wp_enqueue_scripts', function () {
+    if (!is_singular('pomolobee_page')) return;
 
+    $handle = 'pomolobee-pomolobee-app-view-script'; // from block.json
 
-
-    // Only localize if the script is actually registered.
-    if (wp_script_is($handle, 'registered') || wp_script_is($handle, 'enqueued')) {
-        $api_url = get_option('pomolobee_api_url', 'https://beelab-api.nathabee.de/api');
-        wp_localize_script($handle, 'pomolobeeSettings', [
-            'apiUrl'   => $api_url,
-            'basename' => '/pomolobee', // safer and predictable
-            'errorPath' => '/error',
-        ]);
+    // (Block JSON will enqueue it when the block is on the page.
+    //  Calling enqueue again is safe if already enqueued.)
+    if (!wp_script_is($handle, 'enqueued')) {
+        wp_enqueue_script($handle);
     }
+
+    $api_url = get_option('pomolobee_api_url', 'https://beelab-api.nathabee.de/api');
+    wp_localize_script($handle, 'pomolobeeSettings', [
+        'apiUrl'    => $api_url,
+        'basename'  => '/pomolobee',
+        'errorPath' => '/error',
+    ]);
 }, 20);
 
+/* force default to be prod */
+
+/*
+register_activation_hook(__FILE__, function () {
+    if (false === get_option('pomolobee_api_url', false)) {
+        update_option('pomolobee_api_url', 'https://beelab-api.nathabee.de/apidefaulthook');
+    }
+});
+*/
+
+
 // 🐞 Optional: debug registered script handles in the frontend
+/*
 add_action('wp_print_scripts', function () {
-    if (!is_admin()) {
+    if (!is_admin() && is_singular('pomolobee_page')) {
         global $wp_scripts;
         foreach ($wp_scripts->registered as $handle => $script) {
             if (strpos($handle, 'pomolobee') !== false) {
@@ -220,3 +217,72 @@ add_action('wp_print_scripts', function () {
         }
     }
 });
+*/
+
+
+
+
+add_action('admin_init', function () {
+    $stored = get_option('pomolobee_version_flushed');
+    if ($stored !== POMOLOBEE_VERSION) {
+        // Re-register CPT + post (same as activate), then flush
+        pomolobee_activate();
+        update_option('pomolobee_version_flushed', POMOLOBEE_VERSION);
+    }
+});
+
+
+add_filter('request', function ($vars) {
+    if (!empty($vars['pagename']) && $vars['pagename'] === 'pomolobee') {
+        $post = get_page_by_path('pomolobee', OBJECT, 'pomolobee_page');
+        if ($post) {
+            // Force WP to resolve to our single CPT
+            unset($vars['pagename']);
+            $vars['post_type'] = 'pomolobee_page';
+            $vars['name'] = 'pomolobee';
+        }
+    }
+    return $vars;
+});
+
+/**
+ * 3) Deep-link refreshes need a catch-all rewrite
+ * 
+ * With only the CPT rewrite, WordPress will serve /pomolobee fine, 
+ * but a hard refresh (or direct hit) on /pomolobee/dashboard, /pomolobee/login, etc. will 404, 
+ * because WP tries to resolve those as real paths.
+ * 
+ * Your SPA navigation (client-side) works, but browser refresh on nested routes won’t—
+ * unless you add a catch-all rewrite that maps /pomolobee/* back to the single CPT post.
+ */
+
+ 
+
+ 
+
+
+// Put this in your plugin (same file is fine)
+add_action('init', function () {
+    // root
+    add_rewrite_rule('^pomolobee/?$', 'index.php?pomolobee_page=pomolobee', 'top');
+
+    // deep routes
+    add_rewrite_rule('^pomolobee/.+/?$', 'index.php?pomolobee_page=pomolobee', 'top');
+}, 1);
+
+
+
+// Rescue direct hits when rewrites are stale or permalinks are "Plain"
+add_filter('pre_handle_404', function ($pre, $wp_query) {
+    $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    if (preg_match('#^/pomolobee(?:/.*)?$#', $path)) {
+        $post = get_page_by_path('pomolobee', OBJECT, 'pomolobee_page');
+        if ($post) {
+            $wp_query->set('post_type', 'pomolobee_page');
+            $wp_query->set('name', 'pomolobee');
+            $wp_query->is_404 = false;
+            return true; // short-circuit 404 handling
+        }
+    }
+    return $pre;
+}, 10, 2);
