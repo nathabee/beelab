@@ -1,8 +1,10 @@
 <?php
+define('COMPETENCE_VERSION', 'v1.0.11');
+define('POMOLOBEE_VERSION', 'v1.0.1');
 /**
  * Plugin Name:       Competence WP
  * Description:       FSE blocks integrating with Django backend.
- * Version:           1.0.0
+ * Version:           v1.0.11
  * Author:            Nathabee
  */
 
