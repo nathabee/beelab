@@ -12,8 +12,11 @@ function join(base: string, path: string) {
 }
 
 export function getBaseApi(): string {
+  console.log('[pomolobee] getBaseApi settings  :', (window as any)?.pomolobeeSettings);
+
   // 1) WordPress-localized (plugin)
   if (typeof window !== "undefined") {
+    console.log('[pomolobee] getBaseApi window defined  :', (window as any)?.pomolobeeSettings?.apiUrl);
     const wpApi = (window as any)?.pomolobeeSettings?.apiUrl;
     if (wpApi) return norm(wpApi);
     // 2) Optional meta override <meta name="pomolobee-api-base" content="https://api.example.com/api">
@@ -27,7 +30,7 @@ export function getBaseApi(): string {
   }
 
   // 4) Fallback (dev)
-  return "http://localhost:9001/api";
+  return "http://localhost:9001/apilalala";
 }
 
 // Two clear axios clients, one per namespace

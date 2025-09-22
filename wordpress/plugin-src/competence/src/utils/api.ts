@@ -10,12 +10,18 @@ function join(base: string, path: string) {
 }
 
 export function getBaseApi(): string {
+
+  console.log('[competence] getBaseApi settings  :', (window as any)?.competenceSettings);
+
   // 1) WordPress-localized (plugin)
   if (typeof window !== "undefined") {
-    const wpApi = (window as any)?.pomolobeeSettings?.apiUrl;
+    console.log('[competence] getBaseApi window defined  :', (window as any)?.competenceSettings?.apiUrl);
+ 
+    const wpApi = (window as any)?.competenceSettings?.apiUrl;
     if (wpApi) return norm(wpApi);
-    // 2) Optional meta override <meta name="pomolobee-api-base" content="https://api.example.com/api">
-    const meta = document.querySelector('meta[name="pomolobee-api-base"]') as HTMLMetaElement | null;
+    // 2) Optional meta override <meta name="competence-api-base" content="https://api.example.com/api">
+    const meta = document.querySelector('meta[name="competence-api-base"]') as HTMLMetaElement | null;
+    console.log('[competence] getBaseApimeta[name="competence-api-base"]  :',meta?.content);
     if (meta?.content) return norm(meta.content);
   }
 

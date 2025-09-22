@@ -337,11 +337,11 @@ compile_plugin() {
       "$image" \
       bash -lc '
         set -euo pipefail
-        if [[ -f package-lock.json ]]; then
-          npm ci
-        else
-          npm install
-        fi
+        #if [[ -f package-lock.json ]]; then
+        #  npm ci
+        #else
+        #  npm install
+        #fi
         npm run build
       '
   else
@@ -368,13 +368,13 @@ makeplugin() {
 
     # 1) compile (host or docker)
     compile_plugin "$plugin" "$mode"
+    # npm run build
 
     # 2) run plugin scripts
     cd "$src"
     [[ -x ./build_zip.sh ]]     || chmod +x ./build_zip.sh
     [[ -x ./install_plugin.sh ]]|| chmod +x ./install_plugin.sh
-
-    npm run build
+ 
     ./build_zip.sh
     ./install_plugin.sh
   )

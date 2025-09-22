@@ -7,12 +7,21 @@
 				"page"
 			],
 			"title": "Page No Title"
-		}, 
+		},
 		{
 			"name": "pages-plugin",
-			"postTypes": ["page"],
+			"postTypes": [
+				"page"
+			],
 			"title": "Plugin Page (Full Width)"
-		} 
+		},
+		{
+			"name": "plugin-fullwidth",
+			"postTypes": [
+				"pomolobee_page"
+			],
+			"title": "Plugin Page (Full Width)"
+		}
 	],
 	"settings": {
 		"appearanceTools": true,

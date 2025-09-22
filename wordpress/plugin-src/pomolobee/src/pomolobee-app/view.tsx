@@ -13,6 +13,7 @@ nodes.forEach((el) => {
 
   console.log('[diag] React === window.React ?', React === (window as any).React);
   console.log('[diag] ReactDOM === window.ReactDOM ?', ReactDOM === (window as any).ReactDOM);
+  console.log('[pomolobee] settings @load:', (window as any)?.pomolobeeSettings);
 
   const root = ReactDOM.createRoot(el);
   root.render(
@@ -21,3 +22,4 @@ nodes.forEach((el) => {
     </AuthProvider>
   );
 });
+ 
