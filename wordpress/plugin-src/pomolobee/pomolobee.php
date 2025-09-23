@@ -1,10 +1,9 @@
-<?php
-define('POMOLOBEE_VERSION', 'v1.0.11');
+<?php 
 
 /**
  * Plugin Name:       PomoloBee WP
  * Description:       FSE block hosting a React SPA that talks to Django.
- * Version:           v1.0.11
+ * Version:           v1.0.12
  * Author:            Nathabee
  */
 
@@ -37,6 +36,8 @@ add_action('init', function () {
         'menu_icon'           => 'dashicons-chart-line',
     ]);
 });
+
+
 
 
 
@@ -262,12 +263,19 @@ add_filter('request', function ($vars) {
 
 
 // Put this in your plugin (same file is fine)
-add_action('init', function () {
+
+//add_action('init', function () {
     // root
-    add_rewrite_rule('^pomolobee/?$', 'index.php?pomolobee_page=pomolobee', 'top');
+  //  add_rewrite_rule('^pomolobee/?$', 'index.php?pomolobee_page=pomolobee', 'top');
 
     // deep routes
-    add_rewrite_rule('^pomolobee/.+/?$', 'index.php?pomolobee_page=pomolobee', 'top');
+   // add_rewrite_rule('^pomolobee/.+/?$', 'index.php?pomolobee_page=pomolobee', 'top');
+//}, 1);
+
+// root + deep routes, on init (priority 1 is fine once CPT is registered too)
+add_action('init', function () {
+    add_rewrite_rule('^pomolobee/?$',         'index.php?post_type=pomolobee_page&name=pomolobee', 'top');
+    add_rewrite_rule('^pomolobee/.+/?$',      'index.php?post_type=pomolobee_page&name=pomolobee', 'top');
 }, 1);
 
 
@@ -286,3 +294,5 @@ add_filter('pre_handle_404', function ($pre, $wp_query) {
     }
     return $pre;
 }, 10, 2);
+
+
