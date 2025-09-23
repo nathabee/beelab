@@ -1,10 +1,10 @@
 // src/app/App.tsx
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import PomoloBeeHeader from '@app/PomoloBeeHeader';
 import AppRoutes from '@app/router';
-import { ErrorProvider, ErrorBanner, ErrorBoundary, TranslateBox } from '@bee/common';
-
+import { ErrorProvider, ErrorBanner, ErrorBoundary, TranslateBox, toAppError, errorBus  } from '@bee/common';
+ 
 function detectBasename() {
   const injected = (window as any)?.pomolobeeSettings?.basename;
   if (injected) return injected;
@@ -17,8 +17,34 @@ function detectErrorPath() {
 
 const App = () => {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
-  const basename  = detectBasename();
+  const basename = detectBasename();
   const errorPath = detectErrorPath();
+
+  useEffect(() => {
+    const onError = (event: ErrorEvent) => {
+      errorBus.emit(toAppError(event.error || event.message, {
+        component: 'window',
+        functionName: 'error',
+        service: 'runtime',
+        severity: 'toast',
+      }));
+    };
+    const onRejection = (event: PromiseRejectionEvent) => {
+      errorBus.emit(toAppError(event.reason, {
+        component: 'window',
+        functionName: 'unhandledrejection',
+        service: 'runtime',
+        severity: 'toast',
+      }));
+    };
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+    };
+  }, []);
+
 
   return (
     <div className="pomolobee-app-container">

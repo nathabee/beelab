@@ -1,8 +1,8 @@
-<?php
+<?php 
 /**
  * Plugin Name:       Competence WP
  * Description:       FSE blocks integrating with Django backend.
- * Version:           1.0.0
+ * Version:           v1.1.0
  * Author:            Nathabee
  */
 

@@ -1,69 +1,87 @@
-// src/utils/api.ts 
+// src/utils/api.ts
 import axios from 'axios';
-import { toAppError } from '@bee/common';
-import { errorBus } from '@bee/common';
+import { toAppError, errorBus } from '@bee/common';
 
-function norm(u: string) {
-  return u.replace(/\/+$/, ""); // strip trailing slash
-}
+// --- helpers ---
+const norm = (u: string) => u.replace(/\/+$/, '');
+const join = (base: string, path: string) =>
+  `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
 
-function join(base: string, path: string) {
-  return `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
-}
-
-export function getBaseApi(): string {
-  console.log('[pomolobee] getBaseApi settings  :', (window as any)?.pomolobeeSettings);
-
+/** Strict: either return a base URL or throw. */
+function getBaseApiStrict(): string {
   // 1) WordPress-localized (plugin)
-  if (typeof window !== "undefined") {
-    console.log('[pomolobee] getBaseApi window defined  :', (window as any)?.pomolobeeSettings?.apiUrl);
+  if (typeof window !== 'undefined') {
     const wpApi = (window as any)?.pomolobeeSettings?.apiUrl;
     if (wpApi) return norm(wpApi);
-    // 2) Optional meta override <meta name="pomolobee-api-base" content="https://api.example.com/api">
+
+    // 2) Optional meta override
     const meta = document.querySelector('meta[name="pomolobee-api-base"]') as HTMLMetaElement | null;
     if (meta?.content) return norm(meta.content);
   }
 
-  // 3) Next.js / front-end env (public)
-  if (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) {
+  // 3) Front-end env
+  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) {
     return norm(process.env.NEXT_PUBLIC_API_URL);
   }
 
-  // 4) Fallback (dev)
-  return "http://localhost:9001/apilalala";
+  // ❌ Required config missing — throw (and we’ll also emit below)
+  throw new Error('Missing API base configuration (pomolobeeSettings.apiUrl or meta[pomolobee-api-base] or NEXT_PUBLIC_API_URL).');
 }
 
-// Two clear axios clients, one per namespace
+/** Resolve base URL once, but *don’t* crash module load; emit + remember the error. */
+let BASE: string | null = null;
+let BASE_ERR: any = null;
+try {
+  BASE = getBaseApiStrict();
+} catch (e) {
+  BASE_ERR = toAppError(e, { service: 'config', severity: 'page' });
+  errorBus.emit(BASE_ERR); // trigger your UI (banner/page redirect)
+  BASE = null;             // mark as unresolved
+}
+
+// Two axios clients (unchanged public API)
 export const apiUser = axios.create({
-  baseURL: join(getBaseApi(), "/user"),
+  baseURL: BASE ? join(BASE, '/user') : '/__invalid_base__',
   timeout: 15000,
   withCredentials: true,
 });
 
 export const apiPom = axios.create({
-  baseURL: join(getBaseApi(), "/pomolobee"),
+  baseURL: BASE ? join(BASE, '/pomolobee') : '/__invalid_base__',
   timeout: 15000,
+  withCredentials: true,
 });
 
-// Optional helper if you don't use interceptors
-export function authHeaders(token: string | null) {
-  return token ? { Authorization: `Bearer ${token}` } : {};
+// Request interceptor: if base config missing, immediately fail any call with the same app error.
+for (const client of [apiPom, apiUser]) {
+  client.interceptors.request.use((config) => {
+    if (BASE_ERR) {
+      // Reject early so callers get a clear, normalized error
+      return Promise.reject(BASE_ERR);
+    }
+    // WP nonce if available
+    const nonce = (window as any)?.beeNonce || (window as any)?.pomolobeeSettings?.nonce;
+    if (nonce) {
+      config.headers = { ...(config.headers || {}), 'X-WP-Nonce': nonce };
+    }
+    return config;
+  });
 }
 
- 
-
-// unified response error handling
+// Unified response error handling (unchanged behavior)
 for (const [client, service] of [[apiPom, 'pomolobee'], [apiUser, 'user']] as const) {
   client.interceptors.response.use(
-    (r) => r,
+    r => r,
     (err) => {
-      const appErr = toAppError(err, {
-        service,
-        functionName: 'axios',
-        // component left blank; components may add it if they rethrow
-      });
+      // if config error already normalized, it will pass through as-is
+      const appErr = err?.id ? err : toAppError(err, { service, functionName: 'axios' });
       errorBus.emit(appErr);
-      return Promise.reject(appErr); // so local callers can still handle inline if they want
+      return Promise.reject(appErr);
     }
   );
+}
+
+
+export function authHeaders(token: string | null) {
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }

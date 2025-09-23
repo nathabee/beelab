@@ -1,3 +1,5 @@
+// pomolobee-app/view.tsx
+
 import ReactDOM from 'react-dom/client';
 import * as React from 'react';
 import App from '@app/App';

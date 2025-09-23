@@ -1,5 +1,5 @@
-// _shared/error/ErrorContext.tsx (or wherever your provider lives)
-'use client';
+// _shared/error/ErrorContext.tsx
+'use client'; // harmless in WP, needed only for Next.js app router
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { errorBus } from './errorBus';
@@ -12,54 +12,47 @@ type Ctx = {
 };
 const ErrorCtx = createContext<Ctx | null>(null);
 
-export const ErrorProvider: React.FC<{ children: React.ReactNode; errorPath?: string }> = ({ children, errorPath = '/error' }) => {
-  const [stack, setStack] = useState<AppError[]>([]);
+export const ErrorProvider: React.FC<{ children: React.ReactNode; errorPath?: string }> = ({
+  children,
+  errorPath = '/error',
+}) => {
+  // hydrate from sessionStorage
+  const [stack, setStack] = useState<AppError[]>(() => {
+    try {
+      const raw = sessionStorage.getItem('bee_errors');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
   const last = stack.at(-1) ?? null;
 
   const nav = useNavigate();
   const loc = useLocation();
   const unsubRef = useRef<() => void>();
 
-  /*
   useEffect(() => {
-    // subscribe once
     unsubRef.current = errorBus.on((e: AppError) => {
-      setStack(prev => [...prev, e]);
+      setStack(prev => {
+        const next = [...prev, e];
+        try { sessionStorage.setItem('bee_errors', JSON.stringify(next.slice(-20))); } catch {}
+        return next;
+      });
 
-      // Only force page-level redirect if needed
-      if (e.severity === 'page' || (e.httpStatus && e.httpStatus >= 400)) {
-        if (!loc.pathname.startsWith('/pomolobee_error')) {
-          // do it on next tick to avoid setState-during-render pitfalls
-          setTimeout(() => {
-            nav('/pomolobee_error', { state: { errorId: e.id } });
-          }, 0);
-        }
-      }
-    });
-    return () => { unsubRef.current?.(); };
-  }, [nav, loc.pathname]);
-*/
-  useEffect(() => {
-    unsubRef.current = errorBus.on((e) => {
-      setStack(prev => [...prev, e]);
-      if (e.severity === 'page' || (e.httpStatus && e.httpStatus >= 400)) {
-        setTimeout(() => {
-          nav(errorPath);      // ← no more hardcoded '/pomolobee_error'
-        }, 0);
+      // Only redirect for page-level (or 4xx/5xx), and avoid loops
+      const needsRedirect = e.severity === 'page' || (e.httpStatus && e.httpStatus >= 400);
+      const alreadyOnError = loc.pathname === errorPath;
+      if (needsRedirect && !alreadyOnError) {
+        setTimeout(() => nav(errorPath), 0);
       }
     });
     return () => unsubRef.current?.();
-  }, [nav, errorPath]);
+  }, [nav, loc.pathname, errorPath]);
 
-  // inside ErrorProvider
-  useEffect(() => {
-    const id = Math.random().toString(36).slice(2, 8);
-    console.log('[ErrorProvider] mount', id);
-    return () => console.log('[ErrorProvider] unmount', id);
-  }, []);
-
-
-  const clear = () => setStack([]);
+  const clear = () => {
+    setStack([]);
+    try { sessionStorage.removeItem('bee_errors'); } catch {}
+  };
 
   const value = useMemo<Ctx>(() => ({ last, stack, clear }), [last, stack]);
   return <ErrorCtx.Provider value={value}>{children}</ErrorCtx.Provider>;
