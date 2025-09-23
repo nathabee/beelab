@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       PomoloBee WP
  * Description:       FSE block hosting a React SPA that talks to Django.
- * Version:           v1.0.12
+ * Version:           v1.1.0
  * Author:            Nathabee
  */
 
@@ -223,15 +223,7 @@ add_action('wp_print_scripts', function () {
 
 
 
-add_action('admin_init', function () {
-    $stored = get_option('pomolobee_version_flushed');
-    if ($stored !== POMOLOBEE_VERSION) {
-        // Re-register CPT + post (same as activate), then flush
-        pomolobee_activate();
-        update_option('pomolobee_version_flushed', POMOLOBEE_VERSION);
-    }
-});
-
+ 
 
 add_filter('request', function ($vars) {
     if (!empty($vars['pagename']) && $vars['pagename'] === 'pomolobee') {
