@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Competence WP
  * Description:       FSE blocks integrating with Django backend.
- * Version:           v1.1.0
+ * Version:           v1.1.1
  * Author:            Nathabee
  */
 
@@ -158,7 +158,7 @@ function competence_register_settings() {
 
 // ✅ Renders the input box in the admin settings form
 function competence_api_url_render() {
-    $value = get_option('competence_api_url', 'http://localhost:9001/api/');
+    $value = get_option('competence_api_url', 'https://beelab-api.nathabee.de');
     echo "<input type='text' name='competence_api_url' value='" . esc_attr($value) . "' size='50'>";
 }
 
@@ -192,7 +192,7 @@ add_action('enqueue_block_assets', function () {
     );
 
     // Inject the API URL into the frontend script
-    $api_url = get_option('competence_api_url', 'http://localhost:9001/api/');
+    $api_url = get_option('competence_api_url', 'https://beelab-api.nathabee.de/api');
  
 
     wp_localize_script($handle, 'competenceSettings', [

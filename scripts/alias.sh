@@ -728,6 +728,25 @@ dcwpcliup / dcwpclidown # start/stop wpcli sidecar
 dcwpfixroutes        # fix home/siteurl, permalinks, flush rewrites
 dcwplsmedia          # List MEDIA inside containers (defaults to the root of media)
 
+dcwpcheck_leftovers  # check if a plugin left any data behind (options, CPT posts, roles, etc.)
+Usage:   dcwpcheck_leftovers pomolobee 
+
+dcwproutediagnose pluginname  #diagnose the routing in wordpress for the plugin
+
+dcwpcliup                 # ensure wpcli is running
+dcwpclogs                 # watch why it might be stopping
+
+# reseed everything
+dcdjseed_all
+# or only the plugin side
+dcdjseed_pomolobee
+
+# CLI tools
+dcwpcli bash              # shell inside wpcli
+dcwpcli wp plugin list    # run wp commands
+
+
+########################################################
 ###### WEB (Next.js) ##
 dcweblogs            # follow web logs
 dcwebup / dcwebdown  # start/stop web only
@@ -756,22 +775,7 @@ dttestcov_usercore   # run UserCore tests with coverage
 
  
 ###### DEVELOPMENT ##########
-
-dcwpcheck_leftovers  # check if a plugin left any data behind (options, CPT posts, roles, etc.)
-Usage:   dcwpcheck_leftovers pomolobee 
-
-dcwproutediagnose pluginname  #diagnose the routing in wordpress for the plugin
-
-dcwpcliup                 # ensure wpcli is running
-dcwpclogs                 # watch why it might be stopping
-dcwpcli bash              # shell inside wpcli
-dcwpcli wp plugin list    # run wp commands
-
-
-# reseed everything
-dcdjseed_all
-# or only the plugin side
-dcdjseed_pomolobee
+ to be listed
 
  
 

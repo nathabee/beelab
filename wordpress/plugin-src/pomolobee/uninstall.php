@@ -1,19 +1,19 @@
 <?php
 // uninstall.php
-if ( ! defined('WP_UNINSTALL_PLUGIN') ) {
-    exit;
-}
+if ( ! defined('WP_UNINSTALL_PLUGIN') ) exit;
 
 /**
- * Delete plugin options and all CPT posts created by the plugin.
- * Runs in an isolated scope — do not rely on functions/consts from your main plugin file.
+ * Do NOT rely on constants or functions from the main plugin file here.
+ * WP core is loaded, so you can call WP APIs (delete_option, get_posts, etc.).
  */
 
-function pomolobee_delete_everything_for_site() {
-    // remove the option
+function pomolobee_cleanup_one_site() {
+    // --- Options (add any others you may have created)
     delete_option('pomolobee_api_url');
+    delete_option('pomolobee_version_flushed');  // if you used this
+    delete_option('pomolobee_last_migrated');    // if you add versioned migrations
 
-    // delete all CPT posts (force delete)
+    // --- CPT posts (force delete)
     $ids = get_posts([
         'post_type'              => 'pomolobee_page',
         'post_status'            => 'any',
@@ -27,21 +27,33 @@ function pomolobee_delete_everything_for_site() {
     foreach ( $ids as $id ) {
         wp_delete_post( $id, true );
     }
+
+    // --- Cron (if you ever schedule things)
+    // wp_clear_scheduled_hook('pomolobee_cron_hook');
+
+    // --- Transients (best-effort; adjust pattern if needed)
+    global $wpdb;
+    $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_pomolobee\_%' OR option_name LIKE '\_site\_transient\_pomolobee\_%'" );
+
+    // --- Rewrite rules
+    // Option A (cheap): drop the cached rules so WP rebuilds them on next request
+    delete_option('rewrite_rules');
+
+    // Option B (eager): do a soft flush now (needs permalinks set to something).
+    // If you prefer the eager approach, uncomment:
+    // flush_rewrite_rules(false);
 }
 
 if ( is_multisite() ) {
-    // Clean up on every site in the network.
-    $site_ids = get_sites( [ 'fields' => 'ids' ] );
+    // Site options variant (in case you ever stored network options)
+    delete_site_option('pomolobee_api_url');
+
+    $site_ids = get_sites([ 'fields' => 'ids' ]);
     foreach ( $site_ids as $site_id ) {
         switch_to_blog( $site_id );
-        pomolobee_delete_everything_for_site();
+        pomolobee_cleanup_one_site();
         restore_current_blog();
     }
-    // Network-wide option variant (if you ever used it)
-    delete_site_option('pomolobee_api_url');
 } else {
-    pomolobee_delete_everything_for_site();
+    pomolobee_cleanup_one_site();
 }
-
-// Optional: if you created cron events, transients, roles/caps, clean them here too.
-// e.g. wp_clear_scheduled_hook('pomolobee_cron'); delete_transient('pomolobee_*');
