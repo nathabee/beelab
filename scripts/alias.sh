@@ -693,6 +693,24 @@ echo "Done."
 '
 }
 
+dcwproute() {
+  local path="${1:-/}"
+  _beelab_ensure_wpcli
+  local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
+  dc exec $tty_flags "$BEELAB_WPCLI_SVC" bash -lc '
+P="'"$path"'"
+php -r '\''require "wp-load.php"; global $wp;
+  $_GET=$_POST=[];
+  $_SERVER["REQUEST_URI"]=getenv("P");
+  $_SERVER["REQUEST_METHOD"]="GET";
+  $wp->parse_request();
+  printf("=== %s ===\n", getenv("P"));
+  printf("matched_rule:  %s\n", $wp->matched_rule ?? "(none)");
+  printf("matched_query: %s\n", $wp->matched_query ?? "(none)");
+  printf("query_vars:    %s\n", json_encode($wp->query_vars, JSON_UNESCAPED_SLASHES));'\''
+'
+}
+
 
 
 # switch env in the same shell after sourcing: blenv dev|prod
@@ -732,6 +750,17 @@ dcwpcheck_leftovers  # check if a plugin left any data behind (options, CPT post
 Usage:   dcwpcheck_leftovers pomolobee 
 
 dcwproutediagnose pluginname  #diagnose the routing in wordpress for the plugin
+# path
+dcwproute /pomolobee/
+
+# full URL (it strips the domain automatically)
+dcwproute http://localhost:9001/pomolobee/
+
+# nested SPA paths
+dcwproute /pomolobee/login
+dcwproute /pomolobee/dashboard
+
+
 
 dcwpcliup                 # ensure wpcli is running
 dcwpclogs                 # watch why it might be stopping

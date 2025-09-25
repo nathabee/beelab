@@ -3,8 +3,10 @@ import React, { useState,useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import PomoloBeeHeader from '@app/PomoloBeeHeader';
 import AppRoutes from '@app/router';
-import { ErrorProvider, ErrorBanner, ErrorBoundary, TranslateBox, toAppError, errorBus  } from '@bee/common';
+import { ErrorProvider, ErrorBanner, ErrorBoundary, toAppError, errorBus  } from '@bee/common/error';
  
+import { TranslateBox   } from '@bee/common/widgets';
+
 function detectBasename() {
   const injected = (window as any)?.pomolobeeSettings?.basename;
   if (injected) return injected;

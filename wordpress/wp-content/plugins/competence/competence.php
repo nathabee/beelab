@@ -1,13 +1,14 @@
-<?php 
+<?php
+
 /**
  * Plugin Name:       Competence WP
  * Description:       FSE blocks integrating with Django backend.
- * Version:           v1.1.1
+ * Version:           v1.1.2
  * Author:            Nathabee
  */
 
-if ( function_exists( 'wp_register_block_types_from_metadata_collection' ) ) {
-    add_action( 'init', function () {
+if (function_exists('wp_register_block_types_from_metadata_collection')) {
+    add_action('init', function () {
         wp_register_block_types_from_metadata_collection(
             __DIR__ . '/build',
             __DIR__ . '/build/blocks-manifest.php'
@@ -15,20 +16,26 @@ if ( function_exists( 'wp_register_block_types_from_metadata_collection' ) ) {
     });
 }
 
- 
 // FIRST INIT
 register_activation_hook(__FILE__, 'competence_wp_create_pages');
 
-function competence_wp_create_pages() {
+function competence_wp_create_pages()
+{
     $pages = [
-        // Visible in menu (we’ll add it deliberately in the nav)
+        // Visible in menu (we’ll add it deliberately in the nav) — keep a core page if you want
         [
-            'title' => 'Login',
-            'slug'  => 'competence_login',
+            'title' => 'Competence',
+            'slug'  => 'competence', 
             'block' => '<!-- wp:competence/competence-app /-->',
-            'type'  => 'page', // core page so it can be used easily in Navigation if you prefer
+            'type'  => 'page',
         ],
         // Hidden from menus (CPT)
+        [
+            'title' => 'Login',
+            'slug'  => 'competence_login',  
+            'block' => '<!-- wp:competence/competence-app /-->',
+            'type'  => 'competence_page',
+        ],
         [
             'title' => 'Home',
             'slug'  => 'competence_home',
@@ -86,27 +93,21 @@ function competence_wp_create_pages() {
     ];
 
     foreach ($pages as $page) {
-        if (!get_page_by_path($page['slug'])) {
+        if (! get_page_by_path($page['slug'], OBJECT, $page['type'])) {
             wp_insert_post([
                 'post_title'   => $page['title'],
                 'post_name'    => $page['slug'],
                 'post_content' => $page['block'],
                 'post_status'  => 'publish',
-                'post_type'    => $page['type'],  
+                'post_type'    => $page['type'],
             ]);
         }
     }
 }
 
- 
-
-
 /************************************************************** 
- * 
  * SECTION FOR STYLES
- * 
-*****************************************************************/
-
+ *****************************************************************/
 
 add_action('wp_enqueue_scripts', function () {
     wp_enqueue_style(
@@ -117,54 +118,56 @@ add_action('wp_enqueue_scripts', function () {
 
 
 /************************************************************** 
- * 
  * SECTION FOR SETTINGS : ADMIN MENU AND ENQUEUE FOR VIEW.JS
- * 
-*****************************************************************/
+ *****************************************************************/
 // 🔧 Register settings page and settings fields
 add_action('admin_menu', 'competence_register_settings_page');
 add_action('admin_init', 'competence_register_settings');
 
 // ✅ Adds a new page under "Settings" in WP admin
-function competence_register_settings_page() {
+function competence_register_settings_page()
+{
     add_options_page(
-        'Competence Settings',       // Page title
-        'Competence Settings',       // Menu label
-        'manage_options',            // Required capability
-        'competence-settings',       // Menu slug
-        'competence_settings_page_html' // Function to display the page
+        'Competence Settings',
+        'Competence Settings',
+        'manage_options',
+        'competence-settings',
+        'competence_settings_page_html'
     );
 }
 
 // ✅ Register the setting, section, and input field
-function competence_register_settings() {
+function competence_register_settings()
+{
     register_setting('competence_settings_group', 'competence_api_url');
 
     add_settings_section(
-        'competence_main_section',     // Section ID
-        'Main Settings',               // Title
-        null,                          // Callback (none)
-        'competence-settings'          // Page slug
+        'competence_main_section',
+        'Main Settings',
+        null,
+        'competence-settings'
     );
 
     add_settings_field(
-        'competence_api_url',          // Field ID
-        'API Base URL',                // Label
-        'competence_api_url_render',   // Callback to render the input
-        'competence-settings',         // Page slug
-        'competence_main_section'      // Section ID
+        'competence_api_url',
+        'API Base URL',
+        'competence_api_url_render',
+        'competence-settings',
+        'competence_main_section'
     );
 }
 
 // ✅ Renders the input box in the admin settings form
-function competence_api_url_render() {
+function competence_api_url_render()
+{
     $value = get_option('competence_api_url', 'https://beelab-api.nathabee.de');
     echo "<input type='text' name='competence_api_url' value='" . esc_attr($value) . "' size='50'>";
 }
 
 // ✅ Renders the full admin settings page HTML
-function competence_settings_page_html() {
-    ?>
+function competence_settings_page_html()
+{
+?>
     <div class="wrap">
         <h1>Competence Plugin Settings</h1>
         <form method="post" action="options.php">
@@ -175,32 +178,8 @@ function competence_settings_page_html() {
             ?>
         </form>
     </div>
-    <?php
+<?php
 }
-
-// ✅ Enqueue your view.js and inject dynamic settings into the frontend
-add_action('enqueue_block_assets', function () {
-    $handle = 'competence-competence-app-view';
-
-    // Load the React bundle from the plugin directory
-    wp_enqueue_script(
-        $handle,
-        plugins_url('build/competence-app/view.js', __FILE__),
-        ['wp-element', 'wp-blocks'],
-        '1.0.0',
-        true // Footer
-    );
-
-    // Inject the API URL into the frontend script
-    $api_url = get_option('competence_api_url', 'https://beelab-api.nathabee.de/api');
- 
-
-    wp_localize_script($handle, 'competenceSettings', [
-    'apiUrl' => $api_url,
-    'basename' => parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)
-    ]);
-
-});
 
 // 🐞 Optional: debug registered script handles in the frontend
 add_action('wp_print_scripts', function () {
@@ -208,14 +187,32 @@ add_action('wp_print_scripts', function () {
         global $wp_scripts;
         foreach ($wp_scripts->registered as $handle => $script) {
             if (strpos($handle, 'competence') !== false) {
-                error_log("🧩 Competence script handle found: $handle");
+                error_log("🐝 Competence script handle found: $handle");
             }
         }
     }
 });
 
+// Inline runtime config for the view bundle (same pattern as before)
+add_action('wp_enqueue_scripts', function () {
+    // Use the actual handle for your block view script if known. 
+    // Keeping the same pattern you had:
+    $handle = 'competence-competence-app-view-script';
 
-// functions.php or plugin main file
+    if (wp_script_is($handle, 'registered')) {
+        $api_url = get_option('competence_api_url', 'https://beelab-api.nathabee.de/api');
+        wp_add_inline_script(
+            $handle,
+            'window.competenceSettings = ' . wp_json_encode([
+                'apiUrl'   => $api_url,
+                'basename' => '/competence',
+            ]) . ';',
+            'before'
+        );
+    }
+}, 20);
+
+// CPT with rewrite /competence/...
 add_action('init', function () {
     register_post_type('competence_page', [
         'label'               => 'Competence Pages',
@@ -225,8 +222,8 @@ add_action('init', function () {
         'has_archive'         => false,
         'rewrite'             => ['slug' => 'competence'], // /competence/...
         'supports'            => ['title', 'editor'],
-        'show_in_nav_menus'   => false,  // <<< keep out of default menus
-        'exclude_from_search' => true,   // optional
+        'show_in_nav_menus'   => false,
+        'exclude_from_search' => true,
         'menu_position'       => 20,
         'menu_icon'           => 'dashicons-chart-line',
     ]);

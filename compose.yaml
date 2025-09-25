@@ -269,6 +269,7 @@ services:
     depends_on:
       wordpress: { condition: service_started }
       wpdb: { condition: service_healthy }
+    command: sh -c "sleep infinity"   # ← keep it running indefinitly in dev
     profiles: ["dev"]
 
   # PROD CLI

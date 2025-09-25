@@ -3,16 +3,11 @@
   "main": "build/index.js",
   "scripts": {
     "clean": "rm -rf ./build ./dist",
-    "prebuild": "node ../_shared/scripts/inject-version.mjs --plugin-root . ",
-    "buildpack": "wp-scripts build",
-    "devpack": "wp-scripts start",                 
+    "prebuild": "node ../shared/scripts/inject-version.mjs --plugin-root . ",
+    "buildpack": "wp-scripts build",          
     "buildmanifest": "wp-scripts build-blocks-manifest --input=build --output=build/blocks-manifest.php",
-    "zip": "rm -rf ./dist && ./build-zip.sh",
-    "install": "./install-plugin.sh",
-    "build": "npm run clean && npm run prebuild && npm run buildpack && npm run buildmanifest && npm run zip && npm run install",
-    "dev": "npm run prebuild && npm run devpack" 
-
-
+    "zip": "rm -rf ./dist && ./build-zip.sh", 
+    "build": "npm run clean && npm run prebuild && npm run buildpack && npm run buildmanifest && npm run zip "
   },
   "keywords": [],
   "author": "",
