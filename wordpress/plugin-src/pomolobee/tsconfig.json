@@ -21,13 +21,13 @@
       "@utils/*": ["utils/*"],
       "@assets/*": ["assets/*"],
       "@styles/*": ["styles/*"],
-      "@bee/common": ["shared/error/index.ts"],
+      "@bee/common": ["../shared/error/index.ts"],
 
 
     }
   },
   "include": ["src/**/*", 
-    "shared/**/*" 
+    "../shared/**/*" 
   ]
 }
 

@@ -7,13 +7,13 @@ module.exports = {
   ...defaultConfig,
 
   // ✅ externals at top-level (not under 'resolve')
-  //externals: {
-  //  ...(defaultConfig.externals || {}),
-  //  react: 'React',
-  //  'react-dom': 'ReactDOM',
-  //  'react-dom/client': 'ReactDOM',
-  //  'react/jsx-runtime': 'ReactJSXRuntime',
-  //},
+  externals: {
+    ...(defaultConfig.externals || {}),
+    react: 'React',
+    'react-dom': 'ReactDOM',
+    'react-dom/client': 'ReactDOM',
+    'react/jsx-runtime': 'ReactJSXRuntime',
+  },
 
   resolve: {
     ...defaultConfig.resolve,
@@ -32,9 +32,11 @@ module.exports = {
       '@styles': path.resolve(__dirname, 'src/styles'),
 
       // point to shared root so you can also use widgets
-      '@bee/common': path.resolve(__dirname, 'shared'),
+      '@bee/common': path.resolve(__dirname, '../shared'),
     },
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.png', '.css'],
     modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
+
+    
   },
 };

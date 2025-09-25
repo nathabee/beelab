@@ -1,8 +1,7 @@
 // src/hooks/useFieldSvgUpload.ts
 'use client';
 import { apiPom, authHeaders } from '@utils/api';
-import { toAppError, errorBus } from '../../shared/error';
-import type { AppError } from '../../shared/error';
+import { toAppError, errorBus , AppError }    from '@bee/common/error';
 import { useAuth } from '@context/AuthContext';
 
 type UploadResult = { svg_map_url?: string; [k: string]: any };

@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       Competence WP
  * Description:       FSE blocks integrating with Django backend.
- * Version:           v1.1.2
+ * Version:           v1.1.3
  * Author:            Nathabee
  */
 
@@ -32,61 +32,61 @@ function competence_wp_create_pages()
         // Hidden from menus (CPT)
         [
             'title' => 'Login',
-            'slug'  => 'competence_login',  
+            'slug'  => 'login',  
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],
         [
             'title' => 'Home',
-            'slug'  => 'competence_home',
+            'slug'  => 'home',
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],
         [
             'title' => 'Dashboard',
-            'slug'  => 'competence_dashboard',
+            'slug'  => 'dashboard',
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],
         [
             'title' => 'Catalogue Management',
-            'slug'  => 'competence_catalogue_mgt',
+            'slug'  => 'catalogue_mgt',
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],
         [
             'title' => 'Report Management',
-            'slug'  => 'competence_report_mgt',
+            'slug'  => 'report_mgt',
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],
         [
             'title' => 'Student Management',
-            'slug'  => 'competence_student_mgt',
+            'slug'  => 'student_mgt',
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],
         [
             'title' => 'Overview Ongoing Test',
-            'slug'  => 'competence_overview_test',
+            'slug'  => 'overview_test',
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],
         [
             'title' => 'PDF Setup',
-            'slug'  => 'competence_pdf_conf',
+            'slug'  => 'pdf_conf',
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],
         [
             'title' => 'PDF View',
-            'slug'  => 'competence_pdf_view',
+            'slug'  => 'pdf_view',
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],
         [
             'title' => 'Error',
-            'slug'  => 'competence_error',
+            'slug'  => 'error',
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],

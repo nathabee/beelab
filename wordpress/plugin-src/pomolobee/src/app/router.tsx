@@ -8,7 +8,7 @@ import PomoloBeeLogin from '@pages/PomoloBeeLogin';
 import PomoloBeeDashboard from '@pages/PomoloBeeDashboard';
 import PomoloBeeFarm from '@pages/PomoloBeeFarm';
 import PomoloBeeFarmMgt from '@pages/PomoloBeeFarmMgt';
-import { ErrorPage } from '../../shared/error';
+import { ErrorPage }   from '@bee/common/error';
 
 export default function AppRoutes() {
   return (

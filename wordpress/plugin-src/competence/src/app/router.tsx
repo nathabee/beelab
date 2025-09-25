@@ -17,16 +17,16 @@ import CompetencePdfView from  '@pages/CompetencePdfView';
 const AppRoutes = () => (
   <Routes>
     
-    <Route path="/competence_home" element={<CompetenceHome />} />
-    <Route path="/competence_login" element={<CompetenceLogin />} />
-    <Route path="/competence_dashboard" element={<CompetenceDashboard />} />
-    <Route path="/competence_student_mgt" element={<CompetenceStudentMgt />} />
-    <Route path="/competence_pdf_conf" element={<CompetencePdfConf />} />
-    <Route path="/competence_catalogue_mgt" element={<CompetenceCatalogueMgt />} />
-    <Route path="/competence_report_mgt" element={<CompetenceReportMgt />} />
-    <Route path="/competence_overview_test" element={<CompetenceOverviewTest />} /> 
-    <Route path="/competence_pdf_view" element={<CompetencePdfView />} />
-    <Route path="/competence_error" element={<CompetenceError />} />
+    <Route path="/home" element={<CompetenceHome />} />
+    <Route path="/login" element={<CompetenceLogin />} />
+    <Route path="/dashboard" element={<CompetenceDashboard />} />
+    <Route path="/student_mgt" element={<CompetenceStudentMgt />} />
+    <Route path="/pdf_conf" element={<CompetencePdfConf />} />
+    <Route path="/catalogue_mgt" element={<CompetenceCatalogueMgt />} />
+    <Route path="/report_mgt" element={<CompetenceReportMgt />} />
+    <Route path="/overview_test" element={<CompetenceOverviewTest />} /> 
+    <Route path="/pdf_view" element={<CompetencePdfView />} />
+    <Route path="/error" element={<CompetenceError />} />
 
     <Route path="/"  element={<CompetenceDashboard />} />
   </Routes>

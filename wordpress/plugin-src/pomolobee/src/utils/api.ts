@@ -1,6 +1,6 @@
 // src/utils/api.ts
 import axios from 'axios';
-import { toAppError, errorBus } from '../../shared/error';
+import { toAppError, errorBus } from '@bee/common/error';
 
 // --- helpers ---
 const norm = (u: string) => u.replace(/\/+$/, '');
