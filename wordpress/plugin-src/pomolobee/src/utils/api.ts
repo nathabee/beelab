@@ -1,66 +1,81 @@
 // src/utils/api.ts
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { toAppError, errorBus } from '@bee/common/error';
+import { getTokenFromStorage } from '@utils/jwt';
 
-// --- helpers ---
+
+// ---- helpers ---------------------------------------------------------------
 const norm = (u: string) => u.replace(/\/+$/, '');
 const join = (base: string, path: string) =>
   `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
 
 /** Strict: either return a base URL or throw. */
 function getBaseApiStrict(): string {
-  // 1) WordPress-localized (plugin)
+  // 1) WordPress-localized (plugin script)
   if (typeof window !== 'undefined') {
     const wpApi = (window as any)?.pomolobeeSettings?.apiUrl;
     if (wpApi) return norm(wpApi);
-
-    // 2) Optional meta override
-    const meta = document.querySelector('meta[name="pomolobee-api-base"]') as HTMLMetaElement | null;
-    if (meta?.content) return norm(meta.content);
   }
+  // 2) Build-time env (dev / storybook / tests)
+  const envApi =
+    (import.meta as any)?.env?.VITE_POMOLOBEE_API_BASE ||
+    (process as any)?.env?.POMOLOBEE_API_BASE;
+  if (envApi) return norm(String(envApi));
 
-  // 3) Front-end env
-  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) {
-    return norm(process.env.NEXT_PUBLIC_API_URL);
-  }
-
-  // ❌ Required config missing — throw (and we’ll also emit below)
-  throw new Error('Missing API base configuration (pomolobeeSettings.apiUrl or meta[pomolobee-api-base] or NEXT_PUBLIC_API_URL).');
+  // 3) Nothing found → throw. Caller will normalize with toAppError.
+  throw new Error('No API base configured');
 }
 
-/** Resolve base URL once, but *don’t* crash module load; emit + remember the error. */
-let BASE: string | null = null;
-let BASE_ERR: any = null;
-try {
-  BASE = getBaseApiStrict();
-} catch (e) {
-  BASE_ERR = toAppError(e, { service: 'config', severity: 'page' });
-  errorBus.emit(BASE_ERR); // trigger your UI (banner/page redirect)
-  BASE = null;             // mark as unresolved
+/** Loose: returns base or null (so we can precompute a nice app error). */
+function getBaseApiLoose(): string | null {
+  try {
+    return getBaseApiStrict();
+  } catch {
+    return null;
+  }
 }
 
-// Two axios clients (unchanged public API)
-export const apiUser = axios.create({
+// ---- base + pre-normalized missing-base error ------------------------------
+const BASE = getBaseApiLoose();
+const BASE_ERR = !BASE
+  ? toAppError(new Error('API base is missing'), {
+      code: 'NO_BASE_API',
+      severity: 'page',
+      category: 'network',
+      functionName: 'getBaseApiStrict',
+      service: 'config',
+      message:
+        'API is not configured. Please check plugin settings or environment variables.',
+      retryable: false,
+    })
+  : null;
+
+// ---- axios instances -------------------------------------------------------
+export const apiUser: AxiosInstance = axios.create({
   baseURL: BASE ? join(BASE, '/user') : '/__invalid_base__',
   timeout: 15000,
   withCredentials: true,
 });
 
-export const apiPom = axios.create({
+export const apiPom: AxiosInstance = axios.create({
   baseURL: BASE ? join(BASE, '/pomolobee') : '/__invalid_base__',
   timeout: 15000,
   withCredentials: true,
 });
 
-// Request interceptor: if base config missing, immediately fail any call with the same app error.
+// ---- interceptors ----------------------------------------------------------
+// Request: if base missing, fail fast with the same normalized error.
+// Also add WP nonce when available.
 for (const client of [apiPom, apiUser]) {
   client.interceptors.request.use((config) => {
     if (BASE_ERR) {
-      // Reject early so callers get a clear, normalized error
+      // reject early so callers get a clear, normalized error
       return Promise.reject(BASE_ERR);
     }
-    // WP nonce if available
-    const nonce = (window as any)?.beeNonce || (window as any)?.pomolobeeSettings?.nonce;
+    const nonce =
+      (window as any)?.beeNonce ||
+      (window as any)?.pomolobeeSettings?.nonce ||
+      null;
     if (nonce) {
       config.headers = { ...(config.headers || {}), 'X-WP-Nonce': nonce };
     }
@@ -68,12 +83,15 @@ for (const client of [apiPom, apiUser]) {
   });
 }
 
-// Unified response error handling (unchanged behavior)
-for (const [client, service] of [[apiPom, 'pomolobee'], [apiUser, 'user']] as const) {
+// Response: normalize any axios error, emit on the bus, rethrow AppError.
+for (const [client, service] of [
+  [apiPom, 'pomolobee'],
+  [apiUser, 'user'],
+] as const) {
   client.interceptors.response.use(
-    r => r,
+    (r) => r,
     (err) => {
-      // if config error already normalized, it will pass through as-is
+      // if something upstream already passed an AppError, keep it
       const appErr = err?.id ? err : toAppError(err, { service, functionName: 'axios' });
       errorBus.emit(appErr);
       return Promise.reject(appErr);
@@ -81,7 +99,7 @@ for (const [client, service] of [[apiPom, 'pomolobee'], [apiUser, 'user']] as co
   );
 }
 
-
+// ---- misc ------------------------------------------------------------------
 export function authHeaders(token: string | null) {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }

@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       PomoloBee WP
  * Description:       FSE blocks integrating with Django backend.
- * Version:           v1.1.3
+ * Version:           v1.1.4
  * Author:            Nathabee
  */
 

@@ -17,7 +17,7 @@ export const useProtectedPage = () => {
     if (  !token) {
       logout();
       console.warn('[useProtectedPage] No valid token found → redirecting to login in pomolobee_login');
-      navigate('/pomolobee_login');
+      navigate('/login');
     }
   }, [navigate, pathname]);
 };

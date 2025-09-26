@@ -7,6 +7,7 @@ import { FarmWithFields } from "@mytypes/farm";
 import { Fruit } from '@mytypes/fruit';
 import { Field, FieldBasic } from '@mytypes/field';
 import type { Row } from '@mytypes/row';
+import { isTokenExpired } from '@utils/jwt';
 
 
 type Maybe<T> = T | null;
@@ -138,12 +139,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const af = localStorage.getItem("activeFarm");
     const fld = localStorage.getItem("activeField");
 
-    if (t) setTokenState(t);
+    // manage token expiricy
+    if (t) {
+      // If expired at boot, purge immediately
+      if (isTokenExpired(t)) {
+        localStorage.removeItem('authToken');
+      } else {
+        setTokenState(t);
+      }
+    }
+
+
     if (u) setUser(JSON.parse(u));
     if (fs) setFarmsState(JSON.parse(fs));
     if (af) setActiveFarmState(JSON.parse(af));
     if (fld) setActiveFieldState(JSON.parse(fld));
   }, []);
+
+
+  // runtime token guard: clear when token expires (poll every 30s)
+  useEffect(() => {
+    if (!token) return;
+    if (isTokenExpired(token)) {
+      setTokenState(null);
+      return;
+    }
+    const id = setInterval(() => {
+      setTokenState(prev => {
+        if (prev && isTokenExpired(prev)) return null;
+        return prev;
+      });
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [token]);
+
+  // respond to storage changes from other tabs
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'authToken') {
+        const newToken = e.newValue;
+        if (!newToken || isTokenExpired(newToken)) {
+          setTokenState(null);
+        } else {
+          setTokenState(newToken);
+        }
+      }
+      if (e.key === 'userInfo') {
+        setUser(e.newValue ? JSON.parse(e.newValue) : null);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
 
   // persist
   useEffect(() => {

@@ -9,10 +9,10 @@ After activating the plugin:
 
 * 📄 **Four pages are automatically created**:
 
-  * `/pomolobee_login` – 🔐 User login
-  * `/pomolobee_dashboard` – 📊 User dashboard
-  * `/pomolobee_home` – 🏠 Application home
-  * `/pomolobee_error` – ⚠️ Error fallback
+  * `/login` – 🔐 User login
+  * `/dashboard` – 📊 User dashboard
+  * `/home` – 🏠 Application home
+  * `/error` – ⚠️ Error fallback
 * 🛠️ An **admin configuration page** is added under “Settings > PomoloBee Settings”.
 
   * There, you can set the base API URL (e.g., `https://localhost:9001/`) used by the frontend to communicate with the Django backend.

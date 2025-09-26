@@ -37,12 +37,26 @@ const ErrorPage: React.FC = () => {
       </div>
 
       <div className="d-flex gap-2">
-        <button className="btn btn-primary" onClick={() => nav('/pomolobee_dashboard')}>Back to dashboard</button>
+        <button className="btn btn-primary" onClick={() => nav('/dashboard')}>Back to dashboard</button>
         <button className="btn btn-outline-secondary" onClick={() => { clear(); nav(-1); }}>Go back</button>
         {(err.httpStatus === 401 || err.httpStatus === 403) && (
-          <button className="btn btn-outline-danger" onClick={() => nav('/pomolobee_login')}>Sign in</button>
+          <button className="btn btn-outline-danger" onClick={() => nav('/login')}>Sign in</button>
         )}
       </div>
+
+      {err.user && (
+        <section className="mt-3">
+          <h3>User</h3>
+          <ul>
+            <li>Status: {err.user.isLoggedIn ? 'Logged in' : 'Guest'}</li>
+            {err.user.id !== undefined && <li>ID: {String(err.user.id)}</li>}
+            {err.user.username && <li>Username: {err.user.username}</li>}
+            {err.user.email && <li>Email: {err.user.email}</li>}
+            {err.user.roles?.length ? <li>Roles: {err.user.roles.join(', ')}</li> : null}
+          </ul>
+        </section>
+      )}
+
     </div>
   );
 };

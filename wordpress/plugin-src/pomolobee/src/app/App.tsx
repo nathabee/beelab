@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import PomoloBeeHeader from '@app/PomoloBeeHeader';
 import AppRoutes from '@app/router';
 import { ErrorProvider, ErrorBanner, ErrorBoundary, toAppError, errorBus  } from '@bee/common/error';
- 
+import ErrorUserBootstrap from '@app/ErrorUserBootstrap';
 import { TranslateBox   } from '@bee/common/widgets';
 
 function detectBasename() {
@@ -69,6 +69,7 @@ const App = () => {
 
           <div className="content-container">
             <ErrorProvider errorPath={errorPath}>
+              <ErrorUserBootstrap />
               <ErrorBanner />
               <ErrorBoundary>
                 <AppRoutes />

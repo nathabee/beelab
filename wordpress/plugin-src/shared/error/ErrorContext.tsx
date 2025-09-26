@@ -1,4 +1,4 @@
-// _shared/error/ErrorContext.tsx
+// shared/error/ErrorContext.tsx
 'use client'; // harmless in WP, needed only for Next.js app router
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ type Ctx = {
   last: AppError | null;
   stack: AppError[];
   clear: () => void;
+  dismissLast: () => void;
 };
 const ErrorCtx = createContext<Ctx | null>(null);
 
@@ -54,7 +55,15 @@ export const ErrorProvider: React.FC<{ children: React.ReactNode; errorPath?: st
     try { sessionStorage.removeItem('bee_errors'); } catch {}
   };
 
-  const value = useMemo<Ctx>(() => ({ last, stack, clear }), [last, stack]);
+  const dismissLast = () => {
+    setStack(prev => prev.slice(0, -1));
+    try {
+      const next = stack.slice(0, -1);
+      sessionStorage.setItem('bee_errors', JSON.stringify(next));
+    } catch {}
+  };
+
+  const value = useMemo<Ctx>(() => ({ last, stack, clear, dismissLast }), [last, stack]);
   return <ErrorCtx.Provider value={value}>{children}</ErrorCtx.Provider>;
 };
 
