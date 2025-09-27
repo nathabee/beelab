@@ -9,7 +9,7 @@ export const useProtectedPage = () => {
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      navigate('/competence_login');
+      navigate('/login');
     }
   }, [navigate]);
 };

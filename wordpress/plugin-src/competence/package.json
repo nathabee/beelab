@@ -7,7 +7,9 @@
     "buildpack": "wp-scripts build",
     "buildmanifest": "wp-scripts build-blocks-manifest --input=build --output=build/blocks-manifest.php",
     "zip": "rm -rf ./dist && ./build-zip.sh",
-    "build": "npm run clean && npm run prebuild && npm run buildpack && npm run buildmanifest && npm run zip"
+    "build": "npm run clean && npm run prebuild && npm run buildpack && npm run buildmanifest && npm run zip",
+    "dev": "cross-env NODE_ENV=development wp-scripts start",
+    "build:dev": "cross-env NODE_ENV=development wp-scripts build"
   },
 
 

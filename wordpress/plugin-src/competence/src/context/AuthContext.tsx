@@ -5,7 +5,7 @@
 // use client is needed by nextjs (useeeffect...) but will be ignored by wordpress
 
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect ,useCallback,useMemo} from 'react';
 
 
 import { Catalogue, Report, ScoreRulePoint, ReportCatalogue, Resultat } from '@mytypes/report';
@@ -71,6 +71,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+ 
   const [token, internalSetToken] = useState<string | null>(null);
   const [user, internalSetUser] = useState<User | null>(null);
   const [userRoles, internalSetUserRoles] = useState<string[]>([]);
@@ -85,43 +86,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [layouts, internalSetLayouts] = useState<PDFLayout[]>([]);
   const [niveaux, internalSetNiveaux] = useState<Niveau[] | null>(null);
 
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedToken = localStorage.getItem('authToken');
-      if (savedToken) {
-        console.log('Auth Context reloaded from localstorage');
-
-        internalSetToken(savedToken);
-        internalSetIsLoggedIn(true);
-        const roles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-        internalSetUserRoles(roles);
-        const savedUser = JSON.parse(localStorage.getItem('userInfo') || 'null');
-        internalSetUser(savedUser);
-        const savedNiveaux = JSON.parse(localStorage.getItem('niveaux') || '[]');
-        internalSetNiveaux(savedNiveaux);
-
-        const savedCatalogues = JSON.parse(localStorage.getItem('activeCatalogues') || '[]');
-        const savedEleve = JSON.parse(localStorage.getItem('activeEleve') || 'null');
-        const savedReport = JSON.parse(localStorage.getItem('activeReport') || 'null');
-        const savedLayout = JSON.parse(localStorage.getItem('activeLayout') || 'null');
-        const savedLayouts = JSON.parse(localStorage.getItem('layouts') || '[]');
-        const savedCatalogueList = JSON.parse(localStorage.getItem('catalogue') || '[]');
-
-        internalSetActiveCatalogues(savedCatalogues);
-        internalSetActiveEleve(savedEleve);
-        internalSetActiveReport(savedReport);
-        internalSetActiveLayout(savedLayout);
-        internalSetLayouts(savedLayouts);
-        internalSetCatalogue(savedCatalogueList);
-
-
-
-
-      } else {
-        logout();
-      }
+    if (typeof window === 'undefined') return;
+    const savedToken = localStorage.getItem('authToken');
+    if (savedToken) {
+      internalSetToken(savedToken);
+      internalSetIsLoggedIn(true);
+      internalSetUserRoles(JSON.parse(localStorage.getItem('userRoles') || '[]'));
+      internalSetUser(JSON.parse(localStorage.getItem('userInfo') || 'null'));
+      internalSetNiveaux(JSON.parse(localStorage.getItem('niveaux') || '[]'));
+      internalSetActiveCatalogues(JSON.parse(localStorage.getItem('activeCatalogues') || '[]'));
+      internalSetActiveEleve(JSON.parse(localStorage.getItem('activeEleve') || 'null'));
+      internalSetActiveReport(JSON.parse(localStorage.getItem('activeReport') || 'null'));
+      internalSetActiveLayout(JSON.parse(localStorage.getItem('activeLayout') || 'null'));
+      internalSetLayouts(JSON.parse(localStorage.getItem('layouts') || '[]'));
+      internalSetCatalogue(JSON.parse(localStorage.getItem('catalogue') || '[]'));
+    } else {
+      logout(); // <-- relies on stable callback below
     }
-  }, []);
+  }, []); // eslint-disable-line
 
   // retrieve image whenever new report is active
   useEffect(() => {
@@ -173,114 +157,92 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearInterval(interval);
   }, []);
 
-  const login = (token: string, userInfo: User) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('authToken', token);
-      internalSetToken(token);
-      internalSetUser(userInfo);
-      internalSetUserRoles(userInfo.roles);
-      internalSetIsLoggedIn(true);
-      localStorage.setItem('userRoles', JSON.stringify(userInfo.roles));
-      localStorage.setItem('userInfo', JSON.stringify(userInfo));
-    }
-  };
+  const login = useCallback((token: string, userInfo: User) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('authToken', token);
+    internalSetToken(token);
+    internalSetUser(userInfo);
+    internalSetUserRoles(userInfo.roles);
+    internalSetIsLoggedIn(true);
+    localStorage.setItem('userRoles', JSON.stringify(userInfo.roles));
+    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+  }, []);
 
-  const logout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('authToken');
-      internalSetToken(null);
-      internalSetIsLoggedIn(false);
-      localStorage.removeItem('userRoles');
-      localStorage.removeItem('userInfo');
-      localStorage.removeItem('activeCatalogues');
-      localStorage.removeItem('activeReport');
-      localStorage.removeItem('activeEleve');
-      localStorage.removeItem('activeReport');
-      localStorage.removeItem('activeLayout');
-      localStorage.removeItem('eleves');
-      localStorage.removeItem('catalogue');
-      localStorage.removeItem('niveaux');
-      localStorage.removeItem('layouts');
-      localStorage.removeItem('scoreRulePoints');
-      internalSetUser(null);
-      internalSetUserRoles([]);
-      internalSetActiveCatalogues([]);
-      internalSetActiveEleve(null);
-      internalSetActiveReport(null);
-      internalSetActiveLayout(null);
-      internalSetCatalogue([]);
-      internalSetEleves([]);
-      internalSetLayouts([]);
-      internalSetScoreRulePoints([]);
-      // Remove all items from local storage that start with 'competence_'
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('competence_')) {
-          localStorage.removeItem(key);
-        }
-      });
-      localStorage.clear();
-    }
-  };
+  const logout = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    // remove only what you own; don't nuke everything
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRoles');
+    localStorage.removeItem('userInfo');
+    localStorage.removeItem('activeCatalogues');
+    localStorage.removeItem('activeReport');
+    localStorage.removeItem('activeEleve');
+    localStorage.removeItem('activeLayout');
+    localStorage.removeItem('eleves');
+    localStorage.removeItem('catalogue');
+    localStorage.removeItem('niveaux');
+    localStorage.removeItem('layouts');
+    localStorage.removeItem('scoreRulePoints');
+    Object.keys(localStorage).forEach((k) => k.startsWith('competence_') && localStorage.removeItem(k));
 
+    internalSetToken(null);
+    internalSetIsLoggedIn(false);
+    internalSetUser(null);
+    internalSetUserRoles([]);
+    internalSetActiveCatalogues([]);
+    internalSetActiveEleve(null);
+    internalSetActiveReport(null);
+    internalSetActiveLayout(null);
+    internalSetCatalogue([]);
+    internalSetEleves([]);
+    internalSetLayouts([]);
+    internalSetScoreRulePoints([]);
+  }, []);
 
-  const setToken = (newToken: string | null) => {
+  const setToken = useCallback((newToken: string | null) => {
     internalSetToken(newToken);
-    if (typeof window !== 'undefined') {
-      if (newToken) {
-        localStorage.setItem('authToken', newToken);
-      } else {
-        localStorage.removeItem('authToken');
-      }
-    }
-  };
+    if (typeof window === 'undefined') return;
+    if (newToken) localStorage.setItem('authToken', newToken);
+    else localStorage.removeItem('authToken');
+  }, []);
 
-  const setCatalogue = (newCatalogue: Catalogue[]) => {
+  const setCatalogue = useCallback((newCatalogue: Catalogue[]) => {
     internalSetCatalogue(newCatalogue);
     if (typeof window !== 'undefined') {
       localStorage.setItem('catalogue', JSON.stringify(newCatalogue));
     }
-  };
+  }, []);
 
-  const setEleves: React.Dispatch<React.SetStateAction<Eleve[]>> = (newEleves) => {
-    if (typeof newEleves === 'function') {
-      internalSetEleves((prevEleves) => newEleves(prevEleves));
-    } else {
-      internalSetEleves(newEleves);
-    }
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('eleves', JSON.stringify(newEleves));
-    }
-  };
+  const setEleves = useCallback<React.Dispatch<React.SetStateAction<Eleve[]>>>(update => {
+    internalSetEleves(prev => {
+      const next = typeof update === 'function' ? (update as any)(prev) : update;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('eleves', JSON.stringify(next));
+      }
+      return next;
+    });
+  }, []);
 
-
-
-
-
-
-  const setActiveLayout = (layout: PDFLayout | null) => {
+  const setActiveLayout = useCallback((layout: PDFLayout | null) => {
     internalSetActiveLayout(layout);
     if (typeof window !== 'undefined') {
       localStorage.setItem('activeLayout', JSON.stringify(layout));
     }
-  };
+  }, []);
 
-  const setScoreRulePoints = (points: ScoreRulePoint[]) => {
+  const setScoreRulePoints = useCallback((points: ScoreRulePoint[]) => {
     internalSetScoreRulePoints(points);
     if (typeof window !== 'undefined') {
       localStorage.setItem('scoreRulePoints', JSON.stringify(points));
     }
-  };
+  }, []);
 
-  const setActiveReport = (report: Report | null) => {
+  const setActiveReport = useCallback((report: Report | null) => {
     if (report) {
       const updatedReport = {
         ...report,
-        report_catalogues: report.report_catalogues.map((catalogue) => ({
-          ...catalogue,
-          resultats: catalogue.resultats,
-        })),
+        report_catalogues: report.report_catalogues.map(c => ({ ...c, resultats: c.resultats })),
       };
-
       internalSetActiveReport(updatedReport);
       if (typeof window !== 'undefined') {
         localStorage.setItem('activeReport', JSON.stringify(updatedReport));
@@ -291,64 +253,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('activeReport');
       }
     }
-  };
+  }, []);
 
-  const setNiveaux = (newNiveaux: Niveau[]) => {
+  const setNiveaux = useCallback((newNiveaux: Niveau[]) => {
     internalSetNiveaux(newNiveaux);
     if (typeof window !== 'undefined') {
       localStorage.setItem('niveaux', JSON.stringify(newNiveaux));
     }
-  };
+  }, []);
 
+  const setLayouts = useCallback((layouts: PDFLayout[]) => {
+    internalSetLayouts(layouts);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('layouts', JSON.stringify(layouts));
+    }
+  }, []);
+
+  const setActiveCatalogues = useCallback((catalogues: Catalogue[]) => {
+    internalSetActiveCatalogues(catalogues);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activeCatalogues', JSON.stringify(catalogues));
+    }
+  }, []);
+
+  const setActiveEleve = useCallback((eleve: Eleve | null) => {
+    internalSetActiveEleve(eleve);
+    setActiveReport(null); // resets the report
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activeEleve', JSON.stringify(eleve));
+      localStorage.removeItem('activeReport');
+    }
+  }, [setActiveReport]);
+
+  // ---- memoize the exported value ----
+  const value = useMemo(() => ({
+    token, user, userRoles, isLoggedIn,
+    activeCatalogues, activeEleve, catalogue, eleves,
+    scoreRulePoints, activeReport, activeLayout, layouts, niveaux,
+
+    // stable public API
+    setToken, login, logout,
+    setActiveCatalogues, setActiveEleve, setScoreRulePoints,
+    setActiveReport, setActiveLayout, setCatalogue, setEleves, setLayouts, setNiveaux,
+  }), [
+    token, user, userRoles, isLoggedIn,
+    activeCatalogues, activeEleve, catalogue, eleves,
+    scoreRulePoints, activeReport, activeLayout, layouts, niveaux,
+    // functions are stable (callbacks), not needed in deps
+  ]);
 
   return (
-    <AuthContext.Provider value={{
-      token,
-      setToken,
-      user,
-      userRoles,
-      isLoggedIn,
-      login,
-      logout,
-
-
-      activeCatalogues,
-
-      setActiveCatalogues: (catalogues: Catalogue[]) => {
-        internalSetActiveCatalogues(catalogues);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('activeCatalogues', JSON.stringify(catalogues));
-        }
-      },
-      activeEleve,
-      setActiveEleve: (eleve: Eleve | null) => {
-        internalSetActiveEleve(eleve);
-        setActiveReport(null);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('activeEleve', JSON.stringify(eleve));
-          localStorage.removeItem('activeReport');
-        }
-      },
-      catalogue,
-      setCatalogue,
-      eleves,
-      setEleves,
-      scoreRulePoints,
-      setScoreRulePoints,
-      activeReport,
-      setActiveReport,
-      activeLayout,
-      setActiveLayout,
-      layouts,
-      setLayouts: (layouts: PDFLayout[]) => {
-        internalSetLayouts(layouts);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('layouts', JSON.stringify(layouts));
-        }
-      },
-      niveaux,
-      setNiveaux,
-    }}>
+    <AuthContext.Provider value={value}>   {/* <-- use the memoized value */}
       {children}
     </AuthContext.Provider>
   );

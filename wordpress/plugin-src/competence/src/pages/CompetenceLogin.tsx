@@ -17,7 +17,7 @@ const CompetenceLogin = () => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await handleLogin(username, password, () => navigate('/competence_dashboard'));
+    await handleLogin(username, password, () => navigate('/dashboard'));
   };
 
   return (

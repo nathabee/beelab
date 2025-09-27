@@ -1,9 +1,29 @@
-const webpack = require('webpack'); 
+const webpack = require('webpack');
 const defaultConfig = require('@wordpress/scripts/config/webpack.config');
 const path = require('path');
 
+
+const isProd = process.env.NODE_ENV === 'production';
+
 module.exports = {
   ...defaultConfig,
+
+  // readable stacks in dev:
+  devtool: isProd ? defaultConfig.devtool : 'inline-source-map',
+  optimization: {
+    ...defaultConfig.optimization,
+    minimize: isProd, // no minify in dev
+  },
+
+  externals: {
+    ...(defaultConfig.externals || {}),
+    react: 'React',
+    'react-dom': 'ReactDOM',
+    'react-dom/client': 'ReactDOM',
+    'react/jsx-runtime': 'ReactJSXRuntime',
+    '@wordpress/element': 'wp.element',
+  },
+
   resolve: {
     ...defaultConfig.resolve,
     alias: {
@@ -18,7 +38,9 @@ module.exports = {
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@assets': path.resolve(__dirname, 'src/assets'),
       '@styles': path.resolve(__dirname, 'src/styles'),
+      '@bee/common': path.resolve(__dirname, '../shared'),
     },
-    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.png','.css'],
-  }, 
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.png', '.css'],
+    modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'],
+  },
 };

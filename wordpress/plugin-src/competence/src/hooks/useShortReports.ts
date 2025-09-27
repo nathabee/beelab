@@ -1,10 +1,7 @@
 'use client';
-
 import { useState, useCallback } from 'react';
 import { ShortReport } from '@mytypes/shortreport';
 import { getToken, isTokenExpired } from '@utils/jwt';
-//import { getApiUrl } from '@utils/helper';
-//import axios from 'axios';
 import { apiComp, authHeaders } from '@utils/api';
 import { useAuth } from '@context/AuthContext';
 
@@ -22,34 +19,29 @@ const useShortReports = (): UseShortReportsResult => {
   const { logout } = useAuth();
 
   const fetchReports = useCallback(async () => {
-    const token = getToken();
-
-    if (!token || isTokenExpired(token)) {
-      logout();
-      return;
-    }
-
     setLoading(true);
     setError(false);
 
+    const token = getToken();
+    if (!token || isTokenExpired(token)) {
+      setError(true);
+      setLoading(false);
+      logout();         // side-effect, but stable now
+      return;           // <-- stop here
+    }
+
     try {
-      //const apiUrl = getApiUrl();
-      const response = await apiComp.get(`/shortreports/`, { headers: authHeaders(token) });
-      setReports(response.data);
-    } catch (err) {
-      console.error('Error fetching short reports:', err);
+      const res = await apiComp.get(`/shortreports/`, { headers: authHeaders(token) });
+      setReports(res.data);
+    } catch (e) {
+      console.error('Error fetching short reports:', e);
       setError(true);
     } finally {
       setLoading(false);
     }
-  }, [logout]);
+  }, [logout]); // <-- logout is stable; depending on it is fine
 
-  return {
-    reports,
-    loading,
-    error,
-    fetchReports,
-  };
+  return { reports, loading, error, fetchReports };
 };
 
 export default useShortReports;

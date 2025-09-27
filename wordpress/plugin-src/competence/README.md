@@ -9,10 +9,10 @@ After activating the plugin:
 
 * 📄 **Four pages are automatically created**:
 
-  * `/competence_login` – 🔐 User login
-  * `/competence_dashboard` – 📊 User dashboard
-  * `/competence_home` – 🏠 Application home
-  * `/competence_error` – ⚠️ Error fallback
+  * `/login` – 🔐 User login
+  * `/dashboard` – 📊 User dashboard
+  * `/home` – 🏠 Application home
+  * `/error` – ⚠️ Error fallback
 * 🛠️ An **admin configuration page** is added under “Settings > Competence Settings”.
 
   * There, you can set the base API URL (e.g., `http://nathabee.de/api/`) used by the frontend to communicate with the Django backend.

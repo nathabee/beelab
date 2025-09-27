@@ -35,9 +35,20 @@ x-wp-env: &wp_env
   WORDPRESS_DB_NAME: ${WP_DB_NAME:-wordpress}
   WORDPRESS_TABLE_PREFIX: ${WP_TABLE_PREFIX:-wp_}
   WORDPRESS_CONFIG_EXTRA: |
+    // You don’t need a physical wp-config.php at all. In your setup 
+    // the WORDPRESS_CONFIG_EXTRA block is the right place to flip WordPress dev flags, 
+    // because the official image injects that snippet into wp-config at runtime.
     // Only define if not already set (avoid "already defined" warnings)
     if (!defined('WP_DEBUG'))        define('WP_DEBUG', true);
     if (!defined('WP_DEBUG_LOG'))    define('WP_DEBUG_LOG', true);
+
+
+    // Load unminified core JS/CSS (including react.js/react-dom.js)
+    if (!defined('SCRIPT_DEBUG'))    define('SCRIPT_DEBUG', true);
+    // Avoid concatenation (helps source maps & readable stacks)
+    if (!defined('CONCATENATE_SCRIPTS')) define('CONCATENATE_SCRIPTS', false);
+    // Let plugins/themes know it’s a dev context
+    if (!defined('WP_ENVIRONMENT_TYPE')) define('WP_ENVIRONMENT_TYPE', 'development');
 
     // Canonical public URLs (no port)
     if (!defined('WP_HOME'))         define('WP_HOME',    '${WP_BASE_URL}');

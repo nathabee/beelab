@@ -2,77 +2,80 @@ import React, { useEffect,useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import CompetenceHeader from '@app/CompetenceHeader';
 import AppRoutes from '@app/router';
+import { ErrorProvider, ErrorBanner, ErrorBoundary, toAppError, errorBus  } from '@bee/common/error';
+import ErrorUserBootstrap from '@app/ErrorUserBootstrap';
+import { TranslateBox   } from '@bee/common/widgets';
 
-// Redirect if at root
-//if (window.location.pathname === '/') {
-//  window.history.replaceState({}, '', '/competence_dashboard');
-//}
+
+function detectBasename() {
+  const injected = (window as any)?.competenceSettings?.basename;
+  if (injected) return injected;
+  const first = location.pathname.split('/').filter(Boolean)[0] || '';
+  return first ? `/${first}` : '/';
+}
+function detectErrorPath() {
+  return (window as any)?.pomolobeeSettings?.errorPath || '/error';
+}
 
 const App = () => {
-  useEffect(() => {
-    // Avoid duplicate script loading
-    if (!document.getElementById('google-translate-script')) {
-      const script = document.createElement('script');
-      script.id = 'google-translate-script';
-      script.type = 'text/javascript';
-      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-      document.body.appendChild(script);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
+  const basename = detectBasename();
+  const errorPath = detectErrorPath();
 
-      // Define the callback function
-      window.googleTranslateElementInit = () => {
-        new google.translate.TranslateElement(
-          {
-            pageLanguage: 'en',
-            includedLanguages: 'fr,en',
-            autoDisplay: false,
-            default: 'fr'
-          },
-          'google_translate_element'
-        );
-
-        // Force default translation after a delay
-        //setTimeout(() => {
-        //  setDefaultLanguage('French');
-        //}, 1000);
-      };
-
-    }
-  }, []);
- 
-
-
-
-
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    if (window.innerWidth < 768) {
-      setSidebarOpen(false);
-    }
+    const onError = (event: ErrorEvent) => {
+      errorBus.emit(toAppError(event.error || event.message, {
+        component: 'window',
+        functionName: 'error',
+        service: 'runtime',
+        severity: 'toast',
+      }));
+    };
+    const onRejection = (event: PromiseRejectionEvent) => {
+      errorBus.emit(toAppError(event.reason, {
+        component: 'window',
+        functionName: 'unhandledrejection',
+        service: 'runtime',
+        severity: 'toast',
+      }));
+    };
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+    };
   }, []);
+
 
   return (
     <div className="competence-app-container">
-      <BrowserRouter basename={window.competenceSettings?.basename || '/'}>
-        <div className="translate-box" style={{ padding: '10px', textAlign: 'right' }}>
-          🌐 Translate: <span id="google_translate_element"></span>
-        </div>
+      <BrowserRouter basename={basename}>
+        {/* Shared translate widget */}
+        <TranslateBox
+          className="translate-box"
+          style={{ padding: 10, textAlign: 'right' }}
+          languages="fr,en"
+          pageLanguage="en"
+          // optional: give a deterministic id per plugin to avoid clashes
+          containerId="pb_google_translate"
+        />
 
         <div className="app-layout">
-          {/* Sidebar */}
           <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-            <button
-              className="hamburger-icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              ☰
-            </button>
+            <button className="hamburger-icon" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
             <CompetenceHeader />
           </div>
 
-          {/* Main Content */}
           <div className="content-container">
-            <AppRoutes />
+            <ErrorProvider errorPath={errorPath}>
+              <ErrorUserBootstrap />
+              <ErrorBanner />
+              <ErrorBoundary>
+                <AppRoutes />
+              </ErrorBoundary>
+            </ErrorProvider>
           </div>
         </div>
       </BrowserRouter>
@@ -83,32 +86,3 @@ const App = () => {
 export default App;
 
 
-
-
-
-
-
-
-/*
-// src/app/App.tsx
-import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import CompetenceHeader from '@app/CompetenceHeader';
-import AppRoutes from '@app/router';
-
-
-// Redirect to /competence_home if current URL is exactly '/'
-if (window.location.pathname === '/') {
-  window.history.replaceState({}, '', '/competence_home');
-}
-
-
-const App = () => (
-  <BrowserRouter basename={window.competenceSettings?.basename || '/'}>
-    <CompetenceHeader />
-    <AppRoutes />
-  </BrowserRouter>
-);
-
-export default App;
-*/

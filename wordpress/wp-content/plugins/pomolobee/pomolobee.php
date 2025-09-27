@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       PomoloBee WP
  * Description:       FSE blocks integrating with Django backend.
- * Version:           v1.1.4
+ * Version:           v1.1.5
  * Author:            Nathabee
  */
 
@@ -167,6 +167,24 @@ add_action('wp_print_scripts', function () {
         }
     }
 });
+
+// Make sure our view bundle depends on core React + JSX runtime.
+add_action('wp_enqueue_scripts', function () {
+    $handle = 'pomolobee-pomolobee-app-view-script';
+    $wp_scripts = wp_scripts();
+
+    if ( isset( $wp_scripts->registered[ $handle ] ) ) {
+        $reg = $wp_scripts->registered[ $handle ];
+        // Ensure deps array exists
+        if ( ! is_array( $reg->deps ) ) { $reg->deps = []; }
+
+        foreach ( [ 'wp-element', 'react-jsx-runtime' ] as $dep ) {
+            if ( ! in_array( $dep, $reg->deps, true ) ) {
+                $reg->deps[] = $dep;
+            }
+        }
+    }
+}, 5);
 
 // Inline runtime config for the view bundle (same pattern as before)
 add_action('wp_enqueue_scripts', function () {

@@ -5,14 +5,14 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import CompetenceHome from '@pages/CompetenceHome';
 import CompetenceLogin from '@pages/CompetenceLogin';
-import CompetenceDashboard from '@pages/CompetenceDashboard';
-import CompetenceError from '@pages/CompetenceError';
+import CompetenceDashboard from '@pages/CompetenceDashboard'; 
 import CompetenceStudentMgt from  '@pages/CompetenceStudentMgt';
 import CompetencePdfConf from  '@pages/CompetencePdfConf'; 
 import CompetenceCatalogueMgt from  '@pages/CompetenceCatalogueMgt';
 import CompetenceReportMgt from  '@pages/CompetenceReportMgt';
 import CompetenceOverviewTest from  '@pages/CompetenceOverviewTest';
 import CompetencePdfView from  '@pages/CompetencePdfView';
+import { ErrorPage }   from '@bee/common/error';
 
 const AppRoutes = () => (
   <Routes>
@@ -26,9 +26,9 @@ const AppRoutes = () => (
     <Route path="/report_mgt" element={<CompetenceReportMgt />} />
     <Route path="/overview_test" element={<CompetenceOverviewTest />} /> 
     <Route path="/pdf_view" element={<CompetencePdfView />} />
-    <Route path="/error" element={<CompetenceError />} />
+    <Route path="/error"     element={<ErrorPage plugin="competence" />} /> 
 
-    <Route path="/"  element={<CompetenceDashboard />} />
+    <Route path="/"  element={<CompetenceHome />} />
   </Routes>
 );
 

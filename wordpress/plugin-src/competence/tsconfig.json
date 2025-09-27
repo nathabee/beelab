@@ -20,12 +20,14 @@
       "@pages/*": ["pages/*"],
       "@utils/*": ["utils/*"],
       "@assets/*": ["assets/*"],
-      "@styles/*": ["styles/*"]
+      "@styles/*": ["styles/*"],
+      "@bee/common": ["../shared/error/index.ts"],
 
 
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", 
+    "../shared/**/*" ]
 }
 
  
