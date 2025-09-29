@@ -16,9 +16,10 @@ export type ErrorTestButtonsProps = {
     missing?: string; // default: '/definitely_missing_endpoint'
     slow?: string;    // default: '/slow'
   };
+  plugin?: string;   
 };
 
-export default function ErrorTestButtons({ apiApp, apiUser, paths }: ErrorTestButtonsProps) {
+export default function ErrorTestButtons({ apiApp, apiUser, plugin, paths }: ErrorTestButtonsProps) {
   const missingPath = paths?.missing ?? '/definitely_missing_endpoint';
   const slowPath = paths?.slow ?? '/slow';
 
@@ -45,6 +46,7 @@ export default function ErrorTestButtons({ apiApp, apiUser, paths }: ErrorTestBu
       category: 'unknown',
       service: 'ui',
       functionName: 'emitManual',
+      meta: plugin ? { plugin } : undefined, 
     });
     errorBus.emit(err);
   }

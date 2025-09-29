@@ -6,7 +6,8 @@ import { apiApp, apiUser } from '@utils/api';
 const PomolobeeErrorMgt = () => (
   <>
     <h2>Debug phase: test some errors</h2>
-    <ErrorTestButtons apiApp={apiApp} apiUser={apiUser} />
+    <ErrorTestButtons apiApp={apiApp} apiUser={apiUser} plugin="pomolobee" />
+
 
     <h3>Active error display</h3>
     <ErrorPage plugin="pomolobee" />
