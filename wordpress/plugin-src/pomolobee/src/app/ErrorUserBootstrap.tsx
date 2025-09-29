@@ -2,10 +2,10 @@
 'use client';
 import { useEffect } from 'react';
 import { setErrorUserSupplier } from '@bee/common/error';
-import { useAuth } from '@context/AuthContext';
+import { useUser } from '@bee/common';
 
 export default function ErrorUserBootstrap() {
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user } = useUser();
 
   useEffect(() => {
     // Called on mount and whenever auth state changes.

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Spinner from 'react-bootstrap/Spinner';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import { useStudents } from '@hooks/useStudents';
 import StudentSelection from '@components/StudentSelection';
 import StudentForm from '@components/StudentForm';
@@ -10,7 +10,7 @@ import StudentDisplay from '@components/StudentDisplay';
 import { useProtectedPage } from '@hooks/useProtectedPage';
 
 const StudentMgt = () => {
-  const { activeEleve } = useAuth();
+  const { activeEleve } = useApp();
   const { students, loading, error, setStudents } = useStudents();
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);

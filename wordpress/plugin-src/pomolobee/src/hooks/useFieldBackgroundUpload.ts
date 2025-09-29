@@ -1,13 +1,16 @@
 // src/hooks/useFieldBackgroundUpload.ts
 'use client';
 
-import { useAuth } from '@context/AuthContext';
-import { apiPom, authHeaders } from '@utils/api';
+
+import { useUser } from '@bee/common';
+import { useApp } from '@context/AppContext';
+import { apiApp, authHeaders } from '@utils/api';
 
 type UploadResult = { background_image_url?: string; [k: string]: any };
 
 export default function useFieldBackgroundUpload() {
-  const { token, patchField } = useAuth();
+  const { token } = useUser();
+  const { patchField } = useApp();
 
   async function uploadBackground(fieldId: number, file: File, desiredFilename?: string): Promise<string> {
     if (!token) throw new Error('No auth token');
@@ -15,7 +18,7 @@ export default function useFieldBackgroundUpload() {
     const form = new FormData();
     form.append('background_image', file, desiredFilename ?? file.name);
 
-    const res = await apiPom.post<UploadResult>(`/fields/${fieldId}/background/`, form, {
+    const res = await apiApp.post<UploadResult>(`/fields/${fieldId}/background/`, form, {
       headers: { ...authHeaders(token) }, // do not set Content-Type
     });
 

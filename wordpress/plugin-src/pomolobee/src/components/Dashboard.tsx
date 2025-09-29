@@ -3,8 +3,7 @@
 
 import React from "react";
 import { useProtectedPage } from "@hooks/useProtectedPage";
-import ActiveContextCard from "@components/ActiveContextCard";
-import ErrorTestButtons  from "@components/ErrorTestButtons";
+import ActiveContextCard from "@components/ActiveContextCard"; 
 
 const Dashboard: React.FC = () => {
   console.log('[Dashboard] component called');
@@ -12,8 +11,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-      <h1>📊 Dashboard</h1> 
-      <ErrorTestButtons />
+      <h1>📊 Dashboard</h1>  
       <ActiveContextCard />
     </>
   );

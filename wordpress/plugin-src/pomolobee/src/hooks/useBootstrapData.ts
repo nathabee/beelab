@@ -1,7 +1,11 @@
 // src/hooks/useBootstrapData.ts
 'use client';
-import { useAuth } from '@context/AuthContext';
-import { apiPom, authHeaders } from '@utils/api';
+
+
+import { useUser } from '@bee/common';
+import { useApp } from '@context/AppContext';
+
+import { apiApp, authHeaders } from '@utils/api';
 import type { FarmWithFields } from '@mytypes/farm';
 import type { Field, FieldLocation } from '@mytypes/field';
 import type { Fruit } from '@mytypes/fruit';
@@ -19,13 +23,15 @@ function getLocationsArray(payload: any): FieldLocation[] {
 
 export default function useBootstrapData() {
   const {
-    token,
+    token 
+  } = useUser();
+  const {
     farms, setFarms,
     fields, setFields,
     fruits, setFruits,
     rows, setRows,
     setActiveFarm,
-  } = useAuth();
+  } = useApp();
 
   const headersFor = (t?: string) => authHeaders(t ?? token);
 
@@ -40,9 +46,9 @@ export default function useBootstrapData() {
     const headers = headersFor(t);
 
     // Only three requests: farms, fruits, locations (fields come from locations)
-    const farmsReq = needFarms  ? apiPom.get<FarmWithFields[]>('/farms/',    { headers }) : Promise.resolve({ data: farms });
-    const fruitsReq= needFruits ? apiPom.get<Fruit[]>('/fruits/',            { headers }) : Promise.resolve({ data: fruits });
-    const locsReq  = needRows   ? apiPom.get<any>('/locations/',             { headers }) : Promise.resolve({ data: null });
+    const farmsReq = needFarms  ? apiApp.get<FarmWithFields[]>('/farms/',    { headers }) : Promise.resolve({ data: farms });
+    const fruitsReq= needFruits ? apiApp.get<Fruit[]>('/fruits/',            { headers }) : Promise.resolve({ data: fruits });
+    const locsReq  = needRows   ? apiApp.get<any>('/locations/',             { headers }) : Promise.resolve({ data: null });
 
     const [farmsRes, fruitsRes, locsRes] = await Promise.all([farmsReq, fruitsReq, locsReq]);
 
@@ -79,7 +85,7 @@ export default function useBootstrapData() {
 
   // Targeted refreshes if you still need them
   const fetchFieldById = async (fieldId: number, tokenParam?: string) => {
-    const res = await apiPom.get<Field>(`/fields/${fieldId}/`, { headers: headersFor(tokenParam) });
+    const res = await apiApp.get<Field>(`/fields/${fieldId}/`, { headers: headersFor(tokenParam) });
     const updated = res.data;
     const next = [...fields];
     const idx = next.findIndex(f => f.field_id === updated.field_id);
@@ -89,7 +95,7 @@ export default function useBootstrapData() {
   };
 
   const fetchLocationsOnly = async (tokenParam?: string) => {
-    const res = await apiPom.get<any>('/locations/', { headers: headersFor(tokenParam) });
+    const res = await apiApp.get<any>('/locations/', { headers: headersFor(tokenParam) });
     const locs = getLocationsArray(res.data);
     const map = new Map<number, Field>();
     const accRows: Row[] = [];

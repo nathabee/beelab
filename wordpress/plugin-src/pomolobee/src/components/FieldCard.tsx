@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useAuth } from '@context/AuthContext';
+
+ 
+import { useApp } from '@context/AppContext';
+
 import type { FieldBasic, Field } from '@mytypes/field';
 import RowDisplay from '@components/RowDisplay';
 
@@ -12,7 +15,7 @@ function isFullField(f: FieldBasic | Field): f is Field {
 type Props = { field?: FieldBasic | Field | null };
 
 const FieldCard: React.FC<Props> = ({ field }) => {
-  const { fieldsById, rowsByFieldId, getFieldWithRows, activeField } = useAuth();
+  const { fieldsById, rowsByFieldId, getFieldWithRows, activeField } = useApp();
 
   // prefer the prop, else fall back to activeField from context
   const inputField = field ?? activeField ?? null;

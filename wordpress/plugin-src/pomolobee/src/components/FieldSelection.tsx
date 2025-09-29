@@ -2,11 +2,14 @@
 'use client';
 
 import React, { useMemo, useState } from "react";
-import { useAuth } from "@context/AuthContext";
+
+ 
+import { useApp } from '@context/AppContext';
+
 import { FieldBasic } from "@mytypes/field";
 
 const FieldSelection: React.FC = () => {
-  const { farms, activeFarm, setActiveFarm, activeField, setActiveField } = useAuth();
+  const { farms, activeFarm, setActiveFarm, activeField, setActiveField } = useApp();
   const [farmFilter, setFarmFilter] = useState<number | "">("");
 
   const farmOptions = farms;

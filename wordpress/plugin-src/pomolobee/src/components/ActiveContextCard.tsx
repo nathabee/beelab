@@ -1,10 +1,12 @@
 // src/components/ActiveContextCard.tsx
 'use client';
 import React from 'react';
-import { useAuth } from '@context/AuthContext';
+import { useUser } from '@bee/common';
+import { useApp } from '@context/AppContext';
 
 const ActiveContextCard: React.FC = () => {
-  const { user, activeFarm, activeField } = useAuth();
+  const { activeFarm, activeField } = useApp();
+  const { user  } = useUser();
 
 
   console.log('[ActiveContextCard] component called');

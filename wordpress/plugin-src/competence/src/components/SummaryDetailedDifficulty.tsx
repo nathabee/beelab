@@ -5,7 +5,7 @@ import { Report, ReportCatalogue, Resultat } from '@mytypes/report';
 import { Eleve } from '@mytypes/eleve';
 import { User } from '@mytypes/user';
 import { PDFLayout } from '@mytypes/pdf';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import PrintHeader from './PrintHeader';
 import '@styles/pdf.css';
 
@@ -46,7 +46,7 @@ const SummaryDetailedDifficulty: React.FC<SummaryDetailedDifficultyProps> = ({
   max_item,
   self_page,
 }) => {
-  const { activeReport } = useAuth();
+  const { activeReport } = useApp();
   const cachedReport = activeReport ? activeReport.report_catalogues : report.report_catalogues;
 
   const flattenedResults: Row[] = cachedReport.flatMap((reportCatalogue: ReportCatalogue) =>

@@ -3,13 +3,13 @@
 import React from 'react';
 import CatalogueDisplay from '@components/CatalogueDisplay';
 import CatalogueSelection from '@components/CatalogueSelection';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import { useProtectedPage } from '@hooks/useProtectedPage';
 
 const CatalogueMgt: React.FC = () => {
   useProtectedPage(); // handles token check + redirect
 
-  const { activeCatalogues, catalogue } = useAuth();
+  const { activeCatalogues, catalogue } = useApp();
 
   return (
     <div className="container mt-3 ml-2">

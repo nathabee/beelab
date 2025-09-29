@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Eleve } from '@mytypes/eleve';
 import { getToken , isTokenExpired } from '@utils/jwt'; 
 //import { getApiUrl } from '@utils/helper';
-import { apiComp, authHeaders } from '@utils/api';
+import { apiApp, authHeaders } from '@utils/api';
 
 export const useStudents = () => {
   const [students, setStudents] = useState<Eleve[]>([]);
@@ -19,7 +19,7 @@ export const useStudents = () => {
     }
 
     try {
-      const response = await apiComp.get(`/eleves/`, { headers: authHeaders(token) });
+      const response = await apiApp.get(`/eleves/`, { headers: authHeaders(token) });
       setStudents(response.data);
     } catch (e) {
       console.error('Error fetching students', e);

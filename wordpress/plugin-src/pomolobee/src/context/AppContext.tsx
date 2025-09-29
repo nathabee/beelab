@@ -1,27 +1,20 @@
-// src/context/AuthContext.tsx
+// src/context/AppContext.tsx
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
-import { User } from "@mytypes/user";
+ 
 import { FarmWithFields } from "@mytypes/farm";
 import { Fruit } from '@mytypes/fruit';
 import { Field, FieldBasic } from '@mytypes/field';
-import type { Row } from '@mytypes/row';
-import { isTokenExpired } from '@utils/jwt';
+import type { Row } from '@mytypes/row'; 
 
 
 type Maybe<T> = T | null;
 
-type AuthContextType = {
-  // auth
-  token: Maybe<string>;
-  user: Maybe<User>;
-  isLoggedIn: boolean;
-  login: (token: string, user: User) => void;
-  logout: () => void;
-  setToken: (t: Maybe<string>) => void;
+type AppContextType = {
+ 
 
-
+  reset: () => void;
   // domain
   farms: FarmWithFields[];
   setFarms: (f: FarmWithFields[]) => void;
@@ -49,11 +42,9 @@ type AuthContextType = {
   setActiveField: (f: Maybe<FieldBasic | Field>) => void;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setTokenState] = useState<Maybe<string>>(null);
-  const [user, setUser] = useState<Maybe<User>>(null);
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => { 
   const [farms, setFarmsState] = useState<FarmWithFields[]>([]);
   const [activeFarm, setActiveFarmState] = useState<Maybe<FarmWithFields>>(null);
   const [activeField, setActiveFieldState] = useState<Maybe<FieldBasic | Field>>(null);
@@ -64,8 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fieldsById = useMemo(
     () => Object.fromEntries(fields.map(f => [f.field_id, f])),
     [fields]
-  );
-  const isLoggedIn = !!token;
+  ); 
 
   const patchField = (fieldId: number, patch: Partial<Field>) => {
     setFieldsState(prev => prev.map(f => (f.field_id === fieldId ? { ...f, ...patch } : f)));
@@ -93,125 +83,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
 
-  // DEBUG
-  useEffect(() => {
-    console.log('[Auth] DEBUG token changed:', token);
-  }, [token]);
+ 
 
   useEffect(() => {
-    console.log('[Auth] DEBUG user changed:', user);
-  }, [user]);
-
-  useEffect(() => {
-    console.log('[Auth] DEBUG farms set:', farms);
+    console.log('[App] DEBUG farms set:', farms);
   }, [farms]);
 
   useEffect(() => {
-    console.log('[Auth] DEBUG fields set:', fields);
+    console.log('[App] DEBUG fields set:', fields);
   }, [fields]);
 
   useEffect(() => {
-    console.log('[Auth] DEBUG fruits set:', fruits);
+    console.log('[App] DEBUG fruits set:', fruits);
   }, [fruits]);
 
   useEffect(() => {
-    console.log('[Auth] rows set length:', rows.length, 'sample:', rows.slice(0, 3));
+    console.log('[App] rows set length:', rows.length, 'sample:', rows.slice(0, 3));
   }, [rows]);
 
   useEffect(() => {
     const ids = Array.from(new Set(rows.map(r => r.field_id)));
-    console.log('[Auth] rowsByFieldId keys:', ids);
+    console.log('[App] rowsByFieldId keys:', ids);
   }, [rows]);
 
   // END DEBUG
 
 
   useEffect(() => {
-    console.log('[Auth] activeFarm:', activeFarm, 'activeField:', activeField);
+    console.log('[App] activeFarm:', activeFarm, 'activeField:', activeField);
   }, [activeFarm, activeField]);
 
   // boot from localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const t = localStorage.getItem("authToken");
-    const u = localStorage.getItem("userInfo");
     const fs = localStorage.getItem("farms");
     const af = localStorage.getItem("activeFarm");
     const fld = localStorage.getItem("activeField");
 
-    // manage token expiricy
-    if (t) {
-      // If expired at boot, purge immediately
-      if (isTokenExpired(t)) {
-        localStorage.removeItem('authToken');
-      } else {
-        setTokenState(t);
-      }
-    }
 
 
-    if (u) setUser(JSON.parse(u));
     if (fs) setFarmsState(JSON.parse(fs));
     if (af) setActiveFarmState(JSON.parse(af));
     if (fld) setActiveFieldState(JSON.parse(fld));
   }, []);
 
 
-  // runtime token guard: clear when token expires (poll every 30s)
-  useEffect(() => {
-    if (!token) return;
-    if (isTokenExpired(token)) {
-      setTokenState(null);
-      return;
-    }
-    const id = setInterval(() => {
-      setTokenState(prev => {
-        if (prev && isTokenExpired(prev)) return null;
-        return prev;
-      });
-    }, 30_000);
-    return () => clearInterval(id);
-  }, [token]);
-
-  // respond to storage changes from other tabs
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'authToken') {
-        const newToken = e.newValue;
-        if (!newToken || isTokenExpired(newToken)) {
-          setTokenState(null);
-        } else {
-          setTokenState(newToken);
-        }
-      }
-      if (e.key === 'userInfo') {
-        setUser(e.newValue ? JSON.parse(e.newValue) : null);
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
 
 
-  // persist
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (token)
-      localStorage.setItem("authToken", token);
-    else localStorage.removeItem("authToken");
-  }, [token]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem("fields", JSON.stringify(fields));
     localStorage.setItem("fruits", JSON.stringify(fruits));
   }, [fields, fruits]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (user) localStorage.setItem("userInfo", JSON.stringify(user));
-    else localStorage.removeItem("userInfo");
-  }, [user]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -230,15 +154,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     else localStorage.removeItem("activeField");
   }, [activeField]);
 
-  const login = (tok: string, u: User) => {
-    setTokenState(tok);
-    setUser(u);
-    console.log('[AuthProvider] login called');
-  };
 
-  const logout = () => {
-    setTokenState(null);
-    setUser(null);
+
+  const reset = () => {
+    
     setFarmsState([]);
     setFieldsState([]);
     setRowsState([]);   
@@ -248,8 +167,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (typeof window !== 'undefined') {
     [
-      'authToken',
-      'userInfo',
       'farms',
       'fields',
       'fruits',
@@ -259,10 +176,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ].forEach(k => localStorage.removeItem(k));
   }
 
-  console.log('[AuthProvider] logout called');
+  console.log('[AppProvider] logout called');
 };
 
-  const setToken = (t: Maybe<string>) => setTokenState(t);
   const setFarms = (f: FarmWithFields[]) => setFarmsState(f);
   const setActiveFarm = (f: Maybe<FarmWithFields>) => {
     setActiveFarmState(f);
@@ -297,8 +213,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
   return (
-    <AuthContext.Provider value={{
-      token, user, isLoggedIn, login, logout, setToken,
+    <AppContext.Provider value={{
+      reset, 
       farms, setFarms,
       activeFarm, setActiveFarm,
       activeField, setActiveField,
@@ -312,12 +228,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     }}>
       {children}
-    </AuthContext.Provider>
+    </AppContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+export const useApp = (): AppContextType => {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error("useApp must be used within AppProvider");
   return ctx;
 };

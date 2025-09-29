@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Dashboard from '@components/Dashboard';
-import UserDisplay from '@components/UserDisplay';
+import { UserDisplay } from '@bee/common';
 
 const PomoloBeeDashboard = () => <>  <UserDisplay/>< Dashboard /></>;
 

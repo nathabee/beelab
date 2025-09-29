@@ -7,13 +7,13 @@
 
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import useFetchData from '@hooks/useFetchData';
 // import  { getApiUrl } from '@utils/helper'; 
 import { apiUser, authHeaders } from '@utils/api';
 
 export function useLoginHandler() {
-  const { login } = useAuth();
+  const { login } = useApp();
   const { fetchData } = useFetchData();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

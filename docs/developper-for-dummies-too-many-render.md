@@ -36,7 +36,7 @@ If that effect **sets state**, it causes a render → deps change again → effe
    Example pattern (simplified):
 
    ```ts
-   const { logout } = useAuth();
+   const { logout } = useApp();
    const fetchReports = useCallback(..., [logout]); // changes every render because logout changes
    useEffect(() => { 
      setLoading(true);   // sets state
@@ -73,14 +73,14 @@ You fixed two things:
 * You call **logout**.
 * `logout` (stable function) clears storage and sets several pieces of state **once**.
 * Those state changes make `value` (memo) change **once** (because its inputs changed).
-* Components that depend on **primitives** like `isLoggedIn`, `userId`, etc. update and any effects that depend on those **run once**.
+* Components that depend on **primitives** like `isAuthenticated`, `userId`, etc. update and any effects that depend on those **run once**.
 * No further identity thrashing → **no loop**.
 
 ---
 
 ## Quick mental model (sticky note)
 
-* ✅ Depend on **primitives** in effects: `user?.id`, `isLoggedIn`, `roleNames.join(',')`
+* ✅ Depend on **primitives** in effects: `user?.id`, `isAuthenticated`, `roleNames.join(',')`
 * ✅ Wrap **functions you export via context** in `useCallback`
 * ✅ Wrap your **context `value`** in `useMemo` and **use that memo**
 * ❌ Don’t put **whole objects** (e.g., `auth`) or **inline objects/functions** in dep arrays
@@ -116,9 +116,9 @@ const login  = useCallback((t,u)=>{/*...*/}, []);
 const logout = useCallback(()=>{/*...*/}, []);
 
 const value = useMemo(() => ({
-  token, isLoggedIn, user,            // state
+  token, isAuthenticated, user,            // state
   login, logout, setToken,            // stable funcs (callbacks!)
-}), [token, isLoggedIn, user]);       // primitives only
+}), [token, isAuthenticated, user]);       // primitives only
 
 return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 ```
@@ -143,12 +143,12 @@ const cb   = useCallback(() => doThing(c), [c]);
 useEffect(() => { /* ... */ }, [opts, list, cb]);
 
 // ❌ BAD: depending on a whole context/prop object
-const auth = useAuth();
+const auth = useApp();
 useEffect(() => { /* ... */ }, [auth]);
 
 // ✅ GOOD: depend on primitives you use
-const { isLoggedIn, user } = useAuth();
-useEffect(() => { /* ... */ }, [isLoggedIn, user?.id]);
+const { isAuthenticated, user } = useApp();
+useEffect(() => { /* ... */ }, [isAuthenticated, user?.id]);
 ```
 
 ### 3) Effects: fixed shape
@@ -268,7 +268,7 @@ Because it compares **identity**, not deep equality. `{a:1}` !== `{a:1}` across 
 * `useMemo` → memoize **values/objects/arrays**
 
 **Q: Can I put the whole `auth` in deps to be safe?**
-No. Depend on **specific fields** you actually read: `auth.isLoggedIn`, `auth.user?.id`.
+No. Depend on **specific fields** you actually read: `auth.isAuthenticated`, `auth.user?.id`.
 
 ---
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import { useProtectedPage } from '@hooks/useProtectedPage';
 import ActiveContextCard from '@components/ActiveContextCard';
 
@@ -23,7 +23,7 @@ const OverviewTest: React.FC = () => {
     activeCatalogues,
     activeLayout,
     user
-  } = useAuth();
+  } = useApp();
 
   return (
     <div className="container mt-3 ml-2">

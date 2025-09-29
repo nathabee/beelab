@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Farm from '@components/Farm';
-import UserDisplay from '@components/UserDisplay';
+import { UserDisplay } from '@bee/common';
 
 const PomoloBeeFarm = () => <>  <UserDisplay/>< Farm /></>;
 

@@ -1,12 +1,12 @@
 // src/app/CompetenceHeader.tsx
 import React from 'react';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import { Link } from 'react-router-dom';
 
 
 
 const CompetenceHeader = () => {
-  const { isLoggedIn, logout, activeEleve, activeCatalogues, activeLayout, user } = useAuth();
+  const { isAuthenticated, logout, activeEleve, activeCatalogues, activeLayout, user } = useApp();
 
   const canAccessReport = activeEleve && activeCatalogues.length && activeLayout && user;
 
@@ -17,7 +17,7 @@ const CompetenceHeader = () => {
         <div className="navbar-active-data">
           <Link to="/home" className="nav-link">🏠 Home</Link>
 
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <>
               <Link to="/dashboard" className="nav-link">📊 Dashboard</Link>
               <Link to="/student_mgt" className="nav-link">👨‍🎓 Student Management</Link>

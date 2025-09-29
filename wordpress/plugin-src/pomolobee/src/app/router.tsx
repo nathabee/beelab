@@ -7,6 +7,7 @@ import PomoloBeeHome from '@pages/PomoloBeeHome';
 import PomoloBeeLogin from '@pages/PomoloBeeLogin';
 import PomoloBeeDashboard from '@pages/PomoloBeeDashboard';
 import PomoloBeeFarm from '@pages/PomoloBeeFarm';
+import PomoloBeeErrorMgt from '@pages/PomolobeeErrorMgt';
 import PomoloBeeFarmMgt from '@pages/PomoloBeeFarmMgt'; 
 import { ErrorPage }   from '@bee/common/error';
 
@@ -17,6 +18,7 @@ export default function AppRoutes() {
       <Route path="/home"            element={<PomoloBeeHome />} />
       <Route path="/login"     element={<PomoloBeeLogin />} />
       <Route path="/error"     element={<ErrorPage plugin="pomolobee" />} /> 
+      <Route path="/errormgt"     element={<PomoloBeeErrorMgt />} />  
       <Route path="/dashboard" element={<PomoloBeeDashboard />} />
       <Route path="/farm"      element={<PomoloBeeFarm />} />
       <Route path="/farmmgt"   element={<PomoloBeeFarmMgt />} />

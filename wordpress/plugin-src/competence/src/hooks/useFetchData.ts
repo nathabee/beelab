@@ -6,17 +6,17 @@
 
 
 
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import { getToken , isTokenExpired } from '@utils/jwt'; 
 import axios from 'axios';
 import { ScoreRulePoint  } from '@mytypes/report';
 // import { getApiUrl } from '@utils/helper';
-import { apiComp, authHeaders } from '@utils/api';
+import { apiApp, authHeaders } from '@utils/api';
 
 const useFetchData = () => {
     const { catalogue, setCatalogue, layouts, setLayouts,  niveaux, setNiveaux,
         scoreRulePoints,  setScoreRulePoints
-     } = useAuth();
+     } = useApp();
 
     const fetchData = async () => {
         const token = getToken ();
@@ -38,14 +38,14 @@ const useFetchData = () => {
             // Fetch Catalogues only if they are not already set
             if (catalogue.length === 0) {
  
-                const response = await apiComp.get('/catalogues/',  { headers: authHeaders(token) });
+                const response = await apiApp.get('/catalogues/',  { headers: authHeaders(token) });
                 //console.log('useFetchData catalogue:', response.data);
                 //console.log('useFetchData catalogue');
                 setCatalogue(response.data);
             }
 
             if (layouts.length === 0) {
-                const layoutsResponse  = await apiComp.get('/pdf_layouts/',   { headers: authHeaders(token) });
+                const layoutsResponse  = await apiApp.get('/pdf_layouts/',   { headers: authHeaders(token) });
  
                 //console.log("get layoutsResponse ", layoutsResponse.data)
                 //console.log('useFetchData layouts');
@@ -55,7 +55,7 @@ const useFetchData = () => {
 
             // Fetch Niveaux and store them in context/localStorage
             if (!niveaux || niveaux.length === 0) {
-                const niveauResponse  = await apiComp.get('/niveaux/',    { headers: authHeaders(token) });
+                const niveauResponse  = await apiApp.get('/niveaux/',    { headers: authHeaders(token) });
                 //console.log("get niveauResponse ", niveauResponse.data)
                 //console.log('useFetchData niveaux');
                 setNiveaux(niveauResponse.data); // Save in AuthContext and localStorage
@@ -63,7 +63,7 @@ const useFetchData = () => {
 
 
             if (!scoreRulePoints || scoreRulePoints.length === 0) {
-                const scoreRuleResponse = await apiComp.get<ScoreRulePoint[]>(`/scorerulepoints/`,  { headers: authHeaders(token) });
+                const scoreRuleResponse = await apiApp.get<ScoreRulePoint[]>(`/scorerulepoints/`,  { headers: authHeaders(token) });
                 //console.log('Fetched scoreRuleResponse:', scoreRuleResponse.data);
                 //console.log('useFetchData scoreRulePoints');
                 setScoreRulePoints(scoreRuleResponse.data);

@@ -1,15 +1,14 @@
 // src/hooks/useLogin.ts
 'use client';
 
-import { useState } from 'react';
-import axios, { AxiosError } from 'axios';
-import { useAuth } from '@context/AuthContext';
+import { useState } from 'react'; 
+import { useUser } from '@bee/common';
 import useBootstrapData from '@hooks/useBootstrapData';
 import { apiUser, authHeaders } from '@utils/api';
 
 
 export function useLoginHandler() {
-  const { login } = useAuth();
+  const { login } = useUser();
   const { fetchBootstrapData } = useBootstrapData();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
  

@@ -1,13 +1,16 @@
 // src/hooks/useFieldSvgUpload.ts
 'use client';
-import { apiPom, authHeaders } from '@utils/api';
+import { apiApp, authHeaders } from '@utils/api';
 import { toAppError, errorBus , AppError }    from '@bee/common/error';
-import { useAuth } from '@context/AuthContext';
+
+import { useUser } from '@bee/common';
+import { useApp } from '@context/AppContext';
 
 type UploadResult = { svg_map_url?: string; [k: string]: any };
 
-export default function useFieldSvgUpload() {
-  const { token, patchField } = useAuth();
+export default function useFieldSvgUpload() { 
+  const { token } = useUser();
+  const { patchField } = useApp();
 
   async function uploadSvg(fieldId: number, file: File): Promise<string> {
     if (!token) throw new Error('No auth token');
@@ -15,7 +18,7 @@ export default function useFieldSvgUpload() {
     form.append('svg_map', file, file.name);
 
     try {
-      const res = await apiPom.post<UploadResult>(`/fields/${fieldId}/svg/`, form, {
+      const res = await apiApp.post<UploadResult>(`/fields/${fieldId}/svg/`, form, {
         headers: { ...authHeaders(token) },
       });
       const url =

@@ -2,14 +2,14 @@
 
 import React from 'react'; 
 import { PDFLayout } from '@mytypes/pdf';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 
 interface LayoutSelectionProps {
   layouts: PDFLayout[];
 }
 
 const LayoutSelection: React.FC<LayoutSelectionProps> = ({ layouts }) => {
-  const { activeLayout, setActiveLayout } = useAuth();
+  const { activeLayout, setActiveLayout } = useApp();
 
   if (layouts.length === 0) return <p>No layouts available.</p>;
 

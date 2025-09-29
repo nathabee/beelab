@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import {formatDate} from '@utils/helper'; 
 
 const ActiveContextCard: React.FC = () => {
-  const { activeEleve, activeCatalogues, activeLayout, user , activeReport} = useAuth();
+  const { activeEleve, activeCatalogues, activeLayout, user , activeReport} = useApp();
  
 
   return (

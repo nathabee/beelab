@@ -6,8 +6,8 @@ import { useProtectedPage } from "@hooks/useProtectedPage";
 import FieldSelection from "@components/FieldSelection";
 import ActiveContextCard from "@components/ActiveContextCard";
 import FieldEditCard from "@components/FieldEditCard";
-
-import { useAuth } from '@context/AuthContext';
+ 
+import { useApp } from '@context/AppContext';
 
 
 
@@ -17,7 +17,7 @@ const FarmMgt: React.FC = () => {
 
 
 
-  const {  activeField } = useAuth();
+  const {  activeField } = useApp();
 
 
 

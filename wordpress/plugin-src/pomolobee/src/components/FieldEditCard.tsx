@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useAuth } from '@context/AuthContext';
+
+ 
+import { useApp } from '@context/AppContext';
+
 import type { FieldBasic, Field } from '@mytypes/field';
 import useFieldBackgroundUpload from '@hooks/useFieldBackgroundUpload';
 
@@ -26,7 +29,7 @@ const FieldEditCard: React.FC<Props> = ({ field, onSave, onBackgroundSaved }) =>
 
     // inside component
     const { uploadSvg } = useFieldSvgUpload();
-    const { patchField } = useAuth();
+    const { patchField } = useApp();
 
     const [isSvgUploading, setIsSvgUploading] = useState(false);
     const [svgUploadError, setSvgUploadError] = useState<string | null>(null);

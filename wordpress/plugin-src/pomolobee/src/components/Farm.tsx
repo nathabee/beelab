@@ -7,8 +7,8 @@ import FieldSelection from "@components/FieldSelection";
 import ActiveContextCard from "@components/ActiveContextCard";
 import FieldCard from "@components/FieldCard";
 
-import { useAuth } from '@context/AuthContext';
-
+ 
+import { useApp } from '@context/AppContext';
 
 
 const Farm: React.FC = () => {
@@ -17,7 +17,7 @@ const Farm: React.FC = () => {
 
 
 
-  const {  activeField } = useAuth();
+  const {  activeField } = useApp();
 
 
 

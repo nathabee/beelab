@@ -48,7 +48,9 @@ Ports (dev): **WP 9082**, **API 9001**, **Web 9080**. Databases are internal.
 ## Deployment example
 
 This git repository was installed on a VPS, you can access it there:
-
+ 
+* WordPress Pomolobee plugin: [https://beelab-wp.nathabee.de/pomolobee](https://beelab-wp.nathabee.de/pomolobee)
+* WordPress Competence plugin: [https://beelab-wp.nathabee.de/competence](https://beelab-wp.nathabee.de/competence)
 * WordPress: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
 * WordPress admin: [https://beelab-wp.nathabee.de/wp-admin](https://beelab-wp.nathabee.de/wp-admin)
 * Django API: [https://beelab-api.nathabee.de/api](https://beelab-api.nathabee.de/api)

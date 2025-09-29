@@ -4,12 +4,12 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LayoutDisplay from '@components/LayoutDisplay';
 import LayoutSelection from '@components/LayoutSelection';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import { getToken } from '@utils/jwt';
 
 const Configuration: React.FC = () => {
   const navigate = useNavigate();
-  const { activeLayout, layouts } = useAuth();
+  const { activeLayout, layouts } = useApp();
 
   useEffect(() => {
     const token = getToken();

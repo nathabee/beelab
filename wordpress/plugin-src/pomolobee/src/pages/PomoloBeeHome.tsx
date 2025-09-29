@@ -5,7 +5,9 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@context/AuthContext';
+
+import { useUser } from '@bee/common';
+import { useApp } from '@context/AppContext';
 
 const FeatureCard: React.FC<{ title: string; children: React.ReactNode; emoji?: string }> = ({ title, children, emoji }) => (
   <div className="col-md-6 mb-3">
@@ -19,8 +21,9 @@ const FeatureCard: React.FC<{ title: string; children: React.ReactNode; emoji?: 
 );
 
 const PomoloBeeHome: React.FC = () => {
-  const navigate = useNavigate();
-  const { isLoggedIn, user, farms } = useAuth();
+  const navigate = useNavigate(); 
+  const { isLoggedIn, user } = useUser();
+  const { farms } = useApp();
 
   // Derived counts for a quick overview
   const farmsCount = farms?.length || 0;

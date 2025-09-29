@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { CatalogueSelectionProps, Catalogue } from '@mytypes/report';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 
 
 const CatalogueSelection: React.FC<CatalogueSelectionProps> = ({ catalogue }) => {
-  const { activeCatalogues, setActiveCatalogues } = useAuth();
+  const { activeCatalogues, setActiveCatalogues } = useApp();
 
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);

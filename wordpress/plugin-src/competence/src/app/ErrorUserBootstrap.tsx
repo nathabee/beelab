@@ -2,10 +2,10 @@
 'use client';
 import { useEffect } from 'react';
 import { setErrorUserSupplier } from '@bee/common/error';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 
 export default function ErrorUserBootstrap() {
-  const { isLoggedIn, user } = useAuth();
+  const { isAuthenticated, user } = useApp();
 
   useEffect(() => {
     // Called on mount and whenever auth state changes.
@@ -17,14 +17,14 @@ export default function ErrorUserBootstrap() {
         (Array.isArray((user as any)?.role) ? (user as any).role : undefined);
 
       return {
-        isLoggedIn: !!isLoggedIn,
+        isAuthenticated: !!isAuthenticated,
         id: (user as any)?.id ?? (user as any)?.ID,
         username: (user as any)?.username || (user as any)?.name || (user as any)?.user_login,
         email: (user as any)?.email,
         roles: Array.isArray(roles) ? roles : roles ? Object.keys(roles) : [],
       };
     });
-  }, [isLoggedIn, user]);
+  }, [isAuthenticated, user]);
 
   return null;
 }

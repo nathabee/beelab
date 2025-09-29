@@ -66,6 +66,12 @@ function pomolobee_wp_create_pages()
             'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
             'type'  => 'pomolobee_page',
         ],
+        [
+            'title' => 'ErrorMgt',
+            'slug'  => 'errormgt',
+            'block' => '<!-- wp:pomolobee/pomolobee-app /-->',
+            'type'  => 'pomolobee_page',
+        ],
     ];
 
     foreach ($pages as $page) {

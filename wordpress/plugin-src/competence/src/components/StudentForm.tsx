@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { Eleve } from '@mytypes/eleve';
 import { User } from '@mytypes/user';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import { getToken, isTokenExpired } from '@utils/jwt';
-import { apiUser, apiComp, authHeaders } from '@utils/api';
+import { apiUser, apiApp, authHeaders } from '@utils/api';
 
 interface StudentFormProps {
   setStudents: React.Dispatch<React.SetStateAction<Eleve[]>>;
@@ -13,7 +13,7 @@ interface StudentFormProps {
 }
 
 const StudentForm: React.FC<StudentFormProps> = ({ setStudents, closeForm }) => {
-  const { user, niveaux } = useAuth();
+  const { user, niveaux } = useApp();
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [level, setLevel] = useState(''); // will store string, convert to number when posting
@@ -66,7 +66,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ setStudents, closeForm }) => 
     // For teacher: backend auto-assigns the current user in perform_create/serializer
 
     try {
-      const res = await apiComp(`/eleves/`, {
+      const res = await apiApp(`/eleves/`, {
         method: 'POST',
         headers: {
           ...authHeaders(token),

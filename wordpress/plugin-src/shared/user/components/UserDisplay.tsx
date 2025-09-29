@@ -1,7 +1,7 @@
 // src/components/UserDisplay.tsx
 'use client';
 import React from 'react';
-import { useAuth } from '@context/AuthContext';
+import { useUser } from '../UserContext';
 
 const formatDate = (iso?: string) => {
   if (!iso) return '';
@@ -11,7 +11,7 @@ const formatDate = (iso?: string) => {
 };
 
 const UserDisplay: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
 
   if (!user) return null;
 

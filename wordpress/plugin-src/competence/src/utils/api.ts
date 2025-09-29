@@ -40,7 +40,7 @@ export const apiUser = axios.create({
   timeout: 15000,
 });
 
-export const apiComp = axios.create({
+export const apiApp = axios.create({
   baseURL: join(getBaseApi(), "/competence"),
   timeout: 15000,
 });

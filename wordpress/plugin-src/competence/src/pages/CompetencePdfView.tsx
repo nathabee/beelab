@@ -3,7 +3,7 @@
 
 import React from 'react';
 import {useProtectedPage}  from '@hooks/useProtectedPage';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 
 import ActiveContextCard from '@components/ActiveContextCard';
 import PDFComponent from '@components/PDFComponent';
@@ -17,7 +17,7 @@ const CompetencePdfView: React.FC = () => {
     activeCatalogues,
     activeLayout,
     user,
-  } = useAuth();
+  } = useApp();
 
   return (
     <div className="container mt-3 ml-2">

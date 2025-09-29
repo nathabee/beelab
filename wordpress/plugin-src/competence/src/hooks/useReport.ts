@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ReportCataloguePatch } from '@mytypes/reportpatch';
 import { Report } from '@mytypes/report';
 // import { getApiUrl } from '@utils/helper';
-import { apiComp, authHeaders } from '@utils/api';
+import { apiApp, authHeaders } from '@utils/api';
 
 export const useReport = (token: string | null) => {
   const [loading, setLoading] = useState(false);
@@ -25,7 +25,7 @@ export const useReport = (token: string | null) => {
     setIsError(false);
 
     try {
-      const response = await apiComp.post(`/fullreports/`, {
+      const response = await apiApp.post(`/fullreports/`, {
         eleve: eleveId,
         professeur: userId,
         pdflayout: pdflayoutId,
@@ -55,7 +55,7 @@ export const useReport = (token: string | null) => {
     setIsError(false);
 
     try {
-      const response = await apiComp.patch(`/fullreports/${reportId}/`, {
+      const response = await apiApp.patch(`/fullreports/${reportId}/`, {
         id: reportId,
         eleve: eleveId,
         professeur: userId,

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import Spinner from 'react-bootstrap/Spinner';
  
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import { useReport } from '@hooks/useReport';
 import ActiveContextCard from '@components/ActiveContextCard';
 import ReportEleveSelection from '@components/ReportEleveSelection';
@@ -29,7 +29,7 @@ const ReportMgt: React.FC = () => {
     scoreRulePoints,
     setActiveReport,
     token
-  } = useAuth();
+  } = useApp();
 
   const [reportData, setReportData] = useState<ReportCatalogue[]>([]);
   const [isModified, setIsModified] = useState<boolean[]>([]);

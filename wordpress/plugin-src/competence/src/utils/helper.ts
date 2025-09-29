@@ -1,6 +1,6 @@
 // src/utils/helper.ts 
 import logo from  "@assets/logo.png"; 
-import { apiComp, authHeaders } from '@utils/api';
+import { apiApp, authHeaders } from '@utils/api';
 
 
 /*export function getApiUrl(): string {
@@ -57,7 +57,7 @@ export async function fetchBase64Image(itemKey: string, idImage: number, token: 
       //console.log(`Fetching image for key ${itemKey} from ${idImage}...`); //ok
       
       // Fetch the image data from your Django API
-      const response = await apiComp.get(`/myimage/${idImage}/base64/`, { headers: authHeaders(token) });
+      const response = await apiApp.get(`/myimage/${idImage}/base64/`, { headers: authHeaders(token) });
       const base64Image = response.data.image_base64;
 
       // Store the fetched base64 image in localStorage

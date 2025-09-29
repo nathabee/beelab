@@ -2,8 +2,8 @@
 import { useState, useCallback } from 'react';
 import { ShortReport } from '@mytypes/shortreport';
 import { getToken, isTokenExpired } from '@utils/jwt';
-import { apiComp, authHeaders } from '@utils/api';
-import { useAuth } from '@context/AuthContext';
+import { apiApp, authHeaders } from '@utils/api';
+import { useApp } from '@context/AuthContext';
 
 interface UseShortReportsResult {
   reports: ShortReport[];
@@ -16,7 +16,7 @@ const useShortReports = (): UseShortReportsResult => {
   const [reports, setReports] = useState<ShortReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const { logout } = useAuth();
+  const { logout } = useApp();
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
@@ -31,7 +31,7 @@ const useShortReports = (): UseShortReportsResult => {
     }
 
     try {
-      const res = await apiComp.get(`/shortreports/`, { headers: authHeaders(token) });
+      const res = await apiApp.get(`/shortreports/`, { headers: authHeaders(token) });
       setReports(res.data);
     } catch (e) {
       console.error('Error fetching short reports:', e);

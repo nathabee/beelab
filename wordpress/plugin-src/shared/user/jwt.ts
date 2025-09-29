@@ -1,7 +1,7 @@
 // src/utils/jwt.ts
 import { jwtDecode } from 'jwt-decode';
 import { useEffect, useMemo } from 'react';
-import { useAuth } from '@context/AuthContext';
+import { useUser } from './UserContext';
 
 interface JwtPayload {
   exp: number;
@@ -37,7 +37,7 @@ export function getTokenFromStorage(): string | null {
  *  - if expired, clears it from context (and storage via your provider)
  */
 export function useValidToken(): string | null {
-  const { token, setToken } = useAuth();
+  const { token, setToken } = useUser();
 
   useEffect(() => {
     if (token && isTokenExpired(token)) {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import { Eleve } from '@mytypes/eleve';
 import { Report } from '@mytypes/report';
 import FullReportDisplay from '@components/FullReportDisplay';
@@ -13,7 +13,7 @@ interface ReportEleveSelectionProps {
 
 const ReportEleveSelection: React.FC<ReportEleveSelectionProps> = ({ eleve }) => {
   const [expanded, setExpanded] = useState(false);
-  const { catalogue, setActiveReport, setActiveCatalogues, layouts, setActiveLayout } = useAuth();
+  const { catalogue, setActiveReport, setActiveCatalogues, layouts, setActiveLayout } = useApp();
   const { reports, loading, error } = useEleveReports(eleve);
 
   const handleSelectReport = (report: Report) => {

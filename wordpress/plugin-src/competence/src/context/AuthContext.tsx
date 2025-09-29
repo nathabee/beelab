@@ -32,7 +32,7 @@ interface AuthContextType {
 
   user: User | null;
   userRoles: string[];
-  isLoggedIn: boolean;
+  isAuthenticated: boolean;
 
   login: (token: string, userInfo: User) => void;
   logout: () => void;
@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, internalSetToken] = useState<string | null>(null);
   const [user, internalSetUser] = useState<User | null>(null);
   const [userRoles, internalSetUserRoles] = useState<string[]>([]);
-  const [isLoggedIn, internalSetIsLoggedIn] = useState(false);
+  const [isAuthenticated, internalSetisAuthenticated] = useState(false);
   const [activeCatalogues, internalSetActiveCatalogues] = useState<Catalogue[]>([]);
   const [activeEleve, internalSetActiveEleve] = useState<Eleve | null>(null);
   const [catalogue, internalSetCatalogue] = useState<Catalogue[]>([]);
@@ -92,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedToken = localStorage.getItem('authToken');
     if (savedToken) {
       internalSetToken(savedToken);
-      internalSetIsLoggedIn(true);
+      internalSetisAuthenticated(true);
       internalSetUserRoles(JSON.parse(localStorage.getItem('userRoles') || '[]'));
       internalSetUser(JSON.parse(localStorage.getItem('userInfo') || 'null'));
       internalSetNiveaux(JSON.parse(localStorage.getItem('niveaux') || '[]'));
@@ -147,7 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newToken = getToken();
       setToken(newToken); // this will reset token to null if expired
       if (!newToken) {
-        internalSetIsLoggedIn(false);
+        internalSetisAuthenticated(false);
       }
     };
 
@@ -163,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     internalSetToken(token);
     internalSetUser(userInfo);
     internalSetUserRoles(userInfo.roles);
-    internalSetIsLoggedIn(true);
+    internalSetisAuthenticated(true);
     localStorage.setItem('userRoles', JSON.stringify(userInfo.roles));
     localStorage.setItem('userInfo', JSON.stringify(userInfo));
   }, []);
@@ -186,7 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     Object.keys(localStorage).forEach((k) => k.startsWith('competence_') && localStorage.removeItem(k));
 
     internalSetToken(null);
-    internalSetIsLoggedIn(false);
+    internalSetisAuthenticated(false);
     internalSetUser(null);
     internalSetUserRoles([]);
     internalSetActiveCatalogues([]);
@@ -287,7 +287,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ---- memoize the exported value ----
   const value = useMemo(() => ({
-    token, user, userRoles, isLoggedIn,
+    token, user, userRoles, isAuthenticated,
     activeCatalogues, activeEleve, catalogue, eleves,
     scoreRulePoints, activeReport, activeLayout, layouts, niveaux,
 
@@ -296,7 +296,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveCatalogues, setActiveEleve, setScoreRulePoints,
     setActiveReport, setActiveLayout, setCatalogue, setEleves, setLayouts, setNiveaux,
   }), [
-    token, user, userRoles, isLoggedIn,
+    token, user, userRoles, isAuthenticated,
     activeCatalogues, activeEleve, catalogue, eleves,
     scoreRulePoints, activeReport, activeLayout, layouts, niveaux,
     // functions are stable (callbacks), not needed in deps
@@ -309,10 +309,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = () => {
+export const useApp = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useApp must be used within an AuthProvider');
   }
   return context;
 };

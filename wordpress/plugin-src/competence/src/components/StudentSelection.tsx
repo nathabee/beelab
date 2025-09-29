@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '@context/AuthContext';
+import { useApp } from '@context/AuthContext';
 import { EleveSelectionProps, Eleve } from '@mytypes/eleve';
 
 const StudentSelection: React.FC<EleveSelectionProps> = ({ eleves }) => {
-  const { activeEleve, setActiveEleve} = useAuth();
+  const { activeEleve, setActiveEleve} = useApp();
   const [levelFilter, setLevelFilter] = useState<string | null>(null);
 
   const uniqueLevels = Array.from(new Set(eleves.map(s => s.niveau_description)));
