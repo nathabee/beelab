@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useApp } from '@context/AuthContext';
+import { useApp } from '@context/AppContext';
 import { EleveSelectionProps, Eleve } from '@mytypes/eleve';
 
 const StudentSelection: React.FC<EleveSelectionProps> = ({ eleves }) => {

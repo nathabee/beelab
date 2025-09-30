@@ -43,9 +43,7 @@ const CompetenceHome = () => (
 
 
     <div className="flex-container">
-      <div className="flex-item iframe-container">
-        <iframe src="https://nathabee.de/static/html/overview.html" title="Overview" style={{ width: '100%', height: '400px', border: '1px solid #ccc' }} />
-      </div>
+ 
       <div className="flex-item info-container">
         <img src="https://img.shields.io/badge/status-work%20in%20progress-yellow" alt="Work In Progress" />
         <h2>⚠️ Work In Progress</h2>

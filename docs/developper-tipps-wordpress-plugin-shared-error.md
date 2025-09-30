@@ -2,76 +2,29 @@
 
 This guide explains how to integrate the **shared React error system** (`@bee/common/error`) into any WordPress React plugin (e.g. Pomolobee).
 It covers architecture, setup, usage, and expected behaviors.
----
 
-Absolutely—here’s a **Mermaid** flow you can paste right under the manual. It shows both API-originated and manually emitted errors flowing through the system.
+---
 
 ```mermaid
-flowchart TD
-  %% Nodes
-  subgraph Plugin_App["Your Plugin (Pomolobee)"]
-    AC[Axios Client (apiApp/apiUser)]
-    MC[Manual Error (toAppError + errorBus.emit)]
-    RP[React Pages / Components]
-  end
+graph TD
+  RP[React pages] -->|calls| AC[Axios client]
+  AC -->|error| INTF[Axios interceptor]
+  INTF --> NORM[toAppError]
+  NORM --> BUS[errorBus]
 
-  subgraph Shared_Lib["@bee/common (shared error lib)"]
-    FAC[createAxiosClient (interceptors)]
-    TAE[toAppError(error, ctx)]
-    EB[errorBus (global singleton)]
-    EPV[ErrorProvider (context)]
-    EBN[ErrorBanner (toast/inline)]
-    EPG[ErrorPage (full-page)]
-    EHP[ErrorHistoryPage (history)]
-    UEH[useErrorHistory (listener)]
-  end
+  RP -->|emit| MAN[Manual error]
+  MAN --> BUS
 
-  %% API flow
-  RP -->|HTTP request| AC
-  AC -->|error| FAC
-  FAC -->|normalize| TAE
-  TAE -->|AppError| EB
+  BUS --> PROV[ErrorProvider]
+  BUS --> HIST[useErrorHistory]
+  HIST --> PAGEH[ErrorHistoryPage]
 
-  %% Manual flow
-  RP -->|create error| MC
-  MC --> EB
-
-  %% Distribution
-  EB -->|subscribe| EPV
-  EB -->|subscribe| UEH
-  UEH --> EHP
-
-  %% Decision in Provider
-  EPV -->|severity == "page"| EPG
-  EPV -->|severity == "toast" or "inline"| EBN
-
-  %% Notes
-  note right of FAC
-    Adds default meta (e.g., { plugin: "pomolobee" })
-    via createAxiosClient({ meta })
-  end
-
-  note right of TAE
-    Normalizes Axios/unknown errors:
-    - httpStatus, code
-    - severity (page/toast/inline)
-    - service, functionName
-    - meta (e.g., plugin)
-  end
-
-  note right of EPV
-    Keeps latest error in context.
-    Navigates to configured errorPath
-    when severity === "page".
-  end
-
-  style Plugin_App fill:#f6f8fa,stroke:#c0c0c0,stroke-width:1px
-  style Shared_Lib fill:#f6fff8,stroke:#c0c0c0,stroke-width:1px
+  PROV -->|severity page| PAGE[ErrorPage]
+  PROV -->|severity toast or inline| BANNER[ErrorBanner]
 ```
 
- 
-
 ---
+
 
 ## 1. What the shared error system is
 
@@ -97,28 +50,27 @@ The shared error library provides:
 
 ---
 
+
 ## 2. Setup in a plugin
 
 ### 2.1. Webpack alias
 
-In your plugin’s `webpack.config.js`:
+📌 **File:** `plugin-src/pomolobee/webpack.config.js`
 
 ```js
 alias: {
-  '@bee/common': path.resolve(__dirname, '../_shared/error'),
+  '@bee/common': path.resolve(__dirname, '../shared/error'),
   '@context': path.resolve(__dirname, 'src/context'),
   '@utils': path.resolve(__dirname, 'src/utils'),
   // ...other aliases
 }
 ```
 
-Now import with `import { ErrorProvider, ErrorPage } from '@bee/common';`.
-
 ---
 
 ### 2.2. Localize settings from PHP
 
-Provide API URL and error route to JS:
+📌 **File:** `plugin-src/pomolobee/pomolobee.php` (or your main plugin bootstrap file)
 
 ```php
 add_action('enqueue_block_assets', function () {
@@ -137,7 +89,7 @@ add_action('enqueue_block_assets', function () {
 
 ### 2.3. Router integration
 
-Add an error route:
+📌 **File:** `plugin-src/pomolobee/src/app/router.tsx`
 
 ```tsx
 <Route path="/pomolobee_error" element={<ErrorPage plugin="pomolobee" />} />
@@ -146,6 +98,8 @@ Add an error route:
 ---
 
 ### 2.4. Wrap your app
+
+📌 **File:** `plugin-src/pomolobee/src/app/App.tsx`
 
 ```tsx
 <BrowserRouter basename={(window as any).pomolobeeSettings?.basename || '/'}>
@@ -164,27 +118,27 @@ Add an error route:
 
 ### 3.1. From Axios clients
 
-Use the shared factory:
+📌 **File:** `plugin-src/pomolobee/src/utils/api.ts`
 
 ```ts
 export const apiUser = createAxiosClient({
   baseUrl: BASE,
   basePath: '/user',
   service: 'user',
-  meta: { plugin: 'pomolobee' },  // tag errors with plugin
+  meta: { plugin: 'pomolobee' },
 });
 ```
-
-Every request error will be normalized by `toAppError`, tagged with `{ plugin: 'pomolobee' }`, emitted on `errorBus`, and shown in the appropriate UI.
 
 ---
 
 ### 3.2. Manual errors
 
+📌 **Where:** in any React component or service function that may emit errors.
+
 ```ts
 const err = toAppError(new Error('Something broke'), {
   code: 'MANUAL',
-  severity: 'toast',   // toast = non-blocking; page = full error screen
+  severity: 'toast',
   category: 'ui',
   service: 'ui',
   functionName: 'onClick',
@@ -194,6 +148,7 @@ errorBus.emit(err);
 ```
 
 ---
+
 
 ## 4. Severity levels
 
@@ -209,23 +164,21 @@ errorBus.emit(err);
 
 ---
 
+
 ## 5. Components you can use
 
-* **`<ErrorBanner />`**
-  Shows the latest non-blocking error.
+📌 **Where:** in your app’s layout and routes.
 
-* **`<ErrorPage plugin="pomolobee" />`**
-  Full-page error for blocking errors. Add a route for it.
-
-* **`<ErrorHistoryPage plugin="pomolobee" />`**
-  Table of all recorded errors. Useful for debugging.
-
-* **`<ErrorTestButtons apiApp={apiApp} apiUser={apiUser} plugin="pomolobee" />`**
-  Dev-only buttons to simulate 404, timeout, manual error.
+* `<ErrorBanner />` → in `App.tsx` layout
+* `<ErrorPage plugin="pomolobee" />` → in router
+* `<ErrorHistoryPage plugin="pomolobee" />` → in debug page
+* `<ErrorTestButtons apiApp={apiApp} apiUser={apiUser} plugin="pomolobee" />` → in debug page
 
 ---
 
 ## 6. Example: Error management page
+
+📌 **File:** `plugin-src/pomolobee/src/pages/PomolobeeErrorMgt.tsx`
 
 ```tsx
 import { ErrorTestButtons, ErrorPage, ErrorHistoryPage } from '@bee/common';
@@ -276,18 +229,15 @@ import {
 * **Manual error** → severity depends on what you set.
 * **All errors** → appear in ErrorHistoryPage if tagged with `meta.plugin`.
 
----
+--- 
 
 ## 9. Best practices
 
-* Always tag errors with `meta.plugin`.
-* Choose severity carefully: `page` for fatal, `toast` for retryable.
-* Add an error management page for development.
-* Don’t ship `ErrorTestButtons` in production UI.
-* Provide `errorPath` via localized settings or consistent router route.
+* 📌 Add `<ErrorBanner />` in your **layout** (App.tsx).
+* 📌 Add `<ErrorPage />` in your **router**.
+* 📌 Add `<ErrorHistoryPage />` in a **debug/admin-only page**.
+* 📌 Add `meta.plugin` in **api.ts** and manual errors.
 
 ---
-
-✅ With these steps, any plugin under `wordpress/plugin-src/<plugin>` can integrate the shared error system consistently and predictably.
 
  

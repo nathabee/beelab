@@ -1,12 +1,14 @@
 'use client';
 
 import React from 'react';
-import { useApp } from '@context/AuthContext';
+import { useUser } from '@bee/common';
+import { useApp } from '@context/AppContext';
 import {formatDate} from '@utils/helper'; 
 
 const ActiveContextCard: React.FC = () => {
-  const { activeEleve, activeCatalogues, activeLayout, user , activeReport} = useApp();
- 
+  const { activeEleve, activeCatalogues, activeLayout,  activeReport} = useApp();
+  const { user  } = useUser();
+
 
   return (
     <div className="active-context-card">

@@ -4,17 +4,15 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LayoutDisplay from '@components/LayoutDisplay';
 import LayoutSelection from '@components/LayoutSelection';
-import { useApp } from '@context/AuthContext';
-import { getToken } from '@utils/jwt';
+import { useApp } from '@context/AppContext';
+ 
+import { useProtectedPage } from '@hooks/useProtectedPage';
 
 const Configuration: React.FC = () => {
   const navigate = useNavigate();
   const { activeLayout, layouts } = useApp();
 
-  useEffect(() => {
-    const token = getToken();
-    if (!token) navigate('/login');
-  }, [navigate]);
+  useProtectedPage(); // handles token check + redirect
 
   return (
     <div className="container mt-3 ml-2">

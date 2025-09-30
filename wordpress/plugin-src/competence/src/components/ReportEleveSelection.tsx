@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useApp } from '@context/AuthContext';
+import { useApp } from '@context/AppContext';
 import { Eleve } from '@mytypes/eleve';
 import { Report } from '@mytypes/report';
 import FullReportDisplay from '@components/FullReportDisplay';

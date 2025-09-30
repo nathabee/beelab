@@ -3,7 +3,7 @@
 import React from 'react';
 import ActiveContextCard from '@components/ActiveContextCard'; 
 import ShortReportHistory from '@components/ShortReportHistory'; 
-import { useApp } from '@context/AuthContext';
+ 
 import { useProtectedPage } from '@hooks/useProtectedPage';
 
 const Dashboard: React.FC = () => {

@@ -1,15 +1,21 @@
 // src/app/CompetenceHeader.tsx
 import React from 'react';
-import { useApp } from '@context/AuthContext';
+import { useUser } from '@bee/common';
+import { useApp } from '@context/AppContext';
 import { Link } from 'react-router-dom';
 
 
 
 const CompetenceHeader = () => {
-  const { isAuthenticated, logout, activeEleve, activeCatalogues, activeLayout, user } = useApp();
+  const { isLoggedIn, logout, user } = useUser();
+  const {  activeEleve, activeCatalogues, activeLayout,reset } = useApp();
 
   const canAccessReport = activeEleve && activeCatalogues.length && activeLayout && user;
 
+  const handleLogout = () => {
+    logout();
+    reset();
+  };
 
   return (
     <nav className="navbar sticky-navbar">
@@ -17,7 +23,7 @@ const CompetenceHeader = () => {
         <div className="navbar-active-data">
           <Link to="/home" className="nav-link">🏠 Home</Link>
 
-          {isAuthenticated ? (
+          {isLoggedIn ? (
             <>
               <Link to="/dashboard" className="nav-link">📊 Dashboard</Link>
               <Link to="/student_mgt" className="nav-link">👨‍🎓 Student Management</Link>
@@ -37,7 +43,7 @@ const CompetenceHeader = () => {
                 </>
               )}
 
-              <button className="navbar-button" onClick={logout}>🔓 Logout</button>
+              <button className="navbar-button" onClick={handleLogout}>🔓 Logout</button>
             </>
           ) : (
             <Link to="/login" className="nav-link">🔓 Login</Link>

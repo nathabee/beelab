@@ -13,11 +13,18 @@ const CompetenceLogin = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { handleLogin, errorMessage } = useLoginHandler();
+  const { handleLogin,handleDemoStart, errorMessage } = useLoginHandler();
 
   const submit = async (e: React.FormEvent) => {
+    console.log('[CompetenceLogin] submit login pressed');
     e.preventDefault();
     await handleLogin(username, password, () => navigate('/dashboard'));
+  };
+
+
+  const tryDemo = async () => {
+    console.log('[CompetenceLogin] try demo pressed');
+    await handleDemoStart(() => navigate('/dashboard'));
   };
 
   return (
@@ -39,8 +46,16 @@ const CompetenceLogin = () => {
 
         <button type="submit">Login</button>
       </form>
+      <div className="or-sep" style={{ margin: '1rem 0', textAlign: 'center' }}>
+        <span>— or —</span>
+      </div>
+
+      <button type="button" onClick={tryDemo}>
+        🐝 Try the demo
+      </button>
     </div>
   );
 };
+
 
 export default CompetenceLogin;

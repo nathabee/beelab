@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { CatalogueSelectionProps, Catalogue } from '@mytypes/report';
-import { useApp } from '@context/AuthContext';
+import { useApp } from '@context/AppContext';
 
 
 const CatalogueSelection: React.FC<CatalogueSelectionProps> = ({ catalogue }) => {

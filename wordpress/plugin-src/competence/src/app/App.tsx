@@ -14,7 +14,7 @@ function detectBasename() {
   return first ? `/${first}` : '/';
 }
 function detectErrorPath() {
-  return (window as any)?.pomolobeeSettings?.errorPath || '/error';
+  return (window as any)?.competenceSettings?.errorPath || '/error';
 }
 
 const App = () => {

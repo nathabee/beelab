@@ -12,7 +12,7 @@ import SummaryDetailedDifficulty from '@components/SummaryDetailedDifficulty';
 
 import { getImageData } from '@utils/helper';
 
-import '@styles/pdf.css';
+import     '@styles/pdf.css';
 
 import { Report } from '@mytypes/report';
 import { Eleve } from '@mytypes/eleve';

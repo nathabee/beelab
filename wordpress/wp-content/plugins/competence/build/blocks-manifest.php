@@ -5,7 +5,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'competence/competence-app',
-		'version' => 'v1.1.5',
+		'version' => 'v1.1.7',
 		'title' => 'Competence App',
 		'category' => 'widgets',
 		'icon' => 'admin-site',

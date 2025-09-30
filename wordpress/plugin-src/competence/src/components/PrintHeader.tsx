@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { PDFLayout } from '@mytypes/pdf';
-import { User } from '@mytypes/user';
+import { User } from '@bee/common/user';
 import { Eleve } from '@mytypes/eleve';
 import { Report } from '@mytypes/report';
 import { formatDate } from '@utils/helper';

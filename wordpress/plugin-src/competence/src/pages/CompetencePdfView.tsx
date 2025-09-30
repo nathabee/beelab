@@ -3,7 +3,8 @@
 
 import React from 'react';
 import {useProtectedPage}  from '@hooks/useProtectedPage';
-import { useApp } from '@context/AuthContext';
+import { useApp } from '@context/AppContext';
+import { useUser } from '@bee/common';
 
 import ActiveContextCard from '@components/ActiveContextCard';
 import PDFComponent from '@components/PDFComponent';
@@ -11,12 +12,16 @@ import PDFComponent from '@components/PDFComponent';
 const CompetencePdfView: React.FC = () => {
   useProtectedPage(); // handles token check and redirect
 
+
+  const { 
+    user,
+  } = useUser();
+
   const {
     activeReport,
     activeEleve,
     activeCatalogues,
-    activeLayout,
-    user,
+    activeLayout, 
   } = useApp();
 
   return (

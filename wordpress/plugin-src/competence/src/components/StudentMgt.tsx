@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Spinner from 'react-bootstrap/Spinner';
-import { useApp } from '@context/AuthContext';
+import { useApp } from '@context/AppContext';
 import { useStudents } from '@hooks/useStudents';
 import StudentSelection from '@components/StudentSelection';
 import StudentForm from '@components/StudentForm';

@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom';
 
 import Spinner from 'react-bootstrap/Spinner';
  
-import { useApp } from '@context/AuthContext';
+import { useApp } from '@context/AppContext';
+import { useUser } from '@bee/common';
 import { useReport } from '@hooks/useReport';
 import ActiveContextCard from '@components/ActiveContextCard';
 import ReportEleveSelection from '@components/ReportEleveSelection';
@@ -20,15 +21,18 @@ const ReportMgt: React.FC = () => {
   const navigate = useNavigate();
 
 
+  const { 
+    user,  
+    token
+  } = useUser();
+
   const {
     activeEleve,
     activeReport,
     activeCatalogues,
-    activeLayout,
-    user,
+    activeLayout, 
     scoreRulePoints,
-    setActiveReport,
-    token
+    setActiveReport, 
   } = useApp();
 
   const [reportData, setReportData] = useState<ReportCatalogue[]>([]);

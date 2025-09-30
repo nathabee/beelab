@@ -1,61 +1,83 @@
-'use client';
 // src/hooks/useLogin.ts
-
-// shared component
-// use client is needed by nextjs (useeeffect...) but will be ignored by wordpress
-
+'use client';
 
 import { useState } from 'react';
-import axios, { AxiosError } from 'axios';
-import { useApp } from '@context/AuthContext';
-import useFetchData from '@hooks/useFetchData';
-// import  { getApiUrl } from '@utils/helper'; 
+import { useUser } from '@bee/common';
+import useBootstrapData from '@hooks/useBootstrapData';
 import { apiUser, authHeaders } from '@utils/api';
 
+
 export function useLoginHandler() {
-  const { login } = useApp();
-  const { fetchData } = useFetchData();
+  const { login } = useUser();
+  const { fetchBootstrapData } = useBootstrapData();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
- 
-  //const apiUrl = getApiUrl();
- 
 
   const handleLogin = async (username: string, password: string, onSuccess: () => void) => {
     try {
-      console.log("Login attempt:", { username });
-      //console.log("API URL:", apiUrl);
 
-      
-      const response = await apiUser.post("/auth/login/",  { username, password });
+
+      console.warn('[useLoginHandler] handleLogin called');
+      const response = await apiUser.post("/auth/login/", { username, password });
 
       const { access: token } = response.data;
 
- 
-
-      const userResponse = await apiUser.get("/me/", { headers: authHeaders(token) });
 
 
+      const userResponse = await apiUser.get("/users/me/", { headers: authHeaders(token) });
 
       const userInfo = userResponse.data;
+      console.log('[useLoginHandler] apiUser /users/me OK:', userInfo);
+
+
       login(token, userInfo);
-      await fetchData();
-      onSuccess(); // route or redirect handled externally
-    } catch (error) {
-      console.error("Login failed:", error);
-      const axiosError = error as AxiosError;
-      console.error("Login failed  axiosError:", axiosError);
-      setErrorMessage(
-        axiosError.response?.status === 401
-          ? 'Invalid username or password'
-          : 'Connection error'
-      );
+
+      console.log('[useLoginHandler] calling fetchBootstrapData(token)');
+      await fetchBootstrapData(token, { force: true });
+      console.log('[useLoginHandler] fetchBootstrapData() finished');
+
+
+      onSuccess();
+    } catch (e: any) {
+      if (e?.response?.status === 401) {
+        setErrorMessage('Invalid username or password');
+      } else if (e?.response?.status === 403) {
+        setErrorMessage('Your account is not permitted to access this application.');
+      } else {
+        setErrorMessage('Connection error');
+      }
+      console.error('Login failed:', errorMessage);
     }
   };
 
-  return { handleLogin, errorMessage };
+
+  // 🔥 Demo start flow (JWT + cookie)
+  const handleDemoStart = async (onSuccess: () => void) => {
+    try {
+      console.warn('[useLoginHandler] handleDemoStart called');
+
+      // issue demo session; cookie set via withCredentials
+      const startResp = await apiUser.post(
+        '/auth/demo/start/',
+        { roles: ['teacher'] },
+        { withCredentials: true } // <-- critical to receive HttpOnly cookie
+      );
+
+      const { access: token } = startResp.data;
+
+      // fetch user info from /me/ so we get { is_demo, demo_expires_at }
+      const meResp = await apiUser.get('/me/', { headers: authHeaders(token), withCredentials: true });
+      const userInfo = meResp.data;
+
+      login(token, userInfo);
+      await fetchBootstrapData(token, { force: true });
+
+      onSuccess();
+    } catch (e: any) {
+      setErrorMessage('Could not start demo right now.');
+      console.error('Demo start failed:', e);
+    }
+  };
+
+  return { handleLogin, handleDemoStart, errorMessage };
 }
-
-
-
- 

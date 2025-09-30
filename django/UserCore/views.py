@@ -34,6 +34,27 @@ from rest_framework.decorators import api_view, permission_classes, throttle_cla
       
 from django.core.exceptions import ObjectDoesNotExist
 
+# add at top with other imports
+from django.db import transaction
+
+# keep your existing constants
+ALLOWED_DEMO_ROLES = {"demo", "teacher", "farmer"}  # ❗️ NO 'admin' here
+
+def _normalize_roles(raw):
+    """
+    Accept roles from POST JSON in either 'role' (string) or 'roles' (list) form.
+    Lowercase + de-dupe, intersect with whitelist.
+    Always ensure 'demo' is present.
+    """
+    roles = set()
+    if isinstance(raw, str):
+        roles.add(raw)
+    elif isinstance(raw, (list, tuple, set)):
+        roles.update([str(x) for x in raw])
+    roles = {r.strip().lower() for r in roles if isinstance(r, str)}
+    roles.add("demo")  # ensure baseline
+    return roles & ALLOWED_DEMO_ROLES
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -56,13 +77,17 @@ def me(request):
     except ObjectDoesNotExist:
         pass
 
+    roles = list(u.groups.values_list("name", flat=True))
+
     return JsonResponse({
         "id": u.id,
         "username": u.username,
         "email": u.email,
-        "is_demo": u.groups.filter(name="demo").exists(),
+        "is_demo": "demo" in roles,
+        "roles": roles,
         "demo_expires_at": demo_exp,
     })
+
 
 
 
@@ -148,45 +173,86 @@ def demo_reset(request):
     return _issue_demo_response(request)
 
 
+@transaction.atomic
 def _issue_demo_response(request) -> Response:
     """
-    Shared logic to create/reuse a demo account and return a Response
-    with JWT + cookie. Safe to call from both start/reset.
+    Create/reuse a demo account and return a Response with JWT + cookie.
+    Adds requested roles (whitelisted) to the demo user. Idempotent.
     """
     User = get_user_model()
     sid = request.COOKIES.get(DEMO_COOKIE)
     acct = None
     if sid:
-        acct = DemoAccount.objects.select_related("user").filter(sid=sid, active=True).first()
+        acct = (DemoAccount.objects
+                .select_related("user")
+                .filter(sid=sid, active=True)
+                .first())
         if acct and acct.expired:
             acct.active = False
             acct.save()
             acct = None
 
+    # 1) Parse desired roles from POST JSON
+    body = {}
+    try:
+        body = request.data or {}
+    except Exception:
+        body = {}
+    requested_roles = _normalize_roles(body.get("roles") or body.get("role") or [])
+
+    # 2) Load/create groups for requested roles (create lazily)
+    groups_by_name = {g.name: g for g in Group.objects.filter(name__in=ALLOWED_DEMO_ROLES)}
+    def ensure_group(name: str) -> Group:
+        g = groups_by_name.get(name)
+        if g:
+            return g
+        g, _ = Group.objects.get_or_create(name=name)
+        groups_by_name[name] = g
+        return g
+
     if not acct:
-        demo_group, _ = Group.objects.get_or_create(name="demo")
+        # New demo user
         username = f"demo_{secrets.token_hex(6)}"
-        # random password just to satisfy the field; auth is JWT-only
+
         user = User.objects.create_user(
             username=username,
             password=secrets.token_urlsafe(16),
             first_name="Demo",
             last_name="User",
         )
-        user.groups.add(demo_group)
+
+        # Always add 'demo' and requested extras (filtered)
+        final_roles = {"demo"} | requested_roles
+        for r in final_roles:
+            user.groups.add(ensure_group(r))
+
         acct = DemoAccount.objects.create(
             user=user,
             sid=secrets.token_urlsafe(32),
             expires_at=timezone.now() + datetime.timedelta(days=DEMO_DAYS),
         )
+    else:
+        # Existing demo: add any missing roles (idempotent)
+        user = acct.user
+        existing = set(user.groups.values_list("name", flat=True))
+        missing = ({"demo"} | requested_roles) - existing
+        for r in missing:
+            user.groups.add(ensure_group(r))
 
-    access = AccessToken.for_user(acct.user)
-    access["role"] = "demo"
+    # Refresh list of roles for JWT + response
+    roles = list(user.groups.values_list("name", flat=True))
+
+    access = AccessToken.for_user(user)
+    access["roles"] = roles              # ← include all roles
+    access["is_demo"] = True
     access["demo_exp"] = int(acct.expires_at.timestamp())
 
-    resp = Response(
-        {"access": str(access), "expires_in": 15 * 60, "demo_expires_at": acct.expires_at.isoformat()}
-    )
+    resp = Response({
+        "access": str(access),
+        "expires_in": 15 * 60,
+        "demo_expires_at": acct.expires_at.isoformat(),
+        "roles": roles,
+    })
     resp.set_cookie(
         DEMO_COOKIE,
         acct.sid,
@@ -197,6 +263,5 @@ def _issue_demo_response(request) -> Response:
     )
     return resp
 
- 
 
 

@@ -1,18 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
 //import axios from 'axios';
 import { Eleve } from '@mytypes/eleve';
-import { getToken , isTokenExpired } from '@utils/jwt'; 
+//import { getToken , isTokenExpired } from '@utils/jwt'; 
 //import { getApiUrl } from '@utils/helper';
 import { apiApp, authHeaders } from '@utils/api';
+import { useUser } from '@bee/common';
 
 export const useStudents = () => {
   const [students, setStudents] = useState<Eleve[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { token } = useUser();
 
-  const fetchStudents = useCallback(async () => {
-    const token = getToken();
-    if (!token || isTokenExpired(token)) {
+  const fetchStudents = useCallback(async () => { 
+    if (!token ) {
       setError(true);
       setLoading(false);
       return;

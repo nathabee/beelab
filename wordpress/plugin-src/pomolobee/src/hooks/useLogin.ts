@@ -1,7 +1,7 @@
 // src/hooks/useLogin.ts
 'use client';
 
-import { useState } from 'react'; 
+import { useState } from 'react';
 import { useUser } from '@bee/common';
 import useBootstrapData from '@hooks/useBootstrapData';
 import { apiUser, authHeaders } from '@utils/api';
@@ -11,18 +11,18 @@ export function useLoginHandler() {
   const { login } = useUser();
   const { fetchBootstrapData } = useBootstrapData();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
- 
+
 
   const handleLogin = async (username: string, password: string, onSuccess: () => void) => {
-    try { 
+    try {
 
 
       console.warn('[useLoginHandler] handleLogin called');
-      const response = await apiUser.post("/auth/login/",  { username, password });
+      const response = await apiUser.post("/auth/login/", { username, password });
 
       const { access: token } = response.data;
 
- 
+
 
       const userResponse = await apiUser.get("/users/me/", { headers: authHeaders(token) });
 
@@ -35,7 +35,7 @@ export function useLoginHandler() {
       console.log('[useLoginHandler] calling fetchBootstrapData(token)');
       await fetchBootstrapData(token, { force: true });
       console.log('[useLoginHandler] fetchBootstrapData() finished');
- 
+
 
       onSuccess();
     } catch (e: any) {
@@ -45,7 +45,7 @@ export function useLoginHandler() {
         setErrorMessage('Your account is not permitted to access this application.');
       } else {
         setErrorMessage('Connection error');
-      } 
+      }
       console.error('Login failed:', errorMessage);
     }
   };
@@ -59,7 +59,7 @@ export function useLoginHandler() {
       // issue demo session; cookie set via withCredentials
       const startResp = await apiUser.post(
         '/auth/demo/start/',
-        {},
+        { roles: ['farmer'] },
         { withCredentials: true } // <-- critical to receive HttpOnly cookie
       );
 

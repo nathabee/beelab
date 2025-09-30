@@ -5,7 +5,7 @@ import { Report, ReportCatalogue, Resultat } from '@mytypes/report';
 import { Eleve } from '@mytypes/eleve';
 import { User } from '@mytypes/user';
 import { PDFLayout } from '@mytypes/pdf';
-import { useApp } from '@context/AuthContext';
+import { useApp } from '@context/AppContext';
 import PrintHeader from './PrintHeader';
 import '@styles/pdf.css';
 

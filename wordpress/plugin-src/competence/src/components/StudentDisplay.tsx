@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Eleve } from '@mytypes/eleve';
-import UserDisplay from '@components/UserDisplay';
+import { UserDisplay } from '@bee/common';
+
 
 interface Props {
   student?: Eleve | null;

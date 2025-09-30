@@ -32,7 +32,6 @@ const PomoloBeeHeader = () => {
               ) : (
                 <span className="nav-link disabled">Please select a farm</span>
               )}
-              <Link to="/error" className="nav-link">Error Manager</Link>
               <button className="navbar-button" onClick={handleLogout}>🔓 Logout</button>
             </>
           ) : (

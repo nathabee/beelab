@@ -2,7 +2,7 @@
 
 // shared component
 
-import { User } from './user';
+import { User } from '@bee/common';
 
 export interface Niveau {
   id: number;

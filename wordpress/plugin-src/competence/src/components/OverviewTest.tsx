@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { useApp } from '@context/AuthContext';
+import { useApp } from '@context/AppContext';
 import { useProtectedPage } from '@hooks/useProtectedPage';
 import ActiveContextCard from '@components/ActiveContextCard';
+import { UserDisplay } from '@bee/common';
 
-import UserDisplay from '@components/UserDisplay';
 import StudentDisplay from '@components/StudentDisplay';
 import CatalogueDisplay from '@components/CatalogueDisplay';
 import LayoutDisplay from '@components/LayoutDisplay';
@@ -14,16 +14,19 @@ import SummaryScore from '@components/SummaryScore';
 import SummaryDifficulty from '@components/SummaryDifficulty';
 import SummaryDetailedDifficulty from '@components/SummaryDetailedDifficulty';
 
+import { useUser } from '@bee/common';
+ 
 const OverviewTest: React.FC = () => {
   useProtectedPage(); // ✅ token check and redirect if expired
+
+  const { user  } = useUser();
 
   const {
     activeEleve,
     activeReport,
     activeCatalogues,
     activeLayout,
-    user
-  } = useApp();
+    } = useApp();
 
   return (
     <div className="container mt-3 ml-2">

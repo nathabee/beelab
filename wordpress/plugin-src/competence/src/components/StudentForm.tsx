@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { Eleve } from '@mytypes/eleve';
 import { User } from '@mytypes/user';
-import { useApp } from '@context/AuthContext';
-import { getToken, isTokenExpired } from '@utils/jwt';
+import { useApp } from '@context/AppContext';
+import { useUser } from '@bee/common';
 import { apiUser, apiApp, authHeaders } from '@utils/api';
 
 interface StudentFormProps {
@@ -13,7 +13,8 @@ interface StudentFormProps {
 }
 
 const StudentForm: React.FC<StudentFormProps> = ({ setStudents, closeForm }) => {
-  const { user, niveaux } = useApp();
+  const { user , token } = useUser();
+  const { niveaux } = useApp();
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [level, setLevel] = useState(''); // will store string, convert to number when posting
@@ -27,9 +28,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ setStudents, closeForm }) => 
   const isAdmin = !!user?.roles.includes('admin');
 
   useEffect(() => {
-    const fetchTeachers = async () => {
-      const token = getToken();
-      if (!token || isTokenExpired(token) || !isAdmin) return;
+    const fetchTeachers = async () => { 
+      if (!token  || !isAdmin) return;
 
       try {
         const res = await apiUser(`/users/?role=teacher`, {
@@ -47,9 +47,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ setStudents, closeForm }) => 
   }, [isAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = getToken();
-    if (!token || isTokenExpired(token)) return;
+    e.preventDefault(); 
+    if (!token  ) return;
 
     // Build payload expected by DRF
     const payload: any = {

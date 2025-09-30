@@ -3,7 +3,7 @@
 import React from 'react';
 import CatalogueDisplay from '@components/CatalogueDisplay';
 import CatalogueSelection from '@components/CatalogueSelection';
-import { useApp } from '@context/AuthContext';
+import { useApp } from '@context/AppContext';
 import { useProtectedPage } from '@hooks/useProtectedPage';
 
 const CatalogueMgt: React.FC = () => {
