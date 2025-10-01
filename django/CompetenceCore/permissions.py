@@ -111,11 +111,9 @@ class isAllowed(BasePermission):
                     return False
             return True
         return False
+ 
 
 class isAllowedApiView(BasePermission):
-    """
-    Matrix for APIViews using HTTP methods.
-    """
     def has_permission(self, request, view):
         u = request.user
         if not (u and u.is_authenticated):
@@ -127,16 +125,18 @@ class isAllowedApiView(BasePermission):
         if u.is_superuser or u.groups.filter(name='admin').exists():
             return True
 
-        if u.groups.filter(name='demo').exists():
-            return self.is_allowed_for_demo(view_name, method)
+        # ✅ teacher takes precedence over demo
+        if u.groups.filter(name='teacher').exists():
+            return self.is_allowed_for_teacher(view_name, method)
 
         if u.groups.filter(name='analytics').exists():
             return self.is_allowed_for_analytics(view_name, method)
 
-        if u.groups.filter(name='teacher').exists():
-            return self.is_allowed_for_teacher(view_name, method)
+        if u.groups.filter(name='demo').exists():  #case a demo without previous role
+            return self.is_allowed_for_demo(view_name, method)
 
         return False
+
 
     def is_allowed_for_demo(self, view_name, method):
         allowed = {'UserRolesView': ['GET']}

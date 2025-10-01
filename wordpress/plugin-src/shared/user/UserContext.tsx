@@ -17,7 +17,7 @@ type UserContextType = {
   logout: () => void;
   setToken: (t: Maybe<string>) => void;
 
-};
+}; 
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 

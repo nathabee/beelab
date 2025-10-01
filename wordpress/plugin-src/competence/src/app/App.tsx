@@ -1,10 +1,10 @@
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import CompetenceHeader from '@app/CompetenceHeader';
 import AppRoutes from '@app/router';
-import { ErrorProvider, ErrorBanner, ErrorBoundary, toAppError, errorBus  } from '@bee/common/error';
+import { ErrorProvider, ErrorBanner, ErrorBoundary, toAppError, errorBus } from '@bee/common/error';
 import ErrorUserBootstrap from '@app/ErrorUserBootstrap';
-import { TranslateBox   } from '@bee/common/widgets';
+import { TranslateBox } from '@bee/common/widgets';
 
 
 function detectBasename() {
@@ -67,16 +67,17 @@ const App = () => {
             <button className="hamburger-icon" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
             <CompetenceHeader />
           </div>
-
-          <div className="content-container">
-            <ErrorProvider errorPath={errorPath}>
-              <ErrorUserBootstrap />
-              <ErrorBanner />
-              <ErrorBoundary>
-                <AppRoutes />
-              </ErrorBoundary>
-            </ErrorProvider>
-          </div>
+          <main className="flex-grow-1">
+            <div className="content-container">
+              <ErrorProvider errorPath={errorPath}>
+                <ErrorUserBootstrap />
+                <ErrorBanner />
+                <ErrorBoundary>
+                  <AppRoutes />
+                </ErrorBoundary>
+              </ErrorProvider>
+            </div>
+          </main>
         </div>
       </BrowserRouter>
     </div>

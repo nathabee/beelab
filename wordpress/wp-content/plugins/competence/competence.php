@@ -85,6 +85,12 @@ function competence_wp_create_pages()
             'type'  => 'competence_page',
         ],
         [
+            'title' => 'Error Management',
+            'slug'  => 'error_mgt',
+            'block' => '<!-- wp:competence/competence-app /-->',
+            'type'  => 'competence_page',
+        ],
+        [
             'title' => 'Error',
             'slug'  => 'error',
             'block' => '<!-- wp:competence/competence-app /-->',

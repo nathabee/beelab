@@ -10,6 +10,7 @@ import CompetenceStudentMgt from  '@pages/CompetenceStudentMgt';
 import CompetencePdfConf from  '@pages/CompetencePdfConf'; 
 import CompetenceCatalogueMgt from  '@pages/CompetenceCatalogueMgt';
 import CompetenceReportMgt from  '@pages/CompetenceReportMgt';
+import CompetenceErrorMgt from  '@pages/CompetenceErrorMgt';
 import CompetenceOverviewTest from  '@pages/CompetenceOverviewTest';
 import CompetencePdfView from  '@pages/CompetencePdfView';
 import { ErrorPage }   from '@bee/common/error';
@@ -27,6 +28,7 @@ const AppRoutes = () => (
     <Route path="/overview_test" element={<CompetenceOverviewTest />} /> 
     <Route path="/pdf_view" element={<CompetencePdfView />} />
     <Route path="/error"     element={<ErrorPage plugin="competence" />} /> 
+    <Route path="/error_mgt" element={<CompetenceErrorMgt />} />
 
     <Route path="/"  element={<CompetenceHome />} />
   </Routes>

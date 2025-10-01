@@ -13,11 +13,11 @@ interface StudentFormProps {
 }
 
 const StudentForm: React.FC<StudentFormProps> = ({ setStudents, closeForm }) => {
-  const { user , token } = useUser();
+  const { user, token } = useUser();
   const { niveaux } = useApp();
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
-  const [level, setLevel] = useState(''); // will store string, convert to number when posting
+  const [level, setLevel] = useState(''); // store string; cast to number on submit
   const [birthDate, setBirthDate] = useState(
     new Date(new Date().setFullYear(new Date().getFullYear() - 5))
       .toISOString()
@@ -28,63 +28,55 @@ const StudentForm: React.FC<StudentFormProps> = ({ setStudents, closeForm }) => 
   const isAdmin = !!user?.roles.includes('admin');
 
   useEffect(() => {
-    const fetchTeachers = async () => { 
-      if (!token  || !isAdmin) return;
+    const fetchTeachers = async () => {
+      if (!token || !isAdmin) return;
 
       try {
-        const res = await apiUser(`/users/?role=teacher`, {
+        // Axios style
+        const res = await apiUser.get('/users/', {
+          params: { role: 'teacher' },
           headers: authHeaders(token),
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: User[] = await res.json();
+        const data: User[] = res.data;
         setAvailableTeachers(data);
-      } catch (e) {
-        console.error('Failed to load teachers', e);
+      } catch (e: any) {
+        console.error('Failed to load teachers', e?.response?.status, e?.response?.data || e);
       }
     };
 
     fetchTeachers();
-  }, [isAdmin]);
+  }, [isAdmin, token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); 
-    if (!token  ) return;
+    e.preventDefault();
+    if (!token) return;
 
-    // Build payload expected by DRF
     const payload: any = {
       nom: lastName,
       prenom: firstName,
-      niveau: level ? Number(level) : undefined, // PrimaryKeyRelatedField expects ID
-      datenaissance: birthDate,                 // YYYY-MM-DD is good
+      niveau: level ? Number(level) : undefined, // FK id
+      datenaissance: birthDate,                  // YYYY-MM-DD
     };
 
-    // Admin can explicitly set professeurs (array of PKs)
     if (isAdmin && selectedTeachers.length) {
       payload.professeurs = selectedTeachers.map((id) => Number(id));
     }
-    // For teacher: backend auto-assigns the current user in perform_create/serializer
 
     try {
-      const res = await apiApp(`/eleves/`, {
-        method: 'POST',
-        headers: {
-          ...authHeaders(token),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+      // Axios style
+      const res = await apiApp.post('/eleves/', payload, {
+        headers: authHeaders(token),
       });
 
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Create failed: ${res.status} ${res.statusText} - ${text}`);
-      }
-
-      const newStudent: Eleve = await res.json();
+      const newStudent: Eleve = res.data;
       setStudents((prev) => [...prev, newStudent]);
       closeForm();
-    } catch (err) {
-      console.error('Failed to create student', err);
-      alert('Failed to create student. See console for details.');
+    } catch (err: any) {
+      // Axios error details
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      console.error('Failed to create student', status, data || err);
+      alert(`Failed to create student. ${status ? `HTTP ${status}` : ''}`);
     }
   };
 
