@@ -155,28 +155,30 @@ fi
 echo "🧺 collectstatic..."
 compose exec "$DJANGO_SVC" python manage.py collectstatic --noinput || true
 
+
+
 # --- WordPress init (optional) ---
 WP_URL="${WP_BASE_URL:-http://localhost:9082}"
 echo "📋 Open WordPress installer at:  ${WP_URL%/}/wp-admin"
-if yes_no "Run wp-init script (theme, permalinks, logo, copy/activate plugins & theme) after installer?" no; then
+
+if yes_no "Run wp-init for base settings (theme, permalinks, logo)? (Plugins will NOT be installed automatically.)" no; then
   if [[ -x ./scripts/wp-init.sh ]]; then
-    if [[ "$ENV" == "prod" ]]; then
-      ./scripts/wp-init.sh "$ENV" \
-        --theme beelab-theme \
-        --auto-parent \
-        --plugins "pomolobee,competence" \
-        --activate --force
-    else # dev
-      ./scripts/wp-init.sh "$ENV" \
-        --theme beelab-theme \
-        --auto-parent \
-        --plugins "pomolobee,competence" \
-        --activate
-    fi
+    ./scripts/wp-init.sh "$ENV" \
+      --theme beelab-theme \
+      --auto-parent
   else
     echo "⚠️  ./scripts/wp-init.sh not found or not executable; skipping."
   fi
 fi
+
+echo "👉 Next steps to install plugins MANUALLY:"
+echo "   1) Build zips: scripts/build-plugins.sh all"
+echo "   2) In wp-admin → Plugins → Add New → Upload Plugin, upload:"
+echo "      - wordpress/build/pomolobee.zip"
+echo "      - wordpress/build/competence.zip"
+echo "   3) Activate them in wp-admin."
+
+
 
 
 # --- load fixtures (best-effort) ---

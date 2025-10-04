@@ -59,7 +59,7 @@ src
 * `build/` → compiled assets (created on build)
 * `dist/` → distributable ZIP for plugin installation
 * `build_zip.sh` → helper script to create `dist/` ZIP
-* `install_plugin.sh` → installs latest build into WordPress container
+* `install_plugin.sh` → installs latest build into WordPress container **depracated**
 * `package.json` / `package-lock.json` → npm dependencies and scripts
 * `pomolobee.php` → main plugin entry (registers CPTs, enqueues assets, etc.)
 * `uninstall.php` → clean-up logic if plugin is removed
@@ -119,15 +119,10 @@ The shared components are defined in these documents :
 During unit-test/dev work you don’t need to worry about versioning. To rebuild and reinstall a plugin:
 
 ```bash
-cd wordpress/plugin-src/<pluginName>
-npm run build     # compiles TS/React → build/, creates zip, installs into WP
-# or, if you want to run steps manually:
-npm run zip       # packages dist/<pluginName>.zip
-npm run install   # copies the built plugin into wp-content/plugins
+ ./scripts/build-plugins.sh <pluginName> 
 ```
 
-* `npm run build` compiles sources, generates the ZIP (so you can test a ZIP install), **and** installs the plugin to your local WordPress.
-* Use `npm run zip` and `npm run install` separately if you need finer control.
+to install use the wordpress wp-admin console, plugin : install and activate
 
 ---
 

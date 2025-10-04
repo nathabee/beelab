@@ -153,21 +153,13 @@ wordpress/wp-content/themes/pomolobee-theme/
 ---
 
 ## 9. WordPress plugins
-
-### pomolobee
-
-From `wordpress/plugin-src/pomolobee/`:
-
+ 
 ```bash
-npm install
-npm run build
-```
+scripts/build-plugins.sh all
 
-Installation:
+wp-admin → Plugins → Add New → Upload wordpress/build/pomolobee.zip and wordpress/build/competence.zip
 
-```bash
-./build_zip.sh
-./install_plugin.sh
+Activate in wp-admin
 ```
 
 Then in WP Admin ([https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)):
@@ -177,14 +169,4 @@ Then in WP Admin ([https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
   In this dev stack, Django is at `https://beelab-api.nathabee.de/api`.
 
 ---
-
-
-## Next Steps
-
-* Add tests in Django (`pytest` or built-in `unittest`)
-* Add linting (ruff for Python, eslint/prettier for JS/TS)
-* Automate builds with GitHub Actions
-
-```
-
----
+ 

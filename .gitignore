@@ -13,7 +13,8 @@ django/media/
 
 # WordPress uploads (runtime) and installed plugins
 wordpress/wp-content/uploads/
-wordpress/wp-content/plugins/
+/wordpress/wp-content/plugins/*
+!/wordpress/wp-content/plugins/index.php  
 
 # Any folder named "upload" or "uploads" anywhere (defensive)
 **/upload/

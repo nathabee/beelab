@@ -54,7 +54,8 @@ This logo will be used in the WordPress interface (depending on your configurati
 
 Your WordPress setup also includes the **PomoloBee** and **Competence** plugins, both of which interface with the **Django backend** (via APIs) for orchard management and student evaluation.
 
-The plugins are located in `wordpress/wp-content/plugins/pomolobee` and `wordpress/wp-content/plugins/competence`. These plugins are **mounted from the host system** into the container to ensure they persist after container rebuilds.
+The plugins are located in `wordpress/build`
+by installing them with teh console , it will install them in `wp-content/plugins/pomolobee` and `wordpress/wp-content/plugins/competence`. 
 
 #### **PomoloBee Plugin**:
 
