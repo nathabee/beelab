@@ -4,18 +4,18 @@ import React from 'react';
 import ActiveContextCard from '@components/ActiveContextCard'; 
 import ShortReportHistory from '@components/ShortReportHistory'; 
  
-import { useProtectedPage } from '@hooks/useProtectedPage';
+import { useProtectedPage } from '@bee/common'; 
+import { useApp } from '@context/AppContext';
 
 const Dashboard: React.FC = () => {
-  useProtectedPage(); // handles token check + redirect
+  const {  reset } = useApp();
+  useProtectedPage(() => reset()); // handles token check + redirect
  
 
   return (
     <>
     <h1>DASHBOARD</h1>
-    <h2>##############################</h2>
     <ActiveContextCard/>
-    <h2>##############################</h2>
     <ShortReportHistory />
     </>
   );

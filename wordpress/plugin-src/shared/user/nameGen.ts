@@ -1,4 +1,4 @@
-// src/utils/nameGen.ts
+// shared/user/nameGen.ts
 // single allocation: this module is loaded once
 
 // --- pools ---

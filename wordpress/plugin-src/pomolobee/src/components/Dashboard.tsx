@@ -2,12 +2,12 @@
 'use client';
 
 import React from "react";
-import { useProtectedPage } from "@hooks/useProtectedPage";
+import { useProtectedPage } from "@bee/common";
 import ActiveContextCard from "@components/ActiveContextCard"; 
 
 const Dashboard: React.FC = () => {
   console.log('[Dashboard] component called');
-  useProtectedPage(); // redirects if not logged
+  useProtectedPage(() => reset());// redirects if not logged
 
   return (
     <>

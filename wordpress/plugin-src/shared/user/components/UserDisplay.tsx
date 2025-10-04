@@ -1,4 +1,4 @@
-// src/components/UserDisplay.tsx
+// shared/user/components/UserDisplay.tsx
 'use client';
 import React from 'react';
 import { useUser } from '../UserContext';

@@ -7,10 +7,10 @@ import { useStudents } from '@hooks/useStudents';
 import StudentSelection from '@components/StudentSelection';
 import StudentForm from '@components/StudentForm';
 import StudentDisplay from '@components/StudentDisplay';
-import { useProtectedPage } from '@hooks/useProtectedPage';
+import { useProtectedPage } from  '@bee/common'; 
 
 const StudentMgt = () => {
-  const { activeEleve } = useApp();
+  const { activeEleve, reset } = useApp();
   const { students, loading, error, setStudents } = useStudents();
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
@@ -20,7 +20,7 @@ const StudentMgt = () => {
   );
 
 
-  useProtectedPage(); // handles token check + redirect
+  useProtectedPage(() => reset()); // handles token check + redirect
 
   return (
     <div className="container mt-3">

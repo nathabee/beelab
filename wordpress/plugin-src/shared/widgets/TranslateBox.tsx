@@ -1,4 +1,4 @@
-// _shared/widgets/TranslateBox.tsx
+// shared/widgets/TranslateBox.tsx
 import React, { useEffect } from 'react';
 
 type TranslateBoxProps = {

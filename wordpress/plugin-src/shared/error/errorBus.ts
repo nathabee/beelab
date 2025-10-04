@@ -1,4 +1,4 @@
-// _shared/error/errorBus.ts
+// shared/error/errorBus.ts
 export type Listener<T = any> = (e: T) => void;
 
 function createBus<T = any>() {

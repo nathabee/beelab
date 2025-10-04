@@ -1,4 +1,4 @@
-// src/utils/jwt.ts
+// shared/user/jwt.ts
 import { jwtDecode } from 'jwt-decode';
 import { useEffect, useMemo } from 'react';
 import { useUser } from './UserContext';

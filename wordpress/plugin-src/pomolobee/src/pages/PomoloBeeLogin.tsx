@@ -1,59 +1,21 @@
+// pomolobee/src/pages/PomoloBeeLogin.tsx
+'use client';
 
-// src/pages/PomoloBeeLogin.tsx
-// for wordpress only
- 
+import React from 'react';
+import { UserLogin } from '@bee/common';
 
+// plugin-specific injections
+import useBootstrapData from '@hooks/useBootstrapData';
+import { apiUser } from '@utils/api';
 
-// src/pages/PomoloBeeLogin.tsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useLoginHandler } from '@hooks/useLogin';
-
-const PomoloBeeLogin = () => {
-  const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const { handleLogin,handleDemoStart, errorMessage } = useLoginHandler();
-
-  const submit = async (e: React.FormEvent) => {
-    console.log('[PomoloBeeLogin] submit login pressed');
-    e.preventDefault();
-    await handleLogin(username, password, () => navigate('/dashboard'));
-  };
-
-
-  const tryDemo = async () => {
-    console.log('[PomoloBeeLogin] try demo pressed');
-    await handleDemoStart(() => navigate('/dashboard'));
-  };
-
+const PomoloBeeLogin: React.FC = () => {
   return (
-    <div className="login-wrapper">
-      <h2>🔐 Login</h2>
-      {errorMessage && <div className="error">{errorMessage}</div>}
-      <form onSubmit={submit}>
-        <input type="text" placeholder="Identifiant" value={username} onChange={(e) => setUsername(e.target.value)} required /> 
-        <input
-                type="password"
-                name="password"
-                placeholder="Mot de passe"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-
-
-        <button type="submit">Login</button>
-      </form>
-      <div className="or-sep" style={{ margin: '1rem 0', textAlign: 'center' }}>
-        <span>— or —</span>
-      </div>
-
-      <button type="button" onClick={tryDemo}>
-        🐝 Try the demo
-      </button>
-    </div>
+    <UserLogin
+      plugin="pomolobee"
+      initialDemoRoles={['farmer']}          // set your default demo roles for PomoloBee
+      usePluginBootstrap={useBootstrapData}   // plugin-local bootstrap hook
+      usePluginApis={() => ({ apiUser })}     // inject this plugin's apiUser client
+    />
   );
 };
 

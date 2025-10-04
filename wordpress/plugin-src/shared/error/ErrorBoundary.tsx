@@ -1,4 +1,4 @@
-// _shared/error/ErrorBoundary.tsx
+// shared/error/ErrorBoundary.tsx
 import React from 'react';
 import { errorBus } from './errorBus';
 import { toAppError } from './toAppError';

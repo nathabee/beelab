@@ -1,4 +1,4 @@
-// _shared/error/toAppError.ts
+// shared/error/toAppError.ts
 import type { AxiosError } from 'axios';
 import { type AppError, getErrorUserMeta } from './types';
 

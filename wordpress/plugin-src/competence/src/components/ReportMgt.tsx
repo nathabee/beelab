@@ -13,7 +13,7 @@ import ReportEleveSelection from '@components/ReportEleveSelection';
 import { ReportCatalogue, Resultat, ResultatDetail, ScoreRulePoint } from '@mytypes/report';
 import { ReportCataloguePatch, ResultatPatch } from '@mytypes/reportpatch';
 
-import { useProtectedPage } from '@hooks/useProtectedPage';
+import { useProtectedPage } from '@bee/common'; 
  
 
 
@@ -33,6 +33,7 @@ const ReportMgt: React.FC = () => {
     activeLayout, 
     scoreRulePoints,
     setActiveReport, 
+    reset
   } = useApp();
 
   const [reportData, setReportData] = useState<ReportCatalogue[]>([]);
@@ -48,7 +49,7 @@ const ReportMgt: React.FC = () => {
   }), []);
 
 
-  useProtectedPage(); // handles token check + redirect
+  useProtectedPage(() => reset()); // handles token check + redirect
  
 
   // This useEffect handles reportData INIT every time activeReport changes

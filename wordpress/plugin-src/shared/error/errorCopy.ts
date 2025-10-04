@@ -1,4 +1,4 @@
-// _shared/error/errorCopy.ts
+// shared/error/errorCopy.ts
 import type { AppError } from './types';
 
 export function friendlyMessage(e: AppError) {

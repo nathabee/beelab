@@ -41,6 +41,15 @@ const PomoloBeeHeader = () => {
           <Link to="/errormgt" className="nav-link">Error Management</Link>
         </div>
       </div>
+
+            {/* Bottom bar: always visible, regardless of page scroll */}
+      {!isLoggedIn && (
+        <div className="p-3 border-top bg-white">
+          <Link to="/login?mode=demo" className="btn btn-warning btn-lg w-100">
+            🐝 Try the demo
+          </Link>
+        </div>
+      )}
     </nav>
   );
 };

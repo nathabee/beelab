@@ -1,4 +1,4 @@
-// s_shared/error/ErrorPage.tsx
+// shared/error/ErrorPage.tsx
 'use client';
 import React, { useMemo } from 'react';
 import { useErrors } from './ErrorContext';

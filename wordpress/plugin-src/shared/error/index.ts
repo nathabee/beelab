@@ -1,4 +1,4 @@
-// _shared/error/index.ts
+// shared/error/index.ts
  
 
 export { ErrorProvider } from './ErrorContext';   // named export in file

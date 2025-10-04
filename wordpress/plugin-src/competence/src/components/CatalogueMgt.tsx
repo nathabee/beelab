@@ -4,12 +4,12 @@ import React from 'react';
 import CatalogueDisplay from '@components/CatalogueDisplay';
 import CatalogueSelection from '@components/CatalogueSelection';
 import { useApp } from '@context/AppContext';
-import { useProtectedPage } from '@hooks/useProtectedPage';
+import { useProtectedPage } from '@bee/common'; 
 
 const CatalogueMgt: React.FC = () => {
-  useProtectedPage(); // handles token check + redirect
 
-  const { activeCatalogues, catalogue } = useApp();
+  const { activeCatalogues, catalogue,reset } = useApp();
+  useProtectedPage(() => reset());// handles token check + redirect
 
   return (
     <div className="container mt-3 ml-2">

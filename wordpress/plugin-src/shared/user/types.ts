@@ -1,7 +1,5 @@
-// src/types/user.ts
-
-
-// shared component
+// shared/user/types.ts
+ 
 
 export interface User {
     id: number;
@@ -10,7 +8,6 @@ export interface User {
     last_name: string;
     lang: string;
     roles: string[];
-    // new:
     is_demo?: boolean;
     demo_expires_at?: string | null;
   }

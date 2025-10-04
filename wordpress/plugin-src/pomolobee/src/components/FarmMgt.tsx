@@ -2,7 +2,7 @@
 'use client';
 
 import React from "react";
-import { useProtectedPage } from "@hooks/useProtectedPage";
+import { useProtectedPage } from "@bee/common";
 import FieldSelection from "@components/FieldSelection";
 import ActiveContextCard from "@components/ActiveContextCard";
 import FieldEditCard from "@components/FieldEditCard";
@@ -13,7 +13,7 @@ import { useApp } from '@context/AppContext';
 
 const FarmMgt: React.FC = () => {
   console.log('[FarmMgt] component called');
-  useProtectedPage(); // redirects if not logged
+    useProtectedPage(() => reset());// redirects if not logged
 
 
 

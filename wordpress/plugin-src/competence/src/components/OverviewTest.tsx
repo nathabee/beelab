@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useApp } from '@context/AppContext';
-import { useProtectedPage } from '@hooks/useProtectedPage';
+import { useProtectedPage } from  '@bee/common'; 
 import ActiveContextCard from '@components/ActiveContextCard';
 import { UserDisplay } from '@bee/common';
 
@@ -15,9 +15,9 @@ import SummaryDifficulty from '@components/SummaryDifficulty';
 import SummaryDetailedDifficulty from '@components/SummaryDetailedDifficulty';
 
 import { useUser } from '@bee/common';
+
  
 const OverviewTest: React.FC = () => {
-  useProtectedPage(); // ✅ token check and redirect if expired
 
   const { user  } = useUser();
 
@@ -26,7 +26,10 @@ const OverviewTest: React.FC = () => {
     activeReport,
     activeCatalogues,
     activeLayout,
+    reset
     } = useApp();
+
+  useProtectedPage(() => reset());  // ✅ token check and redirect if expired
 
   return (
     <div className="container mt-3 ml-2">

@@ -1,32 +1,36 @@
-// src/hooks/useLogin.ts
+// shared/user/useLogin.ts
 'use client';
 
 import { useState } from 'react';
-import { useUser } from '@bee/common';
-import useBootstrapData from '@hooks/useBootstrapData';
-import { apiUser, authHeaders } from '@utils/api';
+import type { AxiosInstance } from 'axios';
+import { useUser } from './UserContext';
+import { authHeaders } from './http';
 
-type DemoOpts = {
+export type LangCode = 'en' | 'fr' | 'de' | 'br';
+export type BootstrapOpts = { force?: boolean };
+export type BootstrapFn = (token: string, opts?: BootstrapOpts) => Promise<void> | void;
+
+export type DemoOpts = {
   roles?: string[];
-  preferredName?: string; // "First Last" optional
-  lang?: 'en' | 'fr' | 'de' | 'br'; // <-- restrict to your backend choices
+  preferredName?: string;
+  lang?: LangCode;
 };
 
-export function useLoginHandler() {
+export function useLoginHandler(opts: { apiUser: AxiosInstance; bootstrap?: BootstrapFn }) {
+  const { apiUser, bootstrap } = opts;
   const { login } = useUser();
-  const { fetchBootstrapData } = useBootstrapData();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleLogin = async (username: string, password: string, onSuccess: () => void) => {
     try {
-      const response = await apiUser.post("/auth/login/", { username, password });
-      const { access: token } = response.data;
+      const authResp = await apiUser.post('/auth/login/', { username, password });
+      const { access: token } = authResp.data;
 
-      const userResponse = await apiUser.get("/users/me/", { headers: authHeaders(token) });
-      const userInfo = userResponse.data;
+      const meResp = await apiUser.get('/users/me/', { headers: authHeaders(token) });
+      const userInfo = meResp.data;
 
       login(token, userInfo);
-      await fetchBootstrapData(token, { force: true });
+      if (bootstrap) await bootstrap(token, { force: true });
       onSuccess();
     } catch (e: any) {
       if (e?.response?.status === 401) setErrorMessage('Invalid username or password');
@@ -36,22 +40,20 @@ export function useLoginHandler() {
     }
   };
 
-  // ⬇️ Accept preferredName (optional) and roles (optional)
-const handleDemoStart = async (onSuccess: () => void, opts: DemoOpts = {}) => {
+  const handleDemoStart = async (onSuccess: () => void, demo: DemoOpts = {}) => {
     try {
-      const body: any = { roles: opts.roles ?? ['teacher'] };
-      if (opts.preferredName?.trim()) body.preferred_name = opts.preferredName.trim();
-      if (opts.lang) body.lang = opts.lang;                    // <-- send lang if provided
+      const body: any = { roles: Array.isArray(demo.roles) && demo.roles.length ? demo.roles : ['teacher'] };
+      if (demo.preferredName?.trim()) body.preferred_name = demo.preferredName.trim();
+      if (demo.lang) body.lang = demo.lang;
 
       const startResp = await apiUser.post('/auth/demo/start/', body, { withCredentials: true });
       const { access: token } = startResp.data;
 
-      // Use users/me to get username, first_name, last_name, lang, roles...
       const meResp = await apiUser.get('/users/me/', { headers: authHeaders(token), withCredentials: true });
       const userInfo = meResp.data;
 
       login(token, userInfo);
-      await fetchBootstrapData(token, { force: true });
+      if (bootstrap) await bootstrap(token, { force: true });
       onSuccess();
     } catch (e: any) {
       setErrorMessage('Could not start demo right now.');
@@ -60,5 +62,4 @@ const handleDemoStart = async (onSuccess: () => void, opts: DemoOpts = {}) => {
   };
 
   return { handleLogin, handleDemoStart, errorMessage };
-
 }

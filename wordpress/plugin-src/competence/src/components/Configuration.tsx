@@ -6,13 +6,13 @@ import LayoutDisplay from '@components/LayoutDisplay';
 import LayoutSelection from '@components/LayoutSelection';
 import { useApp } from '@context/AppContext';
  
-import { useProtectedPage } from '@hooks/useProtectedPage';
+import { useProtectedPage } from '@bee/common'; 
 
 const Configuration: React.FC = () => {
   const navigate = useNavigate();
-  const { activeLayout, layouts } = useApp();
+  const { activeLayout, layouts,reset } = useApp();
 
-  useProtectedPage(); // handles token check + redirect
+  useProtectedPage(() => reset()); // handles token check + redirect
 
   return (
     <div className="container mt-3 ml-2">

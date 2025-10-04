@@ -18,11 +18,7 @@ const CompetenceHeader = () => {
   };
 
   return (
-    // Make the whole sidebar sticky and exactly one viewport tall
-    //<nav
-    //  className="bg-light border-end position-sticky top-0 min-vh-100 d-flex flex-column"
-    //  style={{ width: SIDEBAR_WIDTH }}
-    //>
+ 
     <nav>
       {/* Scroll only this middle section when links overflow */}
       <div className="flex-grow-1 overflow-auto p-3 d-flex flex-column gap-2">
@@ -71,5 +67,5 @@ const CompetenceHeader = () => {
     </nav>
   );
 };
-
+ 
 export default CompetenceHeader;
