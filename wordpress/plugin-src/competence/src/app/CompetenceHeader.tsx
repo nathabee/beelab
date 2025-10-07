@@ -45,6 +45,10 @@ const CompetenceHeader = () => {
               </>
             )}
 
+
+            <Link to="/user_mgt" className="nav-link">User Management</Link>
+            <Link to="/error_mgt" className="nav-link">Error Management</Link>
+
             <button className="btn btn-outline-secondary mt-2" onClick={handleLogout}>
               🔓 Logout
             </button>

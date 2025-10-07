@@ -9,7 +9,7 @@ class CustomUser(AbstractUser):
     LANGUAGE_CHOICES = [
         ('en', 'English'),
         ('fr', 'Francais'),
-        ('br', 'Breton'),
+        ('bz', 'Breton'),
         ('de', 'Deutsch'),
         # Add other languages as needed
     ]
@@ -18,6 +18,13 @@ class CustomUser(AbstractUser):
         choices=LANGUAGE_CHOICES,
         default='en',  # Default to English
     )
+    @property
+    def is_demo_user(self) -> bool:
+        """
+        A demo user is one that has an active, non-expired DemoAccount.
+        """
+        da = getattr(self, "demo_account", None)
+        return bool(da and da.active and timezone.now() < da.expires_at)
 
  
 class DemoAccount(models.Model):

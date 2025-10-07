@@ -1,47 +1,37 @@
-id,description,etape,niveau,matiere,annee
-1,CP Point Repere Mathematiques 24-25,2,3,3,1
-2,CP Point Etape Mathematiques 24-25,3,3,3,1
-3,CP Bilan Fin annee Mathematiques 24-25,4,3,3,1
-4,E1 Point Repere Mathematiques 24-25,2,4,3,1
-5,E1 Point Etape Mathematiques 24-25,3,4,3,1
-6,E1 Bilan Fin annee Mathematiques 24-25,4,4,3,1
-7,E2 Point Repere Mathematiques 24-25,2,5,3,1
-8,E2 Point Etape Mathematiques 24-25,3,5,3,1
-9,E2 Bilan Fin annee Mathematiques 24-25,4,5,3,1
-10,M1 Point Repere Mathematiques 24-25,2,6,3,1
-11,M1 Point Etape Mathematiques 24-25,3,6,3,1
-12,M1 Bilan Fin annee Mathematiques 24-25,4,6,3,1
-13,M2 Point Repere Mathematiques 24-25,2,7,3,1
-14,M2 Point Etape Mathematiques 24-25,3,7,3,1
-15,M2 Bilan Fin annee Mathematiques 24-25,4,7,3,1
-16,CP Point Repere Francais 24-25,2,3,2,1
-17,CP Point Etape Francais 24-25,3,3,2,1
-18,CP Bilan Fin annee Francais 24-25,4,3,2,1
-19,E1 Point Repere Francais 24-25,2,4,2,1
-20,E1 Point Etape Francais 24-25,3,4,2,1
-21,E1 Bilan Fin annee Francais 24-25,4,4,2,1
-22,E2 Point Repere Francais 24-25,2,5,2,1
-23,E2 Point Etape Francais 24-25,3,5,2,1
-24,E2 Bilan Fin annee Francais 24-25,4,5,2,1
-25,M1 Point Repere Francais 24-25,2,6,2,1
-26,M1 Point Etape Francais 24-25,3,6,2,1
-27,M1 Bilan Fin annee Francais 24-25,4,6,2,1
-28,M2 Point Repere Francais 24-25,2,7,2,1
-29,M2 Point Etape Francais 24-25,3,7,2,1
-30,M2 Bilan Fin annee Francais 24-25,4,7,2,1
-31,GS Point Repere - VERSION DETAILLEE,2,2,1,1
-32,GS Point Etape - VERSION DETAILLEE,3,2,1,1
-33,GS Point Repere - VERSION RAPIDE,2,2,1,1
-34,Grande Section Maternelle,5,2,1,1
-35,CP Test Mathematiques initial,5,3,3,1
-36,CP Test Language initial,5,3,2,1
-37,Large Kindergarten Section,6,2,1,1
-38,CP Initial Mathematics Test,6,3,3,1
-39,CP Initial Language Test,6,3,4,1
-40,Slot Kementad-Ker,8,2,1,1
-41,Test Matematikoù Kentañ CP,8,3,5,1
-42,Test Yezh Kentañ CP,8,3,2,1
-43,Große Kindergartenabteilung,7,2,1,1
-44,CP Ersttest Mathematik,7,3,6,1
-45,CP Ersttest Sprache,7,3,2,1
-
+id,etape,niveau,matiere,annee,is_demo
+1,2,3,3,1,false
+2,3,3,3,1,false
+3,4,3,3,1,false
+4,2,4,3,1,false
+5,3,4,3,1,false
+6,4,4,3,1,false
+7,2,5,3,1,false
+8,3,5,3,1,false
+9,4,5,3,1,false
+10,2,6,3,1,false
+11,3,6,3,1,false
+12,4,6,3,1,false
+13,2,7,3,1,false
+14,3,7,3,1,false
+15,4,7,3,1,false
+16,2,3,2,1,false
+17,3,3,2,1,false
+18,4,3,2,1,false
+19,2,4,2,1,false
+20,3,4,2,1,false
+21,4,4,2,1,false
+22,2,5,2,1,false
+23,3,5,2,1,false
+24,4,5,2,1,false
+25,2,6,2,1,false
+26,3,6,2,1,false
+27,4,6,2,1,false
+28,2,7,2,1,false
+29,3,7,2,1,false
+30,4,7,2,1,false
+31,2,2,1,1,false
+32,3,2,1,1,false
+33,2,2,1,1,false
+34,2,2,1,1,true
+35,3,3,3,1,true
+36,4,3,2,1,true

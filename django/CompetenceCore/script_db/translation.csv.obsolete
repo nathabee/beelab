@@ -1,0 +1,710 @@
+key,language,translation
+inf_welcome,en,Welcome to our application
+news,en,News: Multi-language selection English and French added. Currently only on the student page.
+frm_name,en,Last Name
+frm_first,en,First Name
+frm_level,en,Level
+frm_birthDt,en,Date of Birth
+frm_chooseLvl,en,Choose a level
+frm_prof,en,Professors
+frm_createStud,en,Create Student
+frm_addStud,en,Add New Student
+frm_srchPlcHldr,en,Search by name or first name...
+opt_all,en,All
+tbH_name,en,Last Name
+tbH_first,en,First Name
+tbH_level,en,Level
+tbH_birthDt,en,Date of Birth
+tbH_prof,en,Professors
+msg_req,en,This field is required
+msg_noInfo,en,No student information available.
+msg_chosenStud,en,Chosen student
+msg_noProf,en,No assigned professors
+msg_loadStuds,en,Loading student data...
+msg_loadErr,en,Error loading. Please try again.
+msg_selStud,en,Please select a student.
+msg_noStud,en,No student found.
+msg_chooseTest,en,Choose the tests to perform:
+msg_ctg,en,Catalogues management
+msg_chosenCtg,en,Chosen catalogue
+msg_noCtg,en,No catalogue found.
+msg_errCreateStud,en,Error create student. Please try again.
+msg_na,en,Not available
+pgH_studMgmt,en,Student Management
+pgH_studSel,en,Student Selection
+rpt_selStudRpt,en,Reports obtained by selected student: {{name}}
+NIV_desc0,en,Senior Kindergarten
+NIV_desc1,en,Grade 1
+NIV_desc2,en,Grade 2
+NIV_desc3,en,Grade 3
+NIV_desc4,en,Grade 4
+NIV_desc5,en,Grade 5
+nav_Stud,en,Student
+nav_chooseStud,en,Choose a student
+nav_chooseConf,en,Choose a configuration
+nav_chooseCtg,en,Choose a catalog
+nav_help,en,Need help?
+pgH_histo,en,History
+pgH_confMgmt,en,PDF Configuration
+pgH_ctgMgmt,en,Test Catalog Management
+pgH_rptMgmt,en,Report Management
+pgH_overview,en,Overview of ongoing tests
+pgH_PDF,en,Print
+pgH_iconPDF,en,Print with icons
+pgH_logout,en,Logout
+pgH_login,en,Login
+nav_menu,en,Menu
+nav_chooseRpt,en,Choose to edit or create a report
+tbH_rptId,en,Report ref
+tbH_createdAt,en,Created at
+hlp_globalHelp,en,General Help
+hlp_introDescription,en,"The assessment application allows for entering test results and creating associated reports. The reports can be saved in PDF format for printing when needed. These reports include student and teacher information, spider graphs, and results of problematic tests."
+hlp_accessMenu,en,Access to Menu
+hlp_accessMenuDesc,en,The menu collapses and can be accessed by clicking the icon in the top left.
+hlp_statusBar,en,Status Bar
+hlp_statusBarDesc,en,"The upper bar displays the status of ongoing actions (selected student, catalog, configuration, or report). Actions still required before printing the report appear in yellow. For example, if no student is selected, the action to select a student will be highlighted in yellow. Navigation to the student management page is also possible through the menu."
+hlp_news,en,What's New
+hlp_newsDesc,en,Here are the latest updates in the application.
+btn_close,en,Close
+hlp_needHelp,en,Need help?
+hlp_wellcomeHelp,en,Welcome to the help section
+hlp_reportOverview,en,"Report Overview: The report contains the header with the logo, the test date, the student’s name, teacher’s name, and their level. The radar graph is drawn based on the thresholds configured by the application administrator."
+hlp_histo,en,Report History
+pgH_histo_description,en,This page allows you to view the history of reports and see incomplete reports marked in red.
+hlp_refresh_data,en,Refresh data
+pgH_refresh_data_description,en,"If some reports are not displayed, you can refresh to update the reports shown."
+hlp_red_reports,en,Red reports
+pgH_red_reports_description,en,Reports shown in red need to be re-edited: test data is missing.
+hlp_expand_icon,en,Expand icon
+pgH_expand_icon_description,en,"To show the test progress by category, click on '▲'. To hide them, click on '▼'."
+hlp_studMgmt,en,Student Management
+pgH_studMgmt_description,en,Create or select a student and report.
+hlp_filter_students,en,Filter students
+pgH_filter_students_description,en,"You can search by student’s name or first name, and also filter by level."
+hlp_add_student,en,Add a student
+pgH_add_student_description,en,"If the student is not yet in the database, you can create them."
+hlp_select_student,en,Select a student
+pgH_select_student_description,en,The selected student will be highlighted in a different color. You can only select one student at a time.
+hlp_PDF,en,View and print the PDF
+pgH_PDF_description,en,This page is for viewing and printing PDFs with/without icons. Press print to print.
+hlp_print,en,Print
+pgH_print_description,en,A PDF file will be generated for the selected report with the visible data on the screen.
+hlp_report_first_page,en,Content of the first page of the report
+pgH_report_first_page_description,en,"The report contains the header with the logo, the test date, the student’s name, teacher’s name, and their level."
+hlp_report_following_pages,en,Content of the following pages of the report
+pgH_report_following_pages_description,en,The report prints errors in tests if they belong to the selection rule.
+hlp_confMgmt,en,Configuration Management
+pgH_confMgmt_description,en,"Logos, header names, and footer messages are configurable by the administrator."
+hlp_ctgMgmt,en,Test catalog management
+pgH_ctgMgmt_description,en,Test types are defined in the test catalog and are fully configurable by the administrator.
+hlp_choose_catalogue,en,Choose the catalog
+pgH_choose_catalogue_description,en,Choose a specific test catalog based on the section or level.
+hlp_overview,en,Report summary
+pgH_overview_description,en,This page shows the summary of the selected report. All data associated with the selected report is displayed.
+hlp_page_layout,en,Selected page layout
+pgH_page_layout_description,en,"The report contains the header with the logo, the test date, and relevant data about the student and teacher."
+hlp_summary_scores,en,Score summary
+pgH_summary_scores_description,en,Aggregated test results with progress calculation based on configured thresholds.
+hlp_difficulties_summary,en,Summary of difficulties encountered
+pgH_difficulties_summary_description,en,Category below a threshold - to be defined during development.
+hlp_rptMgmt,en,Report Management
+hlp_select_report,en,Select a report
+pgH_select_report_description,en,"Select an existing report to edit or reprint, or create a new report."
+hlp_save_report,en,Save a report
+pgH_save_report_description,en,"The report being edited will be saved. After saving, if any tests are incomplete, their category will be highlighted in yellow."
+hlp_wellcomeMsg,en,Welcome! Use the navigation to discover the app.
+tab_year,en,Year
+tab_level,en,Class
+tab_stage,en,Stage
+tab_subject,en,Subject
+tab_desc,en,Description
+msg_manyCtg,en,"Warning, you have selected more than one catalog"
+msg_noConf,en,No configuration found.
+msg_noSelectConf,en,No configuration selected.
+msg_load,en,Loading data...
+msg_refresh,en,Refresh data...
+pgH_rptCarousel,en,Test carousel
+tbH_profid,en,Teacher Ref
+tbH_typeTest,en,Test type
+tbH_ctgTest,en,Test category
+tbH_test,en,Test
+tbH_score,en,Score
+tbH_MaxScore,en,Max score
+tbH_Label,en,Label
+tbH_Desc,en,Description
+pdf_prof,en,Teacher
+pdf_lytChosen,en,Chosen layout
+pdf_lytIconeTop,en,Header icon
+pdf_lytSchlName,en,School name
+pdf_lytMsgTop,en,Header message
+pdf_lytMsgFoot1,en,Footer message 1
+pdf_lytMsgFoot2,en,Footer message 2
+msg_noLyt,en,No print configuration found.
+pgH_select_conf,en,Select a configuration for printing
+btn_print,en,Print PDF
+pdf_stdt,en,Student
+pdf_rptCreatDt,en,Report created on
+pdf_ChartLabel,en,Progress
+msg_loadErrIcon,en,Image loading error
+pgH_admin,en,Administration console
+msg_noStdtRpt,en,No test report found for this student.
+msg_noRpt,en,No report available.
+pdf_UpdDt,en,Modification date
+tbH_Seuil1,en,Threshold 1
+tbH_Seuil2,en,Threshold 2
+tbH_Seuil3,en,Threshold 3
+nav_back,en,Previous
+nav_next,en,Next
+nav_page,en,Page
+nav_of,en,of
+tbH_detailRptPb,en,Detailed report of encountered difficulties
+tbH_scoreTotal,en,Total score
+tbH_icon,en,Icon
+tbH_compet,en,Acquired skill
+tbH_CatalogTest,en,Test catalog
+msg_noUserData,en,No user information available.
+tbH_resultat,en,Result
+msg_err_sav,en,Error during save. Please try again.
+tab_id,en,Identifier
+tab_lang,en,Language
+tab_roles,en,Roles
+btn_rptSelect,en,Select this report
+btn_show,en,Show
+btn_hide,en,Hide
+pgH_formStudent,en,Fill out the form to add a student:
+pgH_summaryScor,en,Score Summary
+pgH_summaryDifficult,en,Difficulty Summary
+pgH_summaryTest,en,Summary of ongoing tests
+lang,en,en
+language_list,en,"{""en"": ""English"", ""fr"": ""Français"", ""de"": ""Deutsch"", ""br"": ""Brezhoneg""}"
+inf_welcome,fr,Bienvenue dans notre application
+news,fr,Nouvelles : Sélection multilingue anglais et français ajoutée. Actuellement uniquement sur la page élève.
+frm_name,fr,Nom de famille
+frm_first,fr,Prénom
+frm_level,fr,Niveau
+frm_birthDt,fr,Date de naissance
+frm_chooseLvl,fr,Choisir un niveau
+frm_prof,fr,Professeurs
+frm_createStud,fr,Créer un élève
+frm_addStud,fr,Ajouter un nouvel élève
+frm_srchPlcHldr,fr,Rechercher par nom ou prénom...
+opt_all,fr,Tout
+tbH_name,fr,Nom de famille
+tbH_first,fr,Prénom
+tbH_level,fr,Niveau
+tbH_birthDt,fr,Date de naissance
+tbH_prof,fr,Professeurs
+msg_req,fr,Ce champ est requis
+msg_noInfo,fr,Aucune information disponible.
+msg_chosenStud,fr,Étudiant choisi
+msg_noProf,fr,Aucun professeur attribué
+msg_loadStuds,fr,Chargement des données des élèves...
+msg_loadErr,fr,Erreur de chargement. Veuillez réessayer.
+msg_errCreateStud,fr,Erreur en création élève. Veuillez réessayer.
+msg_na,fr,Non disponible
+msg_selStud,fr,Veuillez sélectionner un élève.
+msg_noStud,fr,Aucun élève trouvé.
+msg_chooseTest,fr,Choisir la liste des tests à faire:
+msg_ctg,fr,Gestion des catalogues
+msg_chosenCtg,fr,Catalogue(s) choisi(s)
+msg_noCtg,fr,pas de catalogue trouvé.
+pgH_studMgmt,fr,Gestion des élèves
+pgH_studSel,fr,Sélection des élèves
+rpt_selStudRpt,fr,Rapports obtenus par l'élève sélectionné : {{name}}
+NIV_desc0,fr,Maternelle grande section
+NIV_desc1,fr,CP
+NIV_desc2,fr,CE1
+NIV_desc3,fr,CE2
+NIV_desc4,fr,CM1
+NIV_desc5,fr,CM2
+nav_Stud,fr,Elève
+nav_chooseStud,fr,Choisir un élève
+nav_chooseConf,fr,Choisir une configuration
+nav_chooseCtg,fr,Choisir un catalogue
+nav_help,fr,Besoin d'aide ?
+pgH_histo,fr,Historique des tests
+pgH_confMgmt,fr,Configuration du PDF
+pgH_ctgMgmt,fr,Gestion du catalogue de tests
+pgH_rptMgmt,fr,Gestion des rapports
+pgH_overview,fr,Résumé des tests en cours
+pgH_PDF,fr,Impression
+pgH_iconPDF,fr,Impression avec pictogrammes
+pgH_logout,fr,Déconnexion
+pgH_login,fr,Connexion
+nav_menu,fr,Menu
+nav_chooseRpt,fr,Choisir de modifier ou de créer un report
+tbH_rptId,fr,Rapport ref
+tbH_createdAt,fr,Créé le
+hlp_globalHelp,fr,Aide globale
+hlp_introDescription,fr,"L'application d'évaluation permet la saisie des résultats des tests d'évaluation et la création des rapports associés. Les rapports peuvent être sauvegardés sous format PDF de façon à être imprimés par besoin. Ces rapports contiennent les informations élèves, enseignant, graphes de type araignées et résultats des tests problématiques."
+hlp_accessMenu,fr,Accès au Menu
+hlp_accessMenuDesc,fr,"Le menu se résorbe, il est possible de le récupérer en appuyant sur l'icône en haut à gauche."
+hlp_statusBar,fr,Barre de statut
+hlp_statusBarDesc,fr,"Cette barre supérieure affiche le statut des actions en cours (élève, catalogue, configuration ou rapport sélectionnés). Sur la barre supérieure des actions s'affichent en jaune pour indiquer ce qu'il reste à faire avant l'impression du rapport. Par exemple, si aucun élève n'est sélectionné, l'action de choisir un élève sera proposée en jaune sur cette barre. Il est aussi possible de naviguer la page de gestion des élèves par le menu également."
+hlp_news,fr,Nouveauté
+hlp_newsDesc,fr,Voici les nouveautés de l'application.
+btn_close,fr,Fermer
+hlp_needHelp,fr,Besoin d'aide ?
+hlp_wellcomeHelp,fr,Bienvenue dans la section d'aide
+hlp_wellcomeMsg,fr,Bienvenue! Utilisez la navigation pour explorer l'application.
+hlp_reportOverview,fr,"Aperçu du rapport : Le rapport contient l&apos;entête avec le logo, la date du test, le nom de l&apos;élève et de l&apos;enseignant ainsi que son niveau. Le graphe araignée est dessiné en fonction des seuils configurés par l&apos;administrateur de l&apos;application."
+hlp_histo,fr,Historique des rapports
+pgH_histo_description,fr,Cette page permet de visualiser l'historique des rapports et de voir en rouge les rapports incomplets.
+hlp_refresh_data,fr,Rafraichir les données
+pgH_refresh_data_description,fr,"Si des rapports ne s'affichent pas tous, il est possible de rafraîchir pour actualiser les rapports affichés."
+hlp_red_reports,fr,Rapport en rouge
+pgH_red_reports_description,fr,Les rapports affichés en rouge nécessitent d'être édités à nouveau : il manque des données de tests.
+hlp_expand_icon,fr,Icône d'agrandissement
+pgH_expand_icon_description,fr,"Pour afficher le bilan d'avancement des tests par catégorie, il est possible de cliquer sur '▲'. Pour ne plus les afficher, utiliser '▼'."
+hlp_studMgmt,fr,Gestion des élèves
+pgH_studMgmt_description,fr,Création ou sélection d'élève et de rapport.
+hlp_filter_students,fr,Filtrer les élèves
+pgH_filter_students_description,fr,"Il est possible de faire une recherche par nom ou prénom d'élève, et aussi de filtrer par niveau."
+hlp_add_student,fr,Ajouter un élève
+pgH_add_student_description,fr,"Si l'élève n'existe pas encore dans la base de données, il est possible de le créer."
+hlp_select_student,fr,Sélectionner un élève
+pgH_select_student_description,fr,L'élève sélectionné sera affiché d'une couleur différente. On ne peut que sélectionner un seul élève à la fois.
+hlp_PDF,fr,Visualiser et imprimer le PDF
+pgH_PDF_description,fr,Ceci est la page pour visualiser et imprimer les PDF avec/sans icône. Appuyer sur imprimer pour imprimer.
+hlp_print,fr,Imprimer
+pgH_print_description,fr,Un fichier PDF sera généré sur le rapport sélectionné avec les données visualisables à l'écran.
+hlp_report_first_page,fr,Contenu de la première page du rapport
+pgH_report_first_page_description,fr,"Le rapport contient l'en-tête avec le logo, la date du test, le nom de l'élève et de l'enseignant ainsi que son niveau."
+hlp_report_following_pages,fr,Contenu des pages suivantes du rapport
+pgH_report_following_pages_description,fr,Le rapport imprime les tests en erreur si ils appartiennent à la loi de sélection.
+hlp_confMgmt,fr,Gestion de la configuration
+pgH_confMgmt_description,fr,"Les logos, nom utilisés en entête et les messages de bas de page sont configurables par l'administrateur."
+hlp_ctgMgmt,fr,Gestion des catalogues de tests
+pgH_ctgMgmt_description,fr,Les types de tests sont définis dans le catalogue de tests et sont entièrement configurables par l'administrateur.
+hlp_choose_catalogue,fr,Choisir le catalogue
+pgH_choose_catalogue_description,fr,Choisir un catalogue de tests spécifique en fonction de la section ou du niveau.
+hlp_overview,fr,Bilan du rapport
+pgH_overview_description,fr,Ceci est la page pour montrer le bilan du rapport sélectionné. Toutes les données associées au rapport sélectionné sont affichées.
+hlp_page_layout,fr,Mise en page sélectionnée
+pgH_page_layout_description,fr,"Le rapport contient l'en-tête avec le logo, la date du test, et les données pertinentes sur l'élève et l'enseignant."
+hlp_summary_scores,fr,Résumé des scores
+pgH_summary_scores_description,fr,Résultat des tests agrégés et avec calcul d'avancement en fonction des seuils configurés.
+hlp_difficulties_summary,fr,Résumé des difficultés rencontrées
+pgH_difficulties_summary_description,fr,Catégorie passée sous un seuil - à définir lors du développement.
+hlp_rptMgmt,fr,Gestion des rapports
+hlp_select_report,fr,Sélectionner un rapport
+pgH_select_report_description,fr,"Sélectionner un rapport existant pour le retravailler ou pour le réimprimer, ou créer un nouveau rapport."
+hlp_save_report,fr,Sauvegarder un rapport
+pgH_save_report_description,fr,"Le rapport en cours d'édition sera sauvegardé. Après sauvegarde, si des tests sont incomplets, leur catégorie sera mise en jaune."
+tab_year,fr,Annee
+tab_level,fr,Classe
+tab_stage,fr,Etape
+tab_subject,fr,Matière
+tab_desc,fr,Description
+msg_manyCtg,fr,"Attention, vous avez sélectionné plus d'un catalogue"
+msg_noConf,fr,pas de configuration trouvée.
+msg_noSelectConf,fr,pas de configuration sélectionnée.
+msg_load,fr,Chargement des données...
+msg_refresh,fr,Rafraîchir les données...
+pgH_rptCarousel,fr,Test carousel
+tbH_profid,fr,Professeur Ref
+tbH_typeTest,fr,Type de tests
+tbH_ctgTest,fr,Categorie de tests
+tbH_test,fr,Test
+tbH_score,fr,Score
+tbH_MaxScore,fr,Maximum
+tbH_Label,fr,Label
+tbH_Desc,fr,Description
+pdf_prof,fr,Pédagogue
+pdf_lytChosen,fr,Mise en page choisie
+pdf_lytIconeTop,fr,Icone en-tête
+pdf_lytSchlName,fr,Nom de l'école
+pdf_lytMsgTop,fr,Message en-tête
+pdf_lytMsgFoot1,fr,Pied de page 1
+pdf_lytMsgFoot2,fr,Pied de page 2
+msg_noLyt,fr,pas de configuration d'impression trouvée.
+pgH_select_conf,fr,Sélectionner une configuration pour l'impression
+btn_print,fr,Imprimer PDF
+pdf_stdt,fr,Elève
+pdf_rptCreatDt,fr,Date création
+pdf_ChartLabel,fr,Avancement
+msg_loadErrIcon,fr,Erreur chargement image
+msg_noData,fr,Pas de données disponible.
+pgH_admin,fr,Console administration
+msg_noStdtRpt,fr,Pas de rapport de tests trouvé pour cet élève.
+msg_noRpt,fr,Pas de rapport disponible.
+pdf_UpdDt,fr,Date de modification
+tbH_Seuil1,fr,Seuil 1
+tbH_Seuil2,fr,Seuil 2
+tbH_Seuil3,fr,Seuil 3
+nav_back,fr,Précédent
+nav_next,fr,Suivant
+nav_page,fr,Page
+nav_of,fr,sur
+tbH_detailRptPb,fr,Rapport détaillé des difficultés rencontrées
+tbH_scoreTotal,fr,Total score
+tbH_icon,fr,Icône
+tbH_compet,fr,Compétence acquise
+tbH_CatalogTest,fr,Catalogue de tests
+msg_noUserData,fr,Pas d'information utilisateur disponible.
+tbH_resultat,fr,Résultat
+msg_err_sav,fr,Erreur lors de la sauvegarde. Veuillez réessayer.
+tab_id,fr,Identifiant
+tab_lang,fr,langue
+tab_roles,fr,Roles
+btn_rptSelect,fr,Sélectionner ce rapport
+btn_show,fr,Montrer
+btn_hide,fr,Cacher
+pgH_formStudent,fr,Remplir le formulaire pour ajouter un élève:
+pgH_summaryScor,fr,Résumé des scores
+pgH_summaryDifficult,fr,Résumé des difficultés
+pgH_summaryTest,fr,Résumé des tests en cours
+lang,fr,fr
+language_list,fr,"{""fr"": ""Français"", ""de"": ""Deutsch"", ""en"": ""English"", ""br"": ""Brezhoneg""}"
+inf_welcome,br,Degemer mat er gontadenn-mañ
+news,br,Keleier: Ouzhpennañ brezhoneg hag al lizherennoù saoznek. Kinniget evit ar bajenn skolier ivez.
+frm_name,br,Anv krign
+frm_first,br,Anv kentañ
+frm_level,br,Lenn
+frm_birthDt,br,Deiz ganedigezh
+frm_chooseLvl,br,Dibab ur level
+frm_prof,br,Professerien
+frm_createStud,br,Krouiñ ur skolier
+frm_addStud,br,Ouzhpennañ ur skolier nevez
+frm_srchPlcHldr,br,Klask evit anv pe anv kentañ...
+opt_all,br,An holl
+tbH_name,br,Anv krign
+tbH_first,br,Anv kentañ
+tbH_level,br,Lenn
+tbH_birthDt,br,Deiz ganedigezh
+tbH_prof,br,Professerien
+msg_req,br,Bez’ ezhomm eus an elfenn-mañ
+msg_noInfo,br,N’eus tamm wybodaeth eus an skolier
+msg_chosenStud,br,Skolier dibabet
+msg_noProf,br,N’eus professer ebet digaset
+msg_loadStuds,br,O kaout data skolier...
+msg_loadErr,br,Fazi en ober. Pleer adkregiñ.
+msg_selStud,br,Pleermed dilivad ur skolier
+msg_noStud,br,N’eus skolier ebet kavet.
+msg_chooseTest,br,Dibabit ar c’hontroù da ober:
+msg_ctg,br,Management kataloj
+msg_chosenCtg,br,Kataloj dibabet
+msg_noCtg,br,N’eus kataloj ebet kavet.
+msg_errCreateStud,br,Fazi e krouiñ skolier. Pleer adkregiñ.
+msg_na,br,N’eus ket disponabl
+pgH_studMgmt,br,Merañ ar skolier
+pgH_studSel,br,Dibab skolier
+rpt_selStudRpt,br,Sklaerioù war ur skolier dibabet: {{name}}
+NIV_desc0,br,Kenderc’h senior
+NIV_desc1,br,Klasa 1
+NIV_desc2,br,Klasa 2
+NIV_desc3,br,Klasa 3
+NIV_desc4,br,Klasa 4
+NIV_desc5,br,Klasa 5
+nav_Stud,br,Skoliad
+nav_chooseStud,br,Dibab ur skoliad
+nav_chooseConf,br,Dibab un aozadur
+nav_chooseCtg,br,Dibab ur c'hatalog
+nav_help,br,Ez eus ezhomm a sikour?
+pgH_histo,br,Istor
+pgH_confMgmt,br,Aozadur PDF
+pgH_ctgMgmt,br,Merañ katalog ar testoù
+pgH_rptMgmt,br,Merañ ar raportoù
+pgH_overview,br,Adweladenn an testoù oc'h ober
+pgH_PDF,br,Moullañ
+pgH_iconPDF,br,Moullañ gant piktoù
+pgH_logout,br,Digevreañ
+pgH_login,br,Kevreañ
+nav_menu,br,Lañser
+nav_chooseRpt,br,Dibab reizhañ pe krouiñ ur raport
+tbH_rptId,br,Ref. ar raport
+tbH_createdAt,br,Krouet d'an
+hlp_globalHelp,br,Sikour Hollek
+hlp_introDescription,br,"Aplikasion an testoù a ro an tu da enrollañ disoc'hoù an testoù hag da sevel an raportoù stag. Gallout a ra bezañ miret ar raportoù e PDF evit ma c'hallfent bezañ moulet pa'z eus ezhomm. Er raportoù-mañ emañ titouroù evit ar skolidi, ar c'helennerien, ar grafoù delienn, hag an disoc'hoù testoù kudennaus."
+hlp_accessMenu,br,Mont d'ar Menu
+hlp_accessMenuDesc,br,Gallout a reer diskouez ar menu en ur frapañ war an arlun e laezh-krec'h.
+hlp_statusBar,br,Barre statud
+hlp_statusBarDesc,br,"Ar varenn uhelañ a diskouez statud an oberoù war ar stern (skolidi, katalogoù, keflunioù pe raportoù dibabet). E-maez eus ar varenn-mañ, e lec'hvezont en jaune an oberoù a chom da gas da benn evit moullañ ar rapport. Da skouer, mar n'eus skolaji dibabet ebet, e vo lakaet war-wel an ober da zibab ur skolaji e jaune. Gallout a reer mont d'ar bajenn evit merañ ar skolidi dre ar menu ivez."
+hlp_news,br,Keloù nevez
+hlp_newsDesc,br,Setu ar keloù nevez evit an aplikasion.
+btn_close,br,Clerc'h
+hlp_needHelp,br,Où peus ezhomm skoazell ?
+hlp_wellcomeHelp,br,Degemer mat er rummad skoazell
+hlp_reportOverview,br,"Tachenn ar raport : Ar raport a zo gant ar pennad-kemmañ gant ar logo, deiziad ar test, anv ar skolier hag ar c'henel, ha hevelep forzh. Ar graf radar a zo diskouezet diwar-benn ar meiziadoù a zo bet ouzhpennet gant ar rannogadur implijer ar programm."
+hlp_histo,br,Istor ar rapportioù
+pgH_histo_description,br,Ar bajenn-mañ a ro da zieub diouz ar raportioù hag a zibabit e rujori ar raportioù o krenn.
+hlp_refresh_data,br,Dreist-ober an dataoù
+pgH_refresh_data_description,br,"Ma n'hellit ket gwelet holl ar raportioù, e c'hallit dreist-ober evit aozañ ar raportioù."
+hlp_red_reports,br,Raportioù ruz
+pgH_red_reports_description,br,Ar raportioù a zo rougit a rank bezañ adkemeret : n'eo ket bet kinniget an data test.
+hlp_expand_icon,br,Ikon ar ruiñ
+pgH_expand_icon_description,br,"Evit kavout an taol-skiant a-raok an testennoù dre babor, e c'hallit klikañ war '▲'. Evit ouzhpennañ, e c'hallit klikañ war '▼'."
+hlp_studMgmt,br,Merouriezh an deskadurezhioù
+pgH_studMgmt_description,br,Krouiñ pe dibab ur skolier hag ur raport.
+hlp_filter_students,br,Filtred skolier
+pgH_filter_students_description,br,"Kallit klask gant an anv pe anv-skolier, ha filtrout war an leveled."
+hlp_add_student,br,Ouzhpennañ ur skolier
+pgH_add_student_description,br,"Ma n'eo ket bet skolier anken e-barzh ar database, e c'hallit kreñvañ anezhañ."
+hlp_select_student,br,Dibabit ur skolier
+pgH_select_student_description,br,Ar skolier dibabet a vo desket gant ul liñse leun a liv. Ne c'hallit dibab nemet ur skolier da vezh.
+hlp_PDF,br,Gweler ha prennañ ar PDF
+pgH_PDF_description,br,Ar bajenn-mañ a zo evit gwelout ha prennañ ar PDFioù gant/heb ikon. Klikañ war prennañ evit embregiñ.
+hlp_print,br,Prennañ
+pgH_print_description,br,Un PDF a vo krouet war ar raport dibabet gant ar dataou visible er skeudenn.
+hlp_report_first_page,br,Kontez ar bajenn gentañ eus ar raport
+pgH_report_first_page_description,br,"Ar raport a zo gant an pennad-kemmañ gant ar logo, deiziad ar test, anv ar skolier, anv ar prof, hag hevelep forzh."
+hlp_report_following_pages,br,Kontez ar bajennadoù o tremen eus ar raport
+pgH_report_following_pages_description,br,Ar raport a rufeñ ar testennoù gant kizidigezhioù mar fell dezho un diforc'h.
+hlp_confMgmt,br,Merouriezh ar kenkadoù
+pgH_confMgmt_description,br,"Ar logos, anvioù useet er pennad-kemmañ hag an detabistoù a c'haller stumm evezh eus ar merour."
+hlp_ctgMgmt,br,Merouriezh ar catalogoù test
+pgH_ctgMgmt_description,br,Ar seurt test a zo diskouezet er catalogoù test hag a c'haller krouiñ er mennoz.
+hlp_choose_catalogue,br,Dielfig ar catalogoù
+pgH_choose_catalogue_description,br,Dielfig ur catalog test spesifik hervez ur skol hag ar vot.
+hlp_overview,br,Bilan ar raport
+pgH_overview_description,br,Ar bajenn-mañ a zo evit mont war an taol skritell kinnigat war ar raport dibabet.
+hlp_page_layout,br,Layout a raok prennañ
+pgH_page_layout_description,br,"Ar raport a zo gant an pennad-kemmañ gant ar logo, deiziad ar test, ha gwiriont gant an skolier hialet an prof."
+hlp_summary_scores,br,Farc'heziad an talmoudegezh
+pgH_summary_scores_description,br,Miserial e bugell ar test da bep tra ha leveled e keñver an sept e titl reol.
+hlp_difficulties_summary,br,Farc'heziad an deviner
+pgH_difficulties_summary_description,br,An un drat-mat chadenni oh gwaret dabluel ho sempezi gmewedjeur !!!
+hlp_rptMgmt,br,Menage oubd...
+hlp_wellcomeMsg,br,Welcome! Use the navigation to discover the app.
+tab_year,br,Bloavezh
+tab_level,br,Klas
+tab_stage,br,Darempred
+tab_subject,br,Danvez
+tab_desc,br,Deskrivadur
+msg_manyCtg,br,"Diwallit, hoc'h eus dibabet muioc'h evit un dastumad"
+msg_noConf,br,Configuradur ebet kavet.
+msg_noSelectConf,br,Configuradur dibabet ebet.
+msg_load,br,O kargañ an titouroù...
+msg_refresh,br,Adfreskaat an titouroù...
+pgH_rptCarousel,br,Karousel test
+tbH_profid,br,Ref Skolaer
+tbH_typeTest,br,Seurt test
+tbH_ctgTest,br,Rummad testoù
+tbH_test,br,Test
+tbH_score,br,Skor
+tbH_MaxScore,br,Skor uhelañ
+tbH_Label,br,Label
+tbH_Desc,br,Deskrivadur
+pdf_prof,br,Skolaer
+pdf_lytChosen,br,Emdroadur dibabet
+pdf_lytIconeTop,br,Arlun talbenn
+pdf_lytSchlName,br,Anv skol
+pdf_lytMsgTop,br,Kemennadenn talbenn
+pdf_lytMsgFoot1,br,Kemennadenn troad 1
+pdf_lytMsgFoot2,br,Kemennadenn troad 2
+msg_noLyt,br,Konfigurañ moullañ ebet kavet.
+pgH_select_conf,br,Diuzañ ur c'honfigurañ evit moullañ
+btn_print,br,Moullañ PDF
+pdf_stdt,br,Skoliad
+pdf_rptCreatDt,br,Rapor krouet d'ar
+pdf_ChartLabel,br,Kenderc'had
+msg_loadErrIcon,br,Fazi kargañ skeudenn
+pgH_admin,br,Konsol renerezh
+msg_noStdtRpt,br,Raport test ebet kavet evit ar skolajiad-mañ.
+msg_noRpt,br,Raport ebet a zo.
+pdf_UpdDt,br,Deiziad kemmañ
+tbH_Seuil1,br,Treuzwel 1
+tbH_Seuil2,br,Treuzwel 2
+tbH_Seuil3,br,Treuzwel 3
+nav_back,br,Kent
+nav_next,br,War-lerc'h
+nav_page,br,Pajenn
+nav_of,br,eus
+tbH_detailRptPb,br,Raport munud war ar c’hudennoù darempredet
+tbH_scoreTotal,br,Skor hollek
+tbH_icon,br,Arlun
+tbH_compet,br,Arouezet skiant-prenet
+tbH_CatalogTest,br,Roll testennoù
+msg_noUserData,br,Roadennoù implijer ebet.
+tbH_resultat,br,Disoc'h
+msg_err_sav,br,Fazi en ur enrollañ. Klaskit en-dro mar plij.
+tab_id,br,Anaouder
+tab_lang,br,Yezh
+tab_roles,br,Perzhioù
+btn_rptSelect,br,Diuzañ ar raport-mañ
+btn_show,br,Diskouez
+btn_hide,br,Kuzhat
+pgH_formStudent,br,Leuniañ ar furmskrid evit ouzhpennañ ur skolaji:
+pgH_summaryScor,br,Diverrañ ar poentoù
+pgH_summaryDifficult,br,Diverrañ an diaesterioù
+pgH_summaryTest,br,Diverrañ an testoù war ober
+lang,br,br
+language_list,br,"{""br"": ""Brezhoneg"",""fr"": ""Français"", ""de"": ""Deutsch"", ""en"": ""English""}"
+inf_welcome,de,Willkommen in unserer Anwendung
+news,de,Neuigkeiten: Auswahl mehrerer Sprachen (Englisch und Französisch) hinzugefügt. Momentan nur auf der Studentenseite.
+frm_name,de,Nachname
+frm_first,de,Vorname
+frm_level,de,Stufe
+frm_birthDt,de,Geburtsdatum
+frm_chooseLvl,de,Wählen Sie eine Klasse
+frm_prof,de,Professoren
+frm_createStud,de,Schüler erstellen
+frm_addStud,de,Neuen Schüler hinzufügen
+frm_srchPlcHldr,de,Suche nach Namen oder Vorname...
+opt_all,de,Alle
+tbH_name,de,Nachname
+tbH_first,de,Vorname
+tbH_level,de,Stufe
+tbH_birthDt,de,Geburtsdatum
+tbH_prof,de,Professoren
+msg_req,de,Dieses Feld ist erforderlich
+msg_noInfo,de,Keine Informationen zum Schüler verfügbar.
+msg_chosenStud,de,Ausgewählter Schüler
+msg_noProf,de,Keine zugewiesenen Professoren
+msg_loadStuds,de,Lade Schülerdaten...
+msg_loadErr,de,Fehler beim Laden. Bitte versuchen Sie es erneut.
+msg_selStud,de,Bitte wählen Sie einen Schüler aus.
+msg_noStud,de,Kein Student gefunden.
+msg_chooseTest,de,Tests Auswahl:
+msg_ctg,de,Catalogue Verwaltung
+msg_chosenCtg,de,ausgewählten catalogue
+msg_noCtg,de,No catalogue gefunden.
+msg_errCreateStud,de,Fehler beim Schüler hinfügen. Please try again.
+msg_na,de,Nicht available
+pgH_studMgmt,de,Schülerverwaltung
+pgH_studSel,de,Schülerauswahl
+rpt_selStudRpt,de,Berichte des ausgewählten Schüler: {{name}}
+NIV_desc0,de,Vorschule
+NIV_desc1,de,1. Klasse
+NIV_desc2,de,2. Klasse
+NIV_desc3,de,3. Klasse
+NIV_desc4,de,4. Klasse
+NIV_desc5,de,5. Klasse
+nav_Stud,de,Schüler
+nav_chooseStud,de,Schüler wählen
+nav_chooseConf,de,Konfiguration wählen
+nav_chooseCtg,de,Katalog wählen
+nav_help,de,Brauchen Sie Hilfe?
+pgH_histo,de,Verlauf
+pgH_confMgmt,de,PDF-Konfiguration
+pgH_ctgMgmt,de,Katalogverwaltung der Tests
+pgH_rptMgmt,de,Berichtsverwaltung
+pgH_overview,de,Übersicht der laufenden Tests
+pgH_PDF,de,Drucken
+pgH_iconPDF,de,Drucken mit Piktogrammen
+pgH_logout,de,Abmelden
+pgH_login,de,Anmelden
+nav_menu,de,Menü
+nav_chooseRpt,de,Bearbeiten oder Bericht erstellen auswählen
+tbH_rptId,de,Berichts-Ref.
+tbH_createdAt,de,Erstellt am
+hlp_globalHelp,de,Allgemeine Hilfe
+hlp_introDescription,de,"Die Bewertungsanwendung ermöglicht die Eingabe der Testergebnisse und die Erstellung der zugehörigen Berichte. Die Berichte können im PDF-Format gespeichert werden, um bei Bedarf gedruckt zu werden. Diese Berichte enthalten Schüler- und Lehrerinformationen, Spinnengrafiken und problematische Testergebnisse."
+hlp_accessMenu,de,Zugang zum Menü
+hlp_accessMenuDesc,de,"Das Menü kann ausgeklappt werden, indem auf das Symbol oben links geklickt wird."
+hlp_statusBar,de,Statusleiste
+hlp_statusBarDesc,de,"Die obere Leiste zeigt den Status der laufenden Aktionen an (ausgewählter Schüler, Katalog, Konfiguration oder Bericht). Auf der oberen Leiste werden die noch auszuführenden Schritte vor dem Drucken des Berichts in Gelb angezeigt. Zum Beispiel, wenn kein Schüler ausgewählt ist, wird die Aktion, einen Schüler auszuwählen, gelb angezeigt. Man kann auch über das Menü zur Schülerverwaltung gelangen."
+hlp_news,de,Neuigkeiten
+hlp_newsDesc,de,Hier sind die neuesten Updates der Anwendung.
+btn_close,de,Schließen
+hlp_needHelp,de,Brauchen Sie Hilfe?
+hlp_wellcomeHelp,de,Willkommen im Hilfebereich
+hlp_reportOverview,de,"Berichtszusammenfassung: Der Bericht enthält die Kopfzeile mit dem Logo, dem Testdatum, dem Namen des Schülers, dem Namen des Lehrers und deren Niveau. Das Radar-Diagramm wird basierend auf den von der Anwendungsadministrator festgelegten Schwellenwerten gezeichnet."
+hlp_histo,de,Berichtsverlauf
+pgH_histo_description,de,Diese Seite ermöglicht das Anzeigen des Verlaufs von Berichten und das Markieren unvollständiger Berichte in Rot.
+hlp_refresh_data,de,Daten aktualisieren
+pgH_refresh_data_description,de,"Falls einige Berichte nicht angezeigt werden, können Sie sie aktualisieren, um die angezeigten Berichte zu aktualisieren."
+hlp_red_reports,de,Rote Berichte
+pgH_red_reports_description,de,In Rot angezeigte Berichte müssen erneut bearbeitet werden: Testdaten fehlen.
+hlp_expand_icon,de,Erweitern-Symbol
+pgH_expand_icon_description,de,"Um den Fortschritt der Tests nach Kategorien anzuzeigen, klicken Sie auf '▲'. Zum Ausblenden klicken Sie auf '▼'."
+hlp_studMgmt,de,Schülerverwaltung
+pgH_studMgmt_description,de,Erstellen oder auswählen eines Schülers und Berichts.
+hlp_filter_students,de,Schüler filtern
+pgH_filter_students_description,de,Sie können nach Namen oder Vornamen des Schülers suchen und auch nach Niveau filtern.
+hlp_add_student,de,Schüler hinzufügen
+pgH_add_student_description,de,"Wenn der Schüler noch nicht in der Datenbank ist, können Sie ihn erstellen."
+hlp_select_student,de,Schüler auswählen
+pgH_select_student_description,de,Der ausgewählte Schüler wird in einer anderen Farbe hervorgehoben. Es kann nur ein Schüler gleichzeitig ausgewählt werden.
+hlp_PDF,de,PDF anzeigen und drucken
+pgH_PDF_description,de,"Diese Seite dient zum Anzeigen und Drucken von PDFs mit/ohne Symbolen. Drücken Sie auf Drucken, um zu drucken."
+hlp_print,de,Drucken
+pgH_print_description,de,Eine PDF-Datei wird für den ausgewählten Bericht mit den auf dem Bildschirm sichtbaren Daten generiert.
+hlp_report_first_page,de,Inhalt der ersten Seite des Berichts
+pgH_report_first_page_description,de,"Der Bericht enthält die Kopfzeile mit dem Logo, dem Testdatum, dem Namen des Schülers, dem Namen des Lehrers und deren Niveau."
+hlp_report_following_pages,de,Inhalt der folgenden Seiten des Berichts
+pgH_report_following_pages_description,de,"Der Bericht druckt Fehler in Tests, wenn sie zur Auswahlregel gehören."
+hlp_confMgmt,de,Konfigurationsverwaltung
+pgH_confMgmt_description,de,"Logos, Kopfzeilennamen und Fußzeilenmeldungen sind vom Administrator konfigurierbar."
+hlp_ctgMgmt,de,Testkatalogverwaltung
+pgH_ctgMgmt_description,de,Testtypen werden im Testkatalog definiert und sind vollständig vom Administrator konfigurierbar.
+hlp_choose_catalogue,de,Katalog wählen
+pgH_choose_catalogue_description,de,Wählen Sie einen spezifischen Testkatalog basierend auf der Sektion oder dem Niveau.
+hlp_overview,de,Berichtszusammenfassung
+pgH_overview_description,de,Diese Seite zeigt die Zusammenfassung des ausgewählten Berichts. Alle Daten des ausgewählten Berichts werden angezeigt.
+hlp_page_layout,de,Ausgewähltes Seitenlayout
+pgH_page_layout_description,de,"Der Bericht enthält die Kopfzeile mit dem Logo, dem Testdatum und relevanten Daten des Schülers und Lehrers."
+hlp_summary_scores,de,Zusammenfassung der Ergebnisse
+pgH_summary_scores_description,de,Aggregierte Testergebnisse mit Fortschrittsberechnung basierend auf den konfigurierten Schwellenwerten.
+hlp_difficulties_summary,de,Zusammenfassung der aufgetretenen Schwierigkeiten
+pgH_difficulties_summary_description,de,Kategorie unter einem Schwellenwert - wird während der Entwicklung definiert.
+hlp_rptMgmt,de,Berichtverwaltung
+hlp_select_report,de,Bericht auswählen
+pgH_select_report_description,de,"Wählen Sie einen bestehenden Bericht zur Bearbeitung oder Neudruck, oder erstellen Sie einen neuen Bericht."
+hlp_save_report,de,Bericht speichern
+pgH_save_report_description,de,"Der bearbeitete Bericht wird gespeichert. Nach dem Speichern wird die Kategorie von Tests, die unvollständig sind, gelb markiert."
+hlp_wellcomeMsg,de,Willkommen! Benutze the Menü um die App zu entdecken.
+tab_year,de,Jahr
+tab_level,de,Klasse
+tab_stage,de,Stufe
+tab_subject,de,Fach
+tab_desc,de,Beschreibung
+msg_manyCtg,de,"Achtung, Sie haben mehr als einen Katalog ausgewählt"
+msg_noConf,de,Keine Konfiguration gefunden.
+msg_noSelectConf,de,Keine Konfiguration ausgewählt.
+msg_load,de,Daten werden geladen...
+msg_refresh,de,Daten aktualisieren...
+pgH_rptCarousel,de,Testkarussell
+tbH_profid,de,Lehrer Ref
+tbH_typeTest,de,Testtyp
+tbH_ctgTest,de,Testkategorie
+tbH_test,de,Test
+tbH_score,de,Ergebnis
+tbH_MaxScore,de,Maximalergebnis
+tbH_Label,de,Etikett
+tbH_Desc,de,Beschreibung
+pdf_prof,de,Lehrer
+pdf_lytChosen,de,Gewähltes Layout
+pdf_lytIconeTop,de,Kopfzeilen-Symbol
+pdf_lytSchlName,de,Schulname
+pdf_lytMsgTop,de,Kopfzeilen-Nachricht
+pdf_lytMsgFoot1,de,Fußzeile Nachricht 1
+pdf_lytMsgFoot2,de,Fußzeile Nachricht 2
+msg_noLyt,de,Keine Druckkonfiguration gefunden.
+pgH_select_conf,de,Druckkonfiguration wählen
+btn_print,de,PDF drucken
+pdf_stdt,de,Schüler
+pdf_rptCreatDt,de,Bericht erstellt am
+pdf_ChartLabel,de,Fortschritt
+msg_loadErrIcon,de,Bildladefehler
+pgH_admin,de,Verwaltungskonsole
+msg_noStdtRpt,de,Kein Testbericht für diesen Schüler gefunden.
+msg_noRpt,de,Kein Bericht verfügbar.
+pdf_UpdDt,de,Änderungsdatum
+tbH_Seuil1,de,Schwelle 1
+tbH_Seuil2,de,Schwelle 2
+tbH_Seuil3,de,Schwelle 3
+nav_back,de,Zurück
+nav_next,de,Weiter
+nav_page,de,Seite
+nav_of,de,von
+tbH_detailRptPb,de,Detaillierter Bericht über aufgetretene Schwierigkeiten
+tbH_scoreTotal,de,Gesamtergebnis
+tbH_icon,de,Symbol
+tbH_compet,de,Erworbene Kompetenz
+tbH_CatalogTest,de,Testkatalog
+msg_noUserData,de,Keine Benutzerinformationen verfügbar.
+tbH_resultat,de,Ergebnis
+msg_err_sav,de,Fehler beim Speichern. Bitte erneut versuchen.
+tab_id,de,Kennung
+tab_lang,de,Sprache
+tab_roles,de,Rollen
+btn_rptSelect,de,Diesen Bericht auswählen
+btn_show,de,Anzeigen
+btn_hide,de,Verbergen
+pgH_formStudent,de,"Formular ausfüllen, um einen Schüler hinzuzufügen:"
+pgH_summaryScor,de,Ergebnisübersicht
+pgH_summaryDifficult,de,Übersicht der Schwierigkeiten
+pgH_summaryTest,de,Zusammenfassung der laufenden Tests
+lang,de,de
+language_list,de,"{""de"": ""Deutsch"", ""fr"": ""Français"",  ""en"": ""English"", ""br"": ""Brezhoneg""}"

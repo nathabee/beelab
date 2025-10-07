@@ -2,7 +2,7 @@
 'use client';
 import React, { useCallback, useMemo, useState } from 'react';
 
-type LangCode = 'en' | 'fr' | 'de' | 'br';
+type LangCode = 'en' | 'fr' | 'de' | 'bz';
 
 export type LoginOrDemoCardProps = {
   mode?: 'login' | 'demo';
@@ -45,7 +45,7 @@ export default function LoginOrDemoCard({
     const raw = (document.documentElement.lang || navigator.language || 'en').toLowerCase();
     if (raw.startsWith('fr')) return 'fr';
     if (raw.startsWith('de')) return 'de';
-    if (raw.startsWith('br')) return 'br';
+    if (raw.startsWith('bz')) return 'bz';
     return 'en';
   }, [detectLang]);
 

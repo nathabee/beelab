@@ -21,6 +21,5 @@ docker compose exec django python manage.py loaddata PomoloBeeCore/fixtures/init
 docker compose exec django python manage.py copy_data_init || true
 docker compose exec django python manage.py populate_data_init || true
 docker compose exec django python manage.py create_groups_and_permissions || true
-docker compose exec django python manage.py populate_teacher || true
-docker compose exec django python manage.py create_translations_csv || true
-docker compose exec django python manage.py populate_translation || true
+docker compose exec django python manage.py populate_demo || true
+ 

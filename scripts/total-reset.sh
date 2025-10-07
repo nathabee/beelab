@@ -195,8 +195,8 @@ compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/init
 compose exec "$DJANGO_SVC" python manage.py seed_competence --clear
 compose exec "$DJANGO_SVC" python manage.py populate_data_init
 compose exec "$DJANGO_SVC" python manage.py create_groups_and_permissions
-compose exec "$DJANGO_SVC" python manage.py populate_teacher
-compose exec "$DJANGO_SVC" python manage.py populate_translation
+compose exec "$DJANGO_SVC" python manage.py populate_demo
+# compose exec "$DJANGO_SVC" python manage.py populate_translation
 set -e
 
 # --- health checks (env-aware) ---

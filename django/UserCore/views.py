@@ -43,16 +43,7 @@ from CompetenceCore.models import Catalogue  # <-- import catalogue model
 
 # keep your existing constants
 ALLOWED_DEMO_ROLES = {"demo", "teacher", "farmer"}  # no 'admin'
-ALLOWED_LANGS = {"en", "fr", "de", "br"}
-
-# map demo language to its catalogue IDs (as in your fixtures)
-LANG_TO_DEMO_CATALOGUES = {
-    "fr": [34, 35, 36],  # jacques
-    "de": [43, 44, 45],  # jakob
-    "br": [40, 41, 42],  # jakez (Breton)
-    "en": [37, 38, 39],  # james
-}
-ALL_MAPPED_CATALOGUE_IDS = {cid for ids in LANG_TO_DEMO_CATALOGUES.values() for cid in ids}
+ALLOWED_LANGS = {"en", "fr", "de", "bz"}
 
 
 
@@ -158,6 +149,7 @@ def me(request):
         "id": u.id,
         "username": u.username,
         "email": u.email,
+        "lang": u.lang,  
         "is_demo": "demo" in roles,
         "roles": roles,
         "demo_expires_at": demo_exp,
@@ -170,6 +162,8 @@ def me(request):
 ####################################################################
 #  ViewSet
 ##############################################################
+# UserCore/views.py (inside UserViewSet)
+
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
@@ -184,17 +178,35 @@ class UserViewSet(viewsets.ModelViewSet):
         return qs.filter(id=u.id)  # 🔒 non-admins only see themselves
 
     def get_permissions(self):
+        # Model-level CRUD stays admin-only
         if self.action in ['list', 'create', 'update', 'partial_update', 'destroy']:
-            return [permissions.IsAdminUser()]  # 🔒 only admins can manage users
-        # actions like 'me' fall back to auth-only
+            return [permissions.IsAdminUser()]
+        # Actions like 'me' are auth-only
         return [permissions.IsAuthenticated()]
-    
- 
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get', 'patch'], permission_classes=[IsAuthenticated])
     def me(self, request):
-        serializer = self.get_serializer(request.user)
+        """
+        GET  /users/me/   → current user details (incl. roles)
+        PATCH /users/me/  → update first_name, last_name, lang (NOT roles unless admin)
+        """
+        user = request.user
+        if request.method.lower() == 'get':
+            data = self.get_serializer(user).data
+            return Response(data)
+
+        # PATCH
+        serializer = self.get_serializer(
+            user,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()  # update logic enforced in serializer.update()
         return Response(serializer.data)
+
+  
     
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
@@ -216,6 +228,9 @@ class UserRolesView(APIView):
 #  DEMO user
 ###############################################################
   
+from CompetenceCore.demo_linking import attach_demo_teacher_relations
+
+
 
 DEMO_COOKIE = "demo_sid"
 DEMO_DAYS = 30
@@ -225,25 +240,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 
-def _assign_demo_catalogues(user, lang: str):
-    """
-    Ensure the demo user is linked to the language-specific catalogue set:
-    - remove catalogues mapped to other demo languages
-    - add any missing catalogues for the target language
-    """
-    target_ids = set(LANG_TO_DEMO_CATALOGUES.get(lang) or LANG_TO_DEMO_CATALOGUES["en"])
-
-    # Remove only catalogues that are part of ANY mapped demo set but not our target
-    to_remove_qs = user.catalogues.filter(id__in=ALL_MAPPED_CATALOGUE_IDS - target_ids)
-    if to_remove_qs.exists():
-        user.catalogues.remove(*to_remove_qs)
-
-    # Add any missing target catalogue ids
-    existing_ids = set(user.catalogues.values_list("id", flat=True))
-    missing_ids = target_ids - existing_ids
-    if missing_ids:
-        add_qs = Catalogue.objects.filter(id__in=missing_ids)
-        user.catalogues.add(*add_qs)
+ 
 
 
 
@@ -270,6 +267,7 @@ def demo_reset(request):
     return _issue_demo_response(request)
 
 
+
 @transaction.atomic
 def _issue_demo_response(request) -> Response:
     User = get_user_model()
@@ -286,7 +284,6 @@ def _issue_demo_response(request) -> Response:
             acct = None
 
     # Parse body
-    body = {}
     try:
         body = request.data or {}
     except Exception:
@@ -295,9 +292,8 @@ def _issue_demo_response(request) -> Response:
     requested_roles = _normalize_roles(body.get("roles") or body.get("role") or [])
     preferred_name = body.get("preferred_name") or body.get("display_name")
     lang = body.get("lang")
-    lang = lang if lang in ALLOWED_LANGS else None
+    language = lang if lang in ALLOWED_LANGS else 'en'
 
-    # groups helper unchanged...
     groups_by_name = {g.name: g for g in Group.objects.filter(name__in=ALLOWED_DEMO_ROLES)}
     def ensure_group(name: str) -> Group:
         g = groups_by_name.get(name)
@@ -305,15 +301,15 @@ def _issue_demo_response(request) -> Response:
         g, _ = Group.objects.get_or_create(name=name)
         groups_by_name[name] = g
         return g
+ 
 
     if not acct:
         # --- New demo user ---
-        # (use your existing name generation; shown compactly here)
         if preferred_name:
             first, last = _sanitize_display_name(preferred_name)
             uname_base = f"demo-{slugify(first)}-{slugify(last)}"
         else:
-            first, last, uname_base = _generate_codename()  # or your human-name generator
+            first, last, uname_base = _generate_codename()
 
         username = _unique_username(uname_base, User)
         user = User.objects.create_user(
@@ -321,47 +317,47 @@ def _issue_demo_response(request) -> Response:
             password=secrets.token_urlsafe(16),
             first_name=first,
             last_name=last,
-            lang=lang or 'en',                  # <-- set lang at creation
+            lang=language,
         )
 
-        # roles
+        # Ensure base roles + requested ones
         final_roles = {"demo"} | requested_roles
         for r in final_roles:
             user.groups.add(ensure_group(r))
-
-        # link the demo catalogues for this language
-        _assign_demo_catalogues(user, user.lang)
 
         acct = DemoAccount.objects.create(
             user=user,
             sid=secrets.token_urlsafe(32),
             expires_at=timezone.now() + datetime.timedelta(days=DEMO_DAYS),
         )
+
     else:
         # --- Existing demo reused ---
         user = acct.user
 
-        # add any missing roles
+        # Add any missing roles ("demo" enforced)
         existing = set(user.groups.values_list("name", flat=True))
         missing = ({"demo"} | requested_roles) - existing
         for r in missing:
             user.groups.add(ensure_group(r))
 
-        # update lang if requested and different
-        if lang and user.lang != lang:
-            user.lang = lang
+        # Update language if requested
+        if language and user.lang != language:
+            user.lang = language
             user.save(update_fields=["lang"])
 
-        # ensure catalogue links match language mapping
-        _assign_demo_catalogues(user, user.lang)
+ 
 
-        # optionally refresh names if you want (keep your current logic)
+    # ✅ Centralized wiring: only if the user is *currently* in both groups
+    user_roles_now = set(user.groups.values_list("name", flat=True))
+    if  "teacher" in user_roles_now:
+        attach_demo_teacher_relations(user, language=language)
 
-    roles = list(user.groups.values_list("name", flat=True))
+    roles = list(user_roles_now)
 
     access = AccessToken.for_user(user)
     access["roles"] = roles
-    access["is_demo"] = True
+    access["is_demo"] = ("demo" in roles)  # you prefer roles-driven flag; OK
     access["demo_exp"] = int(acct.expires_at.timestamp())
     access["lang"] = user.lang
 
@@ -382,5 +378,3 @@ def _issue_demo_response(request) -> Response:
         samesite="Lax",
     )
     return resp
-
-

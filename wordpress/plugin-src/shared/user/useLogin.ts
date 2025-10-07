@@ -5,8 +5,9 @@ import { useState } from 'react';
 import type { AxiosInstance } from 'axios';
 import { useUser } from './UserContext';
 import { authHeaders } from './http';
+import { LangCode } from './lang';
 
-export type LangCode = 'en' | 'fr' | 'de' | 'br';
+// export type LangCode = 'en' | 'fr' | 'de' | 'bz';
 export type BootstrapOpts = { force?: boolean };
 export type BootstrapFn = (token: string, opts?: BootstrapOpts) => Promise<void> | void;
 

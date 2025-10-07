@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       Competence WP
  * Description:       FSE blocks integrating with Django backend.
- * Version:           v1.1.8
+ * Version:           v1.1.9
  * Author:            Nathabee
  */
 
@@ -93,6 +93,12 @@ function competence_wp_create_pages()
         [
             'title' => 'Error',
             'slug'  => 'error',
+            'block' => '<!-- wp:competence/competence-app /-->',
+            'type'  => 'competence_page',
+        ],
+        [
+            'title' => 'User Management',
+            'slug'  => 'user_mgt',
             'block' => '<!-- wp:competence/competence-app /-->',
             'type'  => 'competence_page',
         ],

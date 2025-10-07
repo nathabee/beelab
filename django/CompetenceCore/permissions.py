@@ -1,11 +1,13 @@
 # CompetenceCore/permissions.py
 from django.apps import apps
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+from .models import Eleve
 
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         u = request.user
         return bool(u and u.is_authenticated and (u.is_superuser or u.groups.filter(name='admin').exists()))
+ 
 
 class IsEleveProfessor(BasePermission):
     def has_permission(self, request, view):
@@ -21,7 +23,13 @@ class IsEleveProfessor(BasePermission):
             eleve = Eleve.objects.get(id=eleve_id)
         except Eleve.DoesNotExist:
             return False
-        return request.user in eleve.professeurs.all()
+        return (
+            eleve.professeurs.filter(id=request.user.id).exists()
+            or (getattr(request.user, "is_demo_user", False) and getattr(eleve, "is_demo", False))
+        )
+
+
+ 
 
 class isAllowed(BasePermission):
     """

@@ -20,3 +20,4 @@ const CompetenceLogin: React.FC = () => {
 };
 
 export default CompetenceLogin;
+ 

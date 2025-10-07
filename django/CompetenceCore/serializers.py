@@ -12,11 +12,99 @@ import base64
  
 from UserCore.models import CustomUser  
 from UserCore.serializers import UserSerializer  
- 
- 
+from django.utils.translation import get_language
+from CompetenceCore.models import Translation
+import os
 
  
-class EleveSerializer(serializers.ModelSerializer):
+class TranslationMixin:
+    """
+    Helpers to fetch/store translations with graceful fallback.
+    Order: explicit ?lang → user.lang → request.LANGUAGE_CODE → get_language() → 'en' 
+    """
+    _t_cache = None
+
+    @staticmethod
+    def _normalize_lang(code: str | None) -> str:
+        m = {
+            'en': 'en', 'fr': 'fr', 'de': 'de', 'bz': 'bz',
+        }
+        return m.get((code or 'en').lower(), 'en')
+
+    def _lang(self) -> str:
+        # Prefer request context if available
+        req = getattr(self, 'context', {}).get('request') if hasattr(self, 'context') else None
+        if req:
+            # 1) explicit override via querystring
+            try:
+                qlang = (req.query_params.get('lang')  # DRF Request
+                         or getattr(req, 'GET', {}).get('lang'))
+                if qlang:
+                    return self._normalize_lang(qlang)
+            except Exception:
+                pass
+
+            # 2) logged-in user's profile language
+            u = getattr(req, 'user', None)
+            if getattr(u, 'is_authenticated', False):
+                u_lang = getattr(u, 'lang', None)
+                if u_lang:
+                    return self._normalize_lang(u_lang)
+
+            # 3) request.LANGUAGE_CODE (LocaleMiddleware)
+            lc = getattr(req, 'LANGUAGE_CODE', None)
+            if lc:
+                return self._normalize_lang(lc)
+
+        # 4) thread-local active language
+        try:
+            from django.utils.translation import get_language
+            return self._normalize_lang(get_language())
+        except Exception:
+            return 'en'
+
+    def _t(self, key: str, ref_id: int, default: str = "") -> str:
+        if not ref_id:
+            return default
+
+        if self._t_cache is None:
+            self._t_cache = {}
+
+        lang = self._lang()
+        cache_key = (key, ref_id, lang, default)
+        if cache_key in self._t_cache:
+            return self._t_cache[cache_key]
+
+        qs = Translation.objects.filter(key=key, ref_id=ref_id)
+        # 1) user language
+        text = qs.filter(language=lang).values_list('text', flat=True).first()
+        if text:
+            self._t_cache[cache_key] = text
+            return text
+        # 2) english
+        text = qs.filter(language='en').values_list('text', flat=True).first()
+        if text:
+            self._t_cache[cache_key] = text
+            return text
+        # 3) any available
+        text = qs.values_list('text', flat=True).first()
+        if text:
+            self._t_cache[cache_key] = text
+            return text
+        # 4) default
+        self._t_cache[cache_key] = default
+        return default
+
+    def _set_t(self, key: str, ref_id: int, text: str, language: str = None):
+        if text is None or str(text).strip() == "":
+            return
+        lang = self._normalize_lang(language) if language else self._lang()
+        Translation.objects.update_or_create(
+            key=key, ref_id=ref_id, language=lang, defaults={"text": text}
+        )
+
+
+class EleveSerializer(TranslationMixin, serializers.ModelSerializer):
     # Automatically assign professeurs for non-admin users
     professeurs = serializers.PrimaryKeyRelatedField(
         queryset=CustomUser.objects.filter(groups__name='teacher'),
@@ -28,10 +116,11 @@ class EleveSerializer(serializers.ModelSerializer):
     professeurs_details = UserSerializer(many=True, read_only=True, source='professeurs')
 
     # For create/update, we use the niveau ID
-    niveau = serializers.PrimaryKeyRelatedField(queryset=Niveau.objects.all())
+    niveau_description = serializers.SerializerMethodField(read_only=True)
 
-    # For retrieve (GET), we show only the niveau.niveau as a string
-    niveau_description = serializers.CharField(source='niveau.description', read_only=True)
+    def get_niveau_description(self, obj):
+        # translation key = 'niveau'
+        return self._t('niveau', obj.niveau.id, default=obj.niveau.niveau)
 
     class Meta:
         model = Eleve
@@ -80,33 +169,46 @@ class EleveAnonymizedSerializer(serializers.ModelSerializer):
         fields = ['id', 'niveau', 'textnote1', 'textnote2', 'textnote3', 'professeurs']
         
 # Serializer for Niveau
-class NiveauSerializer(serializers.ModelSerializer):
+class NiveauSerializer(TranslationMixin, serializers.ModelSerializer):
+    description = serializers.SerializerMethodField()
+
     class Meta:
         model = Niveau
         fields = ['id', 'niveau', 'description']
 
+    def get_description(self, obj):
+        return self._t('niveau', obj.id, default=obj.niveau)
+
 
 # Serializer for Etape
-class EtapeSerializer(serializers.ModelSerializer):
+class EtapeSerializer(TranslationMixin, serializers.ModelSerializer):
+    description = serializers.SerializerMethodField()
+
     class Meta:
         model = Etape
         fields = ['id', 'etape', 'description']
 
+    def get_description(self, obj):
+        return self._t('etape', obj.id, default=obj.etape)
+
 
 # Serializer for Annee
-class AnneeSerializer(serializers.ModelSerializer):
-    start_date = serializers.DateField(input_formats=['%Y-%m-%d' ], required=False)
-    stop_date = serializers.DateField(input_formats=['%Y-%m-%d'], required=False)
+class AnneeSerializer(TranslationMixin, serializers.ModelSerializer):
+    start_date = serializers.DateField(input_formats=['%Y-%m-%d'], required=False)
+    stop_date  = serializers.DateField(input_formats=['%Y-%m-%d'], required=False)
+    description = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Annee
         fields = ['id', 'is_active', 'start_date', 'stop_date', 'description']
+
+    def get_description(self, obj):
+        return self._t('annee', obj.id, default="")
         
-    def perform_create(self, serializer):
-        # If start_date is None, set it to today
-        if not serializer.validated_data.get('start_date'):
-            serializer.validated_data['start_date'] = timezone.now().date()
-        serializer.save()
+    def create(self, validated_data):
+        if not validated_data.get('start_date'):
+            validated_data['start_date'] = timezone.now().date()
+        return super().create(validated_data)
 
     def validate(self, attrs):
         is_active = attrs.get('is_active')
@@ -125,27 +227,43 @@ class AnneeSerializer(serializers.ModelSerializer):
  
 
 # Serializer for Matiere
-class MatiereSerializer(serializers.ModelSerializer):
+class MatiereSerializer(TranslationMixin, serializers.ModelSerializer):
+    description = serializers.SerializerMethodField()
+
     class Meta:
         model = Matiere
         fields = ['id', 'matiere', 'description']
 
+    def get_description(self, obj):
+        return self._t('matiere', obj.id, default="")
+
 
 # Serializer for ScoreRule
-class ScoreRuleSerializer(serializers.ModelSerializer):
+class ScoreRuleSerializer(TranslationMixin, serializers.ModelSerializer):
+    description = serializers.SerializerMethodField()
+
     class Meta:
         model = ScoreRule
         fields = ['id', 'description']
 
+    def get_description(self, obj):
+        return self._t('scorerule', obj.id, default="")
+
 
 # Serializer for ScoreRulePoint
-class ScoreRulePointSerializer(serializers.ModelSerializer):
+class ScoreRulePointSerializer(TranslationMixin, serializers.ModelSerializer):
+    description = serializers.SerializerMethodField()
+
     class Meta:
         model = ScoreRulePoint
         fields = ['id', 'scorerule', 'scorelabel', 'score', 'description']
 
+    def get_description(self, obj):
+        return self._t('scorerulepoint', obj.id, default="")
+
+
 # Serializer for Catalogue
-class CatalogueSerializer(serializers.ModelSerializer):
+class CatalogueSerializer(TranslationMixin, serializers.ModelSerializer):
     niveau_id = serializers.PrimaryKeyRelatedField(
         queryset=Niveau.objects.all(),
         source='niveau'  # Allows the use of niveau_id while creating
@@ -169,72 +287,126 @@ class CatalogueSerializer(serializers.ModelSerializer):
     annee = AnneeSerializer(read_only=True)
     matiere = MatiereSerializer(read_only=True)
 
+    description = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Catalogue
-        fields = ['id', 'niveau_id', 'etape_id', 'annee_id', 'matiere_id', 'description', 'niveau', 'etape', 'annee', 'matiere']
+        fields = ['id', 'niveau_id', 'etape_id', 'annee_id', 'matiere_id',
+                  'description', 'niveau', 'etape', 'annee', 'matiere']
+
+    def get_description(self, obj):
+        return self._t('catalogue', obj.id, default="")
 
     def create(self, validated_data):
         return super().create(validated_data)
     
  
+class CatalogueDescriptionSerializer(TranslationMixin, serializers.ModelSerializer):
+    description = serializers.SerializerMethodField()
 
-class CatalogueDescriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Catalogue
-        fields = ['id','description']
+        fields = ['id', 'description']
+
+    def get_description(self, obj):
+        return self._t('catalogue', obj.id, default="")
+
 
 # Serializer for Item
-class ItemSerializer(serializers.ModelSerializer):
-    
+class ItemSerializer(TranslationMixin, serializers.ModelSerializer):
+    # Read-only, human label from Translation(key="temps", ref_id=item.temps)
+    temps = serializers.SerializerMethodField(read_only=True)
+
+    # Write-only, the integer ID you persist in the model
+    temps_id = serializers.IntegerField(source='temps', write_only=True, required=False)
+
+    description = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Item
-        fields = ['id', 'temps', 'description', 'observation', 'scorerule', 'max_score', 'itempos', 'link']
+        fields = [
+            'id',
+            'temps',        # string label (read)
+            'temps_id',     # integer id (write)
+            'description',
+            'observation',
+            'scorerule',
+            'max_score',
+            'itempos',
+            'link',
+        ]
+
+    def get_description(self, obj):
+        return self._t('item', obj.id, default="")
+
+    def get_temps(self, obj):
+        # fallback shows "T{n}" if missing
+        return self._t('temps', obj.temps, default=f"T{obj.temps}")
 
 
- 
-
-class GroupageDataSerializer(serializers.ModelSerializer):
+class GroupageDataSerializer(TranslationMixin, serializers.ModelSerializer):
     groupage_icon_id = serializers.IntegerField(write_only=False, required=False)
-
     items = ItemSerializer(many=True, read_only=True, source='item_set')
+    # catalogue_id = serializers.IntegerField(source='catalogue_id', read_only=True)
+    catalogue_id = serializers.PrimaryKeyRelatedField(source='catalogue', read_only=True)
+    # accept writes with the same field names
+    desc_groupage = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    label_groupage = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = GroupageData
         fields = [
-            'id',
-            'catalogue',
-            'groupage_icon_id',  # We only handle the ID of the icon
-            'catalogue_id',
-            'position',
-            'desc_groupage',
-            'label_groupage',
-            'link',
-            'max_point',
-            'seuil1',
-            'seuil2',
-            'max_item',
-            'items'
+            'id', 'catalogue', 'groupage_icon_id', 'catalogue_id',
+            'position', 'desc_groupage', 'label_groupage',
+            'link', 'max_point', 'seuil1', 'seuil2', 'max_item', 'items'
         ]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # inject translated values for reads
+        data['desc_groupage']  = self._t('groupagedata', instance.id, default="")
+        data['label_groupage'] = self._t('groupagedata.label', instance.id, default="")
+        return data
+
     def create(self, validated_data):
-        groupage_icon_id = validated_data.get('groupage_icon_id', None)
+        desc = validated_data.pop('desc_groupage', None)
+        label = validated_data.pop('label_groupage', None)
+
+        groupage_icon_id = validated_data.pop('groupage_icon_id', None)
         groupage_icon = MyImage.objects.get(id=groupage_icon_id) if groupage_icon_id else None
-        return GroupageData.objects.create(groupage_icon=groupage_icon, **validated_data)
+
+        gd = GroupageData.objects.create(groupage_icon=groupage_icon, **validated_data)
+
+        # store translations (language = active locale)
+        if desc:
+            self._set_t('groupagedata', gd.id, desc)
+        if label:
+            self._set_t('groupagedata.label', gd.id, label)
+
+        return gd
 
     def update(self, instance, validated_data):
-        groupage_icon_id = validated_data.get('groupage_icon_id', None)
-        instance.groupage_icon = MyImage.objects.get(id=groupage_icon_id) if groupage_icon_id else instance.groupage_icon
-        instance.position = validated_data.get('position', instance.position)
-        instance.desc_groupage = validated_data.get('desc_groupage', instance.desc_groupage)
-        instance.label_groupage = validated_data.get('label_groupage', instance.label_groupage)
-        instance.link = validated_data.get('link', instance.link)
-        instance.max_point = validated_data.get('max_point', instance.max_point)
-        instance.seuil1 = validated_data.get('seuil1', instance.seuil1)
-        instance.seuil2 = validated_data.get('seuil2', instance.seuil2)
-        instance.max_item = validated_data.get('max_item', instance.max_item)
+        desc = validated_data.pop('desc_groupage', None)
+        label = validated_data.pop('label_groupage', None)
+
+        groupage_icon_id = validated_data.pop('groupage_icon_id', None)
+        instance.groupage_icon = (
+            MyImage.objects.get(id=groupage_icon_id) if groupage_icon_id else instance.groupage_icon
+        )
+
+        for attr in ['catalogue', 'position', 'link', 'max_point', 'seuil1', 'seuil2', 'max_item']:
+            if attr in validated_data:
+                setattr(instance, attr, validated_data[attr])
 
         instance.save()
+
+        if desc is not None:
+            self._set_t('groupagedata', instance.id, desc)
+        if label is not None:
+            self._set_t('groupagedata.label', instance.id, label)
+
         return instance
+
 
 
     
@@ -451,7 +623,7 @@ class ReportCatalogueSerializer(serializers.ModelSerializer):
                 for attr, value in resultat_data.items():
                     if attr == "resultat_details":  # Handle reverse relation for ResultatDetails
                         # Use the ResultatSerializer to update the nested ResultatDetails
-                        detail_serializer = ResultatSerializer(resultat, data=resultat_data, partial=True)
+                        detail_serializer = ResultatSerializer(resultat, data=resultat_data, partial=True,context=self.context)
                         if detail_serializer.is_valid():
                             detail_serializer.save()
                         else:
@@ -547,7 +719,7 @@ class FullReportSerializer(serializers.ModelSerializer):
                                 resultat = Resultat.objects.get(id=resultat_id, report_catalogue=report_catalogue)
 
                                 # Update the Resultat instance
-                                resultat_serializer = ResultatSerializer(resultat, data=resultat_data, partial=True)
+                                resultat_serializer = ResultatSerializer(resultat, data=resultat_data, partial=True,context=self.context)
                                 if resultat_serializer.is_valid(raise_exception=True):
                                     resultat_serializer.save()
 
@@ -573,11 +745,20 @@ class FullReportSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
 ###################################################
-class ShortGroupageDataSerializer(serializers.ModelSerializer):
+class ShortGroupageDataSerializer(TranslationMixin, serializers.ModelSerializer):
+    desc_groupage  = serializers.SerializerMethodField()
+    label_groupage = serializers.SerializerMethodField()
+
     class Meta:
         model = GroupageData
         fields = ['id', 'desc_groupage', 'label_groupage', 'position', 'max_point', 'seuil1', 'seuil2']
-        read_only_fields = fields  # Make all fields read-only
+        read_only_fields = fields
+
+    def get_desc_groupage(self, obj):
+        return self._t('groupagedata', obj.id, default="")
+
+    def get_label_groupage(self, obj):
+        return self._t('groupagedata.label', obj.id, default="")
 
 
 

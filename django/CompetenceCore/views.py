@@ -33,8 +33,7 @@ from django.utils import timezone
 #from drf_yasg.utils import swagger_auto_schema
 #from drf_yasg import openapi    
 import base64 
-from django.http import JsonResponse
-from django.utils.translation import activate
+from django.http import JsonResponse 
 from .models import Translation
 
 
@@ -83,23 +82,21 @@ def custom_404(request, exception):
 ####################################################################
 #  request without  login 
 ##############################################################
-
+# views.py
 class TranslationView(APIView):
     def get(self, request):
         lang = request.query_params.get('lang', 'en')
+        # key+ref_id → text map; if you truly need a flat map, you can emit "key: {ref_id: text}" etc.
+        rows = Translation.objects.filter(language=lang)
+        data = {(t.key, t.ref_id): t.text for t in rows}
 
-        # Get translations for the specified language
-        translations = Translation.objects.filter(language=lang)
-        data = {t.key: t.translation for t in translations}
-
-        # Get English fallback translations for missing keys
         if lang != 'en':
-            fallback_translations = Translation.objects.filter(language='en')
-            for t in fallback_translations:
-                if t.key not in data:
-                    data[t.key] = t.translation  # Add English fallback if key is missing
+            fb = Translation.objects.filter(language='en')
+            for t in fb:
+                data.setdefault((t.key, t.ref_id), t.text)
 
         return Response(data, status=status.HTTP_200_OK)
+ 
 
 ####################################################################
 #  APIView .... in this case we just have defined a GET
@@ -125,7 +122,7 @@ class EleveReportsView(APIView):
 
         # Retrieve reports for the Eleve
         reports = eleve.reports.all()
-        serializer = FullReportSerializer(reports, many=True) 
+        serializer = FullReportSerializer(reports, many=True, context={'request': request}) 
         return Response(serializer.data, status=status.HTTP_200_OK)
     
  

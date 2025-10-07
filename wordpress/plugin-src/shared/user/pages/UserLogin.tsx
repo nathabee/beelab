@@ -42,7 +42,7 @@ export default function UserLogin({
     const raw = (document.documentElement.lang || navigator.language || 'en').toLowerCase();
     if (raw.startsWith('fr')) return 'fr';
     if (raw.startsWith('de')) return 'de';
-    if (raw.startsWith('br')) return 'br';
+    if (raw.startsWith('bz')) return 'bz';
     return 'en';
   };
 

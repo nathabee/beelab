@@ -144,28 +144,10 @@ dcdjango python manage.py collectstatic --noinput
 ---
 
 ## 5) Django: fixtures / seeds
-
-### Pomolobee
-
 ```bash
-dcdjango python manage.py seed_pomolobee --clear
-dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_groups.json || true
-dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_superuser.json || true
-dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_farms.json   || true
-dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_fields.json  || true
-dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_fruits.json  || true
-dcdjango python manage.py loaddata PomoloBeeCore/fixtures/initial_rows.json    || true
-```
+dcdjango python manage.py flush --no-input
 
-### Competence
-
-```bash
-dcdjango python manage.py seed_competence --clear
-dcdjango python manage.py populate_data_init || true
-dcdjango python manage.py create_groups_and_permissions || true
-dcdjango python manage.py populate_teacher || true
-# dcdjango python manage.py create_translations_csv || true
-dcdjango python manage.py populate_translation || true
+dcdjseed_competence
 ```
 
 ---

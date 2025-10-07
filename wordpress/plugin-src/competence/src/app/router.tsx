@@ -12,8 +12,10 @@ import CompetenceErrorMgt from '@pages/CompetenceErrorMgt';
 import CompetenceOverviewTest from '@pages/CompetenceOverviewTest';
 import CompetencePdfView from '@pages/CompetencePdfView';
 
+import CompetenceUserMgt from '@pages/CompetenceUserMgt';
+
 import { ErrorPage } from '@bee/common/error';
-import { UserMgt, UserLogin } from '@bee/common';
+import { UserLogin } from '@bee/common';
 import useBootstrapData from '@hooks/useBootstrapData';
 import { apiUser } from '@utils/api';
 
@@ -31,7 +33,7 @@ const AppRoutes = () => (
         />
       }
     />
-    <Route path="/user_mgt" element={<UserMgt plugin="competence" />} />
+    <Route path="/user_mgt" element={<CompetenceUserMgt />} />
     <Route path="/dashboard" element={<CompetenceDashboard />} />
     <Route path="/student_mgt" element={<CompetenceStudentMgt />} />
     <Route path="/pdf_conf" element={<CompetencePdfConf />} />

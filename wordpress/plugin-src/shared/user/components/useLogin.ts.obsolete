@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useUser } from './UserContext';
 import { apiUser, authHeaders } from './http';
 
-export type LangCode = 'en' | 'fr' | 'de' | 'br';
+export type LangCode = 'en' | 'fr' | 'de' | 'bz';
 export type BootstrapOpts = { force?: boolean };
 export type BootstrapFn = (token: string, opts?: BootstrapOpts) => Promise<void> | void;
 
