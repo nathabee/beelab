@@ -53,6 +53,7 @@ urlpatterns = [
     path("api/user/", include("UserCore.urls")),      # hello, auth, me
     path("api/pomolobee/", include("PomoloBeeCore.urls")),   #   app’s endpoints
     path("api/competence/", include("CompetenceCore.urls")),   #   app’s endpoints
+    path("api/beefont/", include("BeeFontCore.urls")),
 ]
 
 # this is off in docker

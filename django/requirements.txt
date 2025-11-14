@@ -1,4 +1,4 @@
-# Django backend 
+# Django backend
 Django
 djangorestframework
 djangorestframework-simplejwt
@@ -6,9 +6,13 @@ drf-spectacular
 gunicorn
 asgiref
 psycopg2-binary
-pillow
-numpy
+django-cors-headers
+sqlparse
 requests
 certifi
-sqlparse
-django-cors-headers
+
+# Image / font pipeline
+fonttools
+Pillow~=10.4
+fonttools~=4.55
+opencv-contrib-python-headless==4.10.0.84

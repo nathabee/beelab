@@ -1,0 +1,6 @@
+{
+  "paper": { "width_mm": 210, "height_mm": 297 },
+  "grid":  { "rows": 8, "cols": 10, "margin_mm": 15, "gap_mm": 5 },
+  "order_file": "order/order_DE_8x10.json",
+  "mapping_file": "mapping/mapping_DE.json"
+}

@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'UserCore.apps.UserCoreConfig',
     'PomoloBeeCore.apps.PomoloBeeCoreConfig',  # main app  
     'CompetenceCore.apps.CompetenceCoreConfig',  # main app  
+    "BeeFontCore.apps.BeeFontCoreConfig",
     'corsheaders',   
 ]
  
@@ -87,6 +88,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Use AutoSchema to genera
     "DEFAULT_PERMISSION_CLASSES": (
+        #"rest_framework.permissions.AllowAny",  # eng stellen, wenn nötig
         "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_THROTTLE_CLASSES": [
@@ -101,17 +103,19 @@ REST_FRAMEWORK = {
     },
 }
 
-
-MIDDLEWARE = [ 
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware', 
+MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",   # muss VOR CommonMiddleware
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+
+ 
 
 ROOT_URLCONF = 'config.urls'
 
@@ -197,9 +201,16 @@ DEFAULT_USER_PASSWORD = os.getenv('DEFAULT_USER_PASSWORD', 'DjangoPwd')
 
 #MEDIA_URL = "/media/"
 #MEDIA_ROOT = "/app/media" 
-BYPASS_MEDIA=0
+
+BYPASS_MEDIA = os.getenv('BYPASS_MEDIA', '0') == '1'
+
 MEDIA_URL = os.getenv('MEDIA_URL', '/media/')  # Load from .env
-MEDIA_ROOT = os.getenv('MEDIA_ROOT', BASE_DIR / 'media')  # Default to 'media/' in development
+#MEDIA_ROOT = os.getenv('MEDIA_ROOT', BASE_DIR / 'media')  # Default to 'media/' in development
+MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', str(BASE_DIR / 'media')))
+
+# If you want a subfolder for BeeFont, keep it a Path as well
+BEEFONT_MEDIA_ROOT = Path(os.getenv("BEEFONT_MEDIA_ROOT", str(MEDIA_ROOT / "beefont")))
+BEEFONT_BASE_URL   = os.getenv("BEEFONT_BASE_URL", "/api/beefont")
 
 # In production, Django does NOT serve media files
 #if not BYPASS_MEDIA:
@@ -247,7 +258,7 @@ LOGGING = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "BeeLab API",
-    "DESCRIPTION": "Django backend for PomoloBee and Competence.",
+    "DESCRIPTION": "BeeFontCore / Competence / PomoloBee APIs",
     "VERSION": "0.1.0",
     "SERVERS": [{"url": "http://localhost:9001"}],
     "COMPONENT_SPLIT_REQUEST": True,
@@ -282,3 +293,5 @@ SIMPLE_JWT = {
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY, #env("JWT_SECRET"),
 }
+
+

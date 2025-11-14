@@ -19,6 +19,19 @@ RUN set -eux; \
       build-essential libpq-dev ca-certificates curl; \
     rm -rf /var/lib/apt/lists/*
 
+# BeeFont system deps (headless)
+# BeeFont system deps
+RUN set -eux; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      fontforge \
+      potrace \
+      imagemagick \
+    ; \
+    rm -rf /var/lib/apt/lists/*
+
+
+    
 COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
