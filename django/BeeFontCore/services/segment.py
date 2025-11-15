@@ -26,6 +26,46 @@ def _glyph_order_for_template(tpl: dict) -> list[str]:
     order_path = _TEMPLATE_DIR / order_rel
     return json.loads(order_path.read_text(encoding="utf-8"))
 
+def _remove_small_components(mask01: np.ndarray, min_area: int, dbg_dir: Path | None = None) -> np.ndarray:
+    """
+    Remove tiny connected components (noise) from a 0/1 mask.
+    min_area is in pixels (component area threshold).
+    """
+    if mask01.dtype != np.uint8:
+        mask_u8 = (mask01 > 0).astype(np.uint8)
+    else:
+        mask_u8 = (mask01 > 0).astype(np.uint8)
+
+    H, W = mask_u8.shape[:2]
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mask_u8, connectivity=8)
+
+    # labels: 0 = background, 1..num_labels-1 = components
+    cleaned = np.zeros_like(mask_u8, dtype=np.uint8)
+    removed = 0
+    kept = 0
+
+    for label in range(1, num_labels):
+        area = stats[label, cv2.CC_STAT_AREA]
+        if area >= min_area:
+            cleaned[labels == label] = 1
+            kept += 1
+        else:
+            removed += 1
+
+    if dbg_dir is not None:
+        (dbg_dir / "_debug_cc_cleaning.txt").write_text(
+            f"H={H} W={W}\n"
+            f"num_labels={num_labels}\n"
+            f"min_area={min_area}\n"
+            f"kept_components={kept}\n"
+            f"removed_components={removed}\n",
+            encoding="utf-8"
+        )
+        cv2.imwrite(str(dbg_dir / "_debug_binarize_mask01_before_cc.png"), mask01 * 255)
+        cv2.imwrite(str(dbg_dir / "_debug_binarize_mask01_after_cc.png"), cleaned * 255)
+
+    return cleaned
+
 
 def _find_fiducials_from_mask(mask01: np.ndarray, dbg_dir: Path | None = None):
     """
@@ -264,13 +304,29 @@ def _binarize(img: np.ndarray, dbg_dir: Path | None = None) -> np.ndarray:
         cv2.imwrite(str(dbg_dir / "_debug_binarize_thr_open.png"), thr_open)
         cv2.imwrite(str(dbg_dir / "_debug_binarize_thr_close.png"), thr_close)
 
-    # final mask: 1=ink, 0=bg
+    # final mask candidate: 1=ink, 0=bg
     mask01 = (thr_close > 0).astype(np.uint8)
+
+    H, W = mask01.shape[:2]
+    # remove tiny blobs (isolated pixels / dust) BEFORE any shrinking
+    # tune this if it eats strokes; upper-capped so we don't nuke real writing
+    min_area_cc = max(8, int(0.000001 * (H * W)))
+    min_area_cc = min(min_area_cc, 200)
+
+    mask01_clean = _remove_small_components(mask01, min_area_cc, dbg_dir=dbg_dir)
 
     if dbg_dir is not None:
         cv2.imwrite(str(dbg_dir / "_debug_binarize_mask01.png"), mask01 * 255)
+        cv2.imwrite(str(dbg_dir / "_debug_binarize_mask01_clean.png"), mask01_clean * 255)
+        (dbg_dir / "_debug_binarize_meta.txt").write_text(
+            f"H={H} W={W}\n"
+            f"ink_ratio_final={(mask01_clean > 0).mean():.4f}\n"
+            f"min_area_cc={min_area_cc}\n",
+            encoding="utf-8"
+        )
 
-    return mask01
+    return mask01_clean
+
 
 
 # --- add this helper (new) ---
@@ -390,6 +446,7 @@ def segment_sheet(job):
     out_dir.mkdir(parents=True, exist_ok=True)
     dbg_dir = media_root / "beefont" / "debug" / job.sid
     dbg_dir.mkdir(parents=True, exist_ok=True) 
+    debug_lines: list[str] = []
 
     # load original
     file_bytes = np.fromfile(str(upload_path), dtype=np.uint8)
@@ -397,12 +454,21 @@ def segment_sheet(job):
     if img is None:
         raise RuntimeError(f"Could not read upload: {upload_path}")
 
+    H0, W0 = img.shape[:2]
+    debug_lines.append(f"upload_path={upload_path}")
+    debug_lines.append(f"orig_img_shape={H0}x{W0}")
+    debug_lines.append(f"job.template_name={job.template_name!r}")
+
+
     # template + order
     tpl = _load_template(job.template_name)
     order = _glyph_order_for_template(tpl)
 
     # target raster
     Wt, Ht = template_raster_size(tpl, dpi=DPI_DEFAULT)
+    debug_lines.append(f"template_raster_size Wt={Wt} Ht={Ht}")
+    debug_lines.append(f"order_len={len(order)}")
+
 
     # 1) global mask BEFORE any warp (this is what we trust for fiducials)
     full_mask_raw = _binarize(img, dbg_dir=dbg_dir)
@@ -440,6 +506,9 @@ def segment_sheet(job):
             mask_warp = cv2.warpPerspective(mask_u8, M, (Wt, Ht))
             full_mask = (mask_warp > 0).astype(np.uint8)
 
+            debug_lines.append("warp_applied=1")
+            debug_lines.append(f"warp_det={np.linalg.det(M[:2, :2]):.6e}")
+
             cv2.imwrite(str(dbg_dir / "_debug_warp.png"), img)
             cv2.imwrite(str(dbg_dir / "_debug_mask.png"),
                         (full_mask * 255).astype(np.uint8))
@@ -456,6 +525,8 @@ def segment_sheet(job):
                     (full_mask * 255).astype(np.uint8))
         if dbg_fid is not None:
             cv2.imwrite(str(dbg_dir / "_debug_fiducials_REJECTED.png"), dbg_fid)
+ 
+        debug_lines.append("warp_applied=0 (no fid or quad rejected)")
 
     # 4) fiducial debug meta file
     if fid is not None and len(fid) == 4:
@@ -493,6 +564,7 @@ Wt={Wt} Ht={Ht}
 
     # refresh size after possible warp
     H, W = img.shape[:2]
+    debug_lines.append(f"post_warp_img_shape={H}x{W}")
 
     saved = 0
     tokens_iter = iter(order)
@@ -527,6 +599,8 @@ Wt={Wt} Ht={Ht}
         rows, cols = int(tpl["grid"]["rows"]), int(tpl["grid"]["cols"])
         cells = _grid_cells(H, W, rows, cols)
         n = min(len(cells), len(order))
+        debug_lines.append(f"grid_rows={rows} grid_cols={cols}")
+        debug_lines.append(f"grid_cells_count={len(cells)}")
 
         for i in range(n):
             token = order[i]
@@ -556,5 +630,17 @@ Wt={Wt} Ht={Ht}
 
     if saved == 0:
         Image.new("L", (1024, 1024), 255).save(out_dir / "space.png")
+
+   
+    debug_lines.append(f"glyphs_saved={saved}")
+
+    try:
+        (dbg_dir / "_debug_sizes_segments.txt").write_text(
+            "\n".join(debug_lines),
+            encoding="utf-8"
+        )
+    except Exception:
+        # don't blow the job because of debug write
+        pass
 
     return str(out_dir)

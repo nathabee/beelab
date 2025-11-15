@@ -147,7 +147,7 @@ def template_image(request, name: str):
     order = json.loads(order_fp.read_text(encoding="utf-8")) if order_fp.exists() else []
 
     if mode == "prefill":
-        im = template_utils.render_template_png(tpl, order, prefill=True,  show_indices=True)
+        im = template_utils.render_template_png(tpl, order, prefill=True,  show_indices=False)
     elif mode == "blankpure":
         im = template_utils.render_template_png(tpl, [],    prefill=False, show_indices=False)
     else:  # "blank"
