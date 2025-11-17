@@ -42,8 +42,10 @@ COPY . .
 # dev image: NO test deps here
 FROM base AS dev
 EXPOSE 8000
-ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8000 --workers=2 --reload"
+ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8000 --workers=2  --timeout 300 --reload"
 CMD ["gunicorn","config.wsgi:application"]
+ 
+
 
 # ---------- test ----------
 # test image: includes pytest stack

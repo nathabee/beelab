@@ -7,10 +7,10 @@ import json
 from pathlib import Path
 from django.conf import settings
 import zipfile
-import shutil
+import shutil  
+import subprocess
 
-
-
+# Base directory for templates / mappings
 _TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
 
 
@@ -103,18 +103,151 @@ def _png_to_svg(png: Path, svg: Path, timeout: float = 5.0) -> None:
         if not svg.is_file():
             raise RuntimeError(f"potrace did not produce SVG: {svg}")
 
- 
+def _parse_codepoint(v) -> int | None:
+    """
+    Try to parse various codepoint formats:
 
-def _load_template(name: str | None) -> dict:
-    p = _TEMPLATE_DIR / f"{name}.json" if name else _TEMPLATE_DIR / "A4_10x10.json"
-    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+      - integer: 65
+      - numeric string: "65", "0x41"
+      - bare hex string: "0041"
+      - single character: "A", "ä"
+    """
+    # already an int
+    if isinstance(v, int):
+        return v
+
+    if isinstance(v, str):
+        s = v.strip()
+
+        # 1) try numeric with base prefix ( "65", "0x41", "0o101" )
+        try:
+            return int(s, 0)
+        except ValueError:
+            pass
+
+        # 2) bare hex like "0041"
+        if all(ch in "0123456789abcdefABCDEF" for ch in s) and 1 <= len(s) <= 6:
+            try:
+                return int(s, 16)
+            except ValueError:
+                pass
+
+        # 3) single character like "A" or "ä"
+        if len(s) == 1:
+            return ord(s)
+
+    return None
 
 
-def _load_mapping(template_name: str | None) -> tuple[dict, Path]:
-    tpl = _load_template(template_name)
-    mapping_rel = tpl.get("mapping_file", "mapping/mapping.json")
-    mapping_path = _TEMPLATE_DIR / mapping_rel
-    mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
+def _normalize_mapping(mapping_raw: dict) -> dict[str, int]:
+    """
+    Normalize mapping values to plain integer codepoints.
+
+    Supports:
+      - "A": 65
+      - "A": "65" or "0x41"
+      - "A": {"unicode": "0041"}
+      - "A": {"char": "A", "unicode": "0041"}
+      - "A": {"codepoint": 65}, {"cp": "0x41"}, {"u": "A"}, etc.
+    """
+    mapping: dict[str, int] = {}
+
+    for token, val in mapping_raw.items():
+        cp: int | None = None
+
+        if isinstance(val, (int, str)):
+            cp = _parse_codepoint(val)
+        elif isinstance(val, dict):
+            # first try explicit numeric/hex fields (including your "unicode")
+            for key in ("codepoint", "cp", "unicode", "u"):
+                if key in val:
+                    cp = _parse_codepoint(val[key])
+                    if cp is not None:
+                        break
+            # if still nothing, fall back to "char"
+            if cp is None and "char" in val:
+                cp = _parse_codepoint(val["char"])
+
+        if cp is None:
+            # could log here if you want to debug
+            continue
+
+        mapping[token] = cp
+
+    return mapping
+
+def _mapping_path_for_language(language: str | None) -> Path:
+    """
+    Determine mapping file from job.language:
+
+    - Try:     mapping/mapping_<LANG>.json  (LANG uppercased)
+    - Fallback: mapping/mapping.json
+    """
+    lang_raw = language or ""
+    lang = lang_raw.strip().upper()
+
+    base = _TEMPLATE_DIR / "mapping"
+
+    # 1) language-specific mapping, e.g. mapping/mapping_DE.json
+    p_lang = None
+    if lang:
+        p_lang = base / f"mapping_{lang}.json"
+        if p_lang.exists():
+            return p_lang
+
+    # 2) fallback mapping/mapping.json
+    p_default = base / "mapping.json"
+    if p_default.exists():
+        return p_default
+
+    # 3) nothing found → hard error
+    raise RuntimeError(
+        f"No mapping file found for language={language!r}: "
+        f"tried {p_lang if p_lang is not None else '(none)'} and {p_default}"
+    )
+
+
+
+def _load_mapping_for_job(job) -> tuple[dict, Path]:
+    """
+    Load the mapping (token -> codepoint) for this job, based purely on job.language,
+    normalize values to plain integer codepoints, and filter to the
+    characters actually requested in job.characters (if provided).
+    """
+    # 1) decide mapping file from language, e.g. mapping/mapping_DE.json
+    mapping_path = _mapping_path_for_language(getattr(job, "language", None))
+
+    # 2) load and normalize
+    mapping_raw = json.loads(mapping_path.read_text(encoding="utf-8"))
+    mapping = _normalize_mapping(mapping_raw) 
+
+    # sanity check after normalization
+    if not mapping:
+        raise RuntimeError(
+            f"Normalized mapping from {mapping_path} is empty "
+            f"(raw entries: {len(mapping_raw)})"
+        )
+
+    # optional debug while you’re still testing
+    # print("DEBUG build_font: raw entries:", len(mapping_raw), "normalized:", len(mapping))
+
+    # 3) optional filtering by job.characters (string of actual Unicode chars)
+    chars = getattr(job, "characters", "") or ""
+    if chars:
+        filtered: dict[str, int] = {}
+        for token, cp in mapping.items():
+            ch = chr(cp)
+            if ch in chars:
+                filtered[token] = cp
+        mapping = filtered
+
+        # sanity check after filter
+        if not mapping:
+            raise RuntimeError(
+                f"Mapping from {mapping_path} became empty after "
+                f"applying job.characters={chars!r}"
+            )
+
     return mapping, mapping_path
 
 
@@ -126,8 +259,6 @@ def _write_fontforge_script(script_path: Path, svg_dir: Path, out_ttf: Path, fam
     - sets widths
     - generates TTF
     """
-    # Build a plain dict mapping token -> codepoint; we only use those that have an SVG
-    # The Python inside FontForge will re-check existence.
     script = f'''\
 import fontforge, os, sys
 
@@ -152,7 +283,6 @@ for token, cp in mapping.items():
     if not p:
         continue
     g = font.createChar(cp)
-    # NOTE: SVG -> vector outlines
     g.importOutlines(p)
     g.removeOverlap()
     g.simplify()
@@ -185,45 +315,60 @@ print("OK glyphs:", count)
     script_path.write_text(script, encoding="utf-8")
 
 
-def build_bundle(job, seg_dir: str):
+def build_bundle(job, segdir: Path):
     """
-    seg_dir: django/media/beefont/segments/<sid>
-    Produces:
-      /media/beefont/builds/<family>.ttf
-      /media/beefont/builds/<sid>_bundle.zip
+    V2: build font bundle from canonical glyph PNGs for this job.
+
+    Expected layout:
+
+      MEDIA_ROOT/
+        beefont/
+          segments/
+            <sid>/
+              A.png
+              B.png
+              adieresis.png
+              exclam.png
+              ...
+
+    `segdir` is MEDIA_ROOT/beefont/segments/<sid>, passed in from views.build_ttf.
     """
     media_root = Path(settings.MEDIA_ROOT)
-    seg_dir = Path(seg_dir)
+    seg_dir = Path(segdir)
+
+    if not seg_dir.is_dir():
+        raise RuntimeError(f"Canonical glyph directory not found for job {job.sid}: {seg_dir}")
 
     builds_root = media_root / "beefont" / "builds"
     builds_root.mkdir(parents=True, exist_ok=True)
 
-    family_slim = "".join(c for c in job.family if c.isalnum()) or "BeeHand"
+    family_slim = "".join(c for c in (job.family or "") if c.isalnum()) or "BeeHand"
     out_ttf = builds_root / f"{family_slim}.ttf"
     out_zip = builds_root / f"{job.sid}_bundle.zip"
 
-    mapping, mapping_path = _load_mapping(job.template_name)
-
-    # 1) convert all PNGs we actually have to SVGs in a temp dir
+    # Load and normalize mapping (token -> int codepoint)
+    mapping, mapping_path = _load_mapping_for_job(job)
+ 
+    # 1) Convert all available canonical PNGs to SVG (independent of mapping)
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
         svg_dir = td / "svg"
         svg_dir.mkdir(parents=True, exist_ok=True)
 
-        # Only convert tokens from mapping that have a PNG in seg_dir
         converted = 0
-        for token, cp in mapping.items():
-            png_path = seg_dir / f"{token}.png"
-            if not png_path.is_file():
-                continue
+
+        # iterate over actual PNGs present in seg_dir
+        for png_path in sorted(seg_dir.glob("*.png")):
+            token = png_path.stem  # e.g. "A", "adieresis", "exclam"
             svg_path = svg_dir / f"{token}.svg"
             _png_to_svg(png_path, svg_path)
             converted += 1
 
         if converted == 0:
-            raise RuntimeError("No glyph PNGs found to convert → nothing to build.")
+            raise RuntimeError(f"No glyph PNGs found in {seg_dir} → nothing to build.")
 
-        # 2) write fontforge script into the same temp dir
+
+        # 2) write fontforge script
         script_path = td / "build_font.py"
         _write_fontforge_script(script_path, svg_dir, out_ttf, job.family, mapping)
 
@@ -243,12 +388,15 @@ def build_bundle(job, seg_dir: str):
                 f"stderr:\n{proc.stderr}"
             )
 
-    # 4) Build the zip bundle (TTF + mapping + a sample of segments)
+    # 4) Build the zip bundle (TTF + mapping + canonical PNGs)
     with zipfile.ZipFile(out_zip, "w", zipfile.ZIP_DEFLATED) as z:
         z.write(out_ttf, arcname=out_ttf.name)
         z.write(mapping_path, arcname="mapping.json")
-        # include up to 80 segment PNGs for debugging / preview
-        for p in sorted(seg_dir.glob("*.png"))[:80]:
-            z.write(p, arcname=f"segments/{p.name}")
+        used_tokens = set(mapping.keys())
+        for token in sorted(used_tokens):
+            p = seg_dir / f"{token}.png"
+            if p.is_file():
+                z.write(p, arcname=f"canonical/{p.name}")
+
 
     return str(out_ttf), str(out_zip)

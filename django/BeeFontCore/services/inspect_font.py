@@ -3,8 +3,8 @@ import sys
 from pathlib import Path
 from fontTools.ttLib import TTFont
 
-
-NAMES_TO_CHECK = ["A", "a", "zero", "comma", "adieresis", "germandbls"]
+# Default probe set – fine for DE:
+DEFAULT_NAMES_TO_CHECK = ["A", "a", "zero", "comma", "adieresis", "germandbls"]
 
 
 def inspect_glyph(font: TTFont, name: str):
@@ -26,14 +26,19 @@ def inspect_glyph(font: TTFont, name: str):
     width, lsb = hmtx_table.metrics.get(name, (None, None))
 
     print(f"{name}: contours={n_contours}, bounds={bounds}, width={width}, lsb={lsb}")
- 
 
 
 def main():
+    # argv:
+    #   1: path to TTF (optional)
+    #   2+: glyph names to inspect (optional)
     if len(sys.argv) > 1:
         ttf_path = Path(sys.argv[1])
+        names = sys.argv[2:] or DEFAULT_NAMES_TO_CHECK
     else:
-        ttf_path = Path("/app/media/beefont/builds/BeeHand3.ttf")
+        # Adjust this to your V2 default output name if you like
+        ttf_path = Path("/app/media/beefont/builds/BeeHand_DE_.ttf")
+        names = DEFAULT_NAMES_TO_CHECK
 
     if not ttf_path.exists():
         print(f"TTF not found: {ttf_path}")
@@ -47,7 +52,7 @@ def main():
     print("Num glyphs:", font["maxp"].numGlyphs)
     print()
 
-    for name in NAMES_TO_CHECK:
+    for name in names:
         inspect_glyph(font, name)
 
 

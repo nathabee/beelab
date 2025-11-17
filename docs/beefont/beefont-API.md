@@ -1,316 +1,595 @@
-# BeeFont API (WP ↔ Django)
+# BeeFont V2 API Specification
 
-## Overview
+Base path (suggested):
+`/api/beefont/…`
 
-The **BeeFontCore** service exposes REST endpoints that allow a WordPress plugin (or any client) to:
-
-1. Discover available handwriting templates by language
-2. Retrieve **blank** or **prefilled** template grids (PNG images)
-3. Upload a scanned sheet or photo to generate a TTF font
-4. Poll and download the generated font artifacts
-5. Optionally manage (list / delete) previous jobs
-
-The workflow for the WP plugin is:
-
-> Discover templates → Render blank/prefill → Upload scan → Poll → Preview → Download font → Clean up
+Authentication:
+Standard DRF auth (e.g. Bearer token). All endpoints assume an authenticated user unless explicitly noted.
 
 ---
 
-## Templates API
+## 1. Templates
 
-### 1. List templates by language
+### 1.1 List templates
 
-```
-GET /api/beefont/templates?lang=DE
-```
+**GET** `/api/beefont/templates`
 
-**Purpose:**
-Return all templates for a given language (DE, EN, FR, etc.).
-Each template defines a paper size, grid, and file references for its glyph order and mapping.
+Return the available template definitions (e.g. `A4_DE_6x5`).
 
-**Response Example:**
+**Response 200**
 
 ```json
-{
-  "lang": "DE",
-  "templates": [
-    {
-      "name": "A4_DE_8x10",
-      "paper": {"width_mm":210, "height_mm":297},
-      "grid": {"rows":8, "cols":10, "margin_mm":15, "gap_mm":5},
-      "order_len": 80,
-      "order_file": "order/order_DE_8x10.json",
-      "mapping_file": "mapping/mapping_DE.json"
+[
+  {
+    "name": "A4_DE_6x5",
+    "language": "DE",
+    "page_format": "A4",
+    "pages": [
+      "A4_DE_6x5_1",
+      "A4_DE_6x5_2",
+      "A4_DE_6x5_3"
+    ],
+    "mapping_file": "mapping/mapping_DE.json",
+    "paper": {
+      "width_mm": 210,
+      "height_mm": 297,
+      "dpi": 300
     }
-  ]
-}
+  }
+]
 ```
+
+Implementation detail: this is basically exposing the JSON documents under `BeeFontCore/services/templates/*.json` in a compact form.
 
 ---
 
-### 2. Get a template image (blank or prefilled)
+### 1.2 Get printable template image
 
-```
-GET /api/beefont/templates/{name}/image?mode=blank|prefill
-```
+**GET** `/api/beefont/templates/{name}/image`
 
-**Parameters**
+Return a **PNG** (or PDF) for printing a specific template page.
 
-* `mode=blank` → grid only, with faint cell indices and four fiducial markers (used for alignment)
-* `mode=prefill` → grid with light-gray example glyphs, same markers included
+* `name` examples: `A4_DE_6x5_1`, `A4_DE_6x5_2` …
 
-**Response**
+**Query parameters (optional)**
 
-* Content-Type: `image/png`
-* Direct PNG binary (no JSON wrapper)
+* `format` = `png` (default) | `pdf`
 
-**Example:**
+**Response 200**
 
-```
-GET /api/beefont/templates/A4_DE_8x10/image?mode=prefill
-```
+* Content-Type: `image/png` or `application/pdf`
+* Body: binary image of the template page with grid + fiducials.
 
-Produces a printable handwriting sheet.
+**Errors**
+
+* `404` if template page not found.
 
 ---
 
-## Jobs API
+## 2. Jobs
 
-### 3. Create a font generation job
+A **Job** represents one font project.
 
+### 2.1 Job list / create
+
+**GET** `/api/beefont/jobs`
+
+Lists jobs of the current user.
+
+**Query parameters (optional)**
+
+* `status` – filter by job status (e.g. `in_progress`, `font_generated`)
+* `language` – e.g. `DE`
+* `page_format` – e.g. `A4`
+
+**Response 200**
+
+```json
+[
+  {
+    "sid": "c6fc5cc62cecfdb0",
+    "family": "BeeHand_DE",
+    "language": "DE",
+    "page_format": "A4",
+    "characters": "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß",
+    "status": "font_generated",
+    "ttf_url": "/media/beefont/builds/BeeHandDE.ttf",
+    "zip_url": "/media/beefont/builds/c6fc5cc62cecfdb0_bundle.zip",
+    "created_at": "2025-11-16T11:23:06.997791Z",
+    "updated_at": "2025-11-16T11:23:06.997802Z"
+  }
+]
 ```
-POST /api/beefont/jobs
-  -F image=@scan.png|jpg
-  -F family=BeeHand_DE
-  -F template_name=A4_DE_8x10
-```
 
-**Purpose:**
-Upload a scanned sheet or phone photo; the server segments glyphs, builds a font, and packages the results.
+Note: `ttf_url` / `zip_url` are derived from `ttf_path` / `zip_path`.
 
-**Auth:**
-Requires Bearer token (JWT demo token or user token).
+---
 
-**Response Example:**
+**POST** `/api/beefont/jobs`
+
+Create a new font job based on a language, paper format, and character set.
+
+**Request body**
 
 ```json
 {
-  "sid": "f5d8d75cf3ee",
-  "status": "done",
   "family": "BeeHand_DE",
-  "ttf_path": "/media/beefont/builds/BeeHand_DE.ttf",
-  "zip_path": "/media/beefont/builds/f5d8d75cf3ee_bundle.zip",
-  "log": ""
+  "language": "DE",
+  "page_format": "A4",
+  "characters": "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß"
 }
 ```
 
-**Status values:**
+Rules:
 
-* `queued` – waiting to process
-* `processing` – segmenting / building font
-* `done` – completed successfully
-* `failed` – error during processing (check `log`)
+* `language` drives which template + mapping file is used.
+* `characters` defines which codepoints are required to be present in canonical glyphs before building the font.
 
----
-
-### 4. Poll a job status
-
-```
-GET /api/beefont/jobs/{sid}
-```
-
-**Purpose:**
-Check if a previously submitted job is finished and retrieve output paths.
-
-**Response Example:**
+**Response 201**
 
 ```json
 {
-  "sid": "f5d8d75cf3ee",
-  "status": "done",
+  "sid": "c6fc5cc62cecfdb0",
   "family": "BeeHand_DE",
-  "ttf_path": "/media/beefont/builds/BeeHand_DE.ttf",
-  "zip_path": "/media/beefont/builds/f5d8d75cf3ee_bundle.zip",
-  "log": ""
+  "language": "DE",
+  "page_format": "A4",
+  "characters": "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß",
+  "status": "in_progress",
+  "ttf_url": null,
+  "zip_url": null,
+  "segments_dir": "beefont/segments/c6fc5cc62cecfdb0",
+  "created_at": "2025-11-16T11:23:06.997791Z",
+  "updated_at": "2025-11-16T11:23:06.997802Z"
 }
 ```
 
+Side-effect: backend creates the initial `TemplateSlot` entries for this job according to the chosen template (e.g. 3 slots for `A4_DE_6x5_1/2/3` with `page_index=0` and `status=no_scan`).
+
 ---
 
-### 5. List jobs (for current user)
+### 2.2 Job detail / delete
 
-```
-GET /api/beefont/jobs
-```
+**GET** `/api/beefont/jobs/{sid}`
 
-**Purpose:**
-Return recent jobs (default: last 50).
-Useful for WP dashboard view.
-
-**Response Example:**
+**Response 200**
 
 ```json
 {
-  "results": [
-    {
-      "sid": "f5d8d75cf3ee",
-      "created_at": "2025-11-12T12:48:10Z",
-      "status": "done",
-      "family": "BeeHand_DE",
-      "ttf_path": "/media/beefont/builds/BeeHand_DE.ttf",
-      "zip_path": "/media/beefont/builds/f5d8d75cf3ee_bundle.zip"
-    }
-  ]
+  "sid": "c6fc5cc62cecfdb0",
+  "family": "BeeHand_DE",
+  "language": "DE",
+  "page_format": "A4",
+  "characters": "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß",
+  "status": "ready_for_font",
+  "ttf_url": null,
+  "zip_url": null,
+  "segments_dir": "beefont/segments/c6fc5cc62cecfdb0",
+  "log": "",
+  "created_at": "2025-11-16T11:23:06.997791Z",
+  "updated_at": "2025-11-16T11:25:10.002345Z"
 }
 ```
 
----
-
-### 6. Download generated files
-
-#### a) TTF font
-
-```
-GET /api/beefont/jobs/{sid}/download/ttf
-```
-
-Response headers:
-
-```
-Content-Type: font/ttf
-Content-Disposition: attachment; filename="BeeHand_DE.ttf"
-```
-
-#### b) ZIP bundle
-
-```
-GET /api/beefont/jobs/{sid}/download/zip
-```
-
-Contains:
-
-* `.ttf` font
-* mapping.json
-* sample PNG segments
-
-Response headers:
-
-```
-Content-Type: application/zip
-Content-Disposition: attachment; filename="BeeHand_DE_bundle.zip"
-```
+Optionally you can embed `slots` here, but the core spec keeps them separate.
 
 ---
 
-### 7. List segmented glyph images
+**DELETE** `/api/beefont/jobs/{sid}`
 
+Delete or cancel a job.
+
+Recommended semantics:
+
+* If `status` is not `font_generated`, hard-delete job + slots + files.
+* If `status == font_generated`, either:
+
+  * soft-delete / mark `status=cancelled`, *or*
+  * allow full deletion if you don’t need retention.
+
+**Response 204** – job deleted.
+
+---
+
+### 2.3 Build TTF
+
+**POST** `/api/beefont/jobs/{sid}/build-ttf`
+
+Trigger font building. Requires:
+
+* job status `ready_for_font`
+* canonical PNGs for all required characters present (`segments/<sid>/<TOKEN>.png`)
+
+**Request body**
+
+Empty or:
+
+```json
+{}
 ```
-GET /api/beefont/jobs/{sid}/segments
-```
 
-Returns a JSON list of glyph image filenames.
-
-Example:
+**Successful Response 200**
 
 ```json
 {
-  "segments": ["A.png", "B.png", "C.png", "a.png", "b.png", "c.png", ...]
+  "sid": "c6fc5cc62cecfdb0",
+  "family": "BeeHand_DE",
+  "language": "DE",
+  "page_format": "A4",
+  "characters": "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß",
+  "status": "font_generated",
+  "ttf_url": "/media/beefont/builds/BeeHandDE.ttf",
+  "zip_url": "/media/beefont/builds/c6fc5cc62cecfdb0_bundle.zip",
+  "log": "OK glyphs: 30\n",
+  "created_at": "2025-11-16T11:23:06.997791Z",
+  "updated_at": "2025-11-16T11:26:12.112233Z"
 }
 ```
 
-Optionally, the parameter `?zip=1` could return a downloadable ZIP (planned).
+**Errors**
+
+* `400` if not all required glyphs are canonical.
+* `409` if job not in `ready_for_font`.
+* `500` if FontForge/conversion failed (details in `log`).
 
 ---
 
-### 8. Delete a job (optional cleanup)
+### 2.4 Download TTF
 
-```
-DELETE /api/beefont/jobs/{sid}
-```
+**GET** `/api/beefont/jobs/{sid}/download/ttf`
 
-Deletes the job and associated files (TTF, ZIP, segments).
+Returns the built TTF.
 
-Response:
-`204 No Content`
+* Requires `status == font_generated`.
+
+**Response 200**
+
+* Content-Type: `font/ttf` (or `application/octet-stream`)
+* Content-Disposition: `attachment; filename="BeeHand_DE.ttf"`
+
+**Errors**
+
+* `404` if TTF not found or job not in `font_generated`.
 
 ---
 
-## Example test commands
+### 2.5 Download ZIP bundle
+
+**GET** `/api/beefont/jobs/{sid}/download/zip`
+
+Returns the ZIP bundle (TTF + mapping + canonical PNGs).
+
+**Response 200**
+
+* Content-Type: `application/zip`
+* Content-Disposition: `attachment; filename="{sid}_bundle.zip"`
+
+**Errors**
+
+* `404` if bundle not found or job not in `font_generated`.
+
+---
+
+## 3. Template Slots (Per-Page Handling)
+
+### 3.1 List slots for a job
+
+**GET** `/api/beefont/jobs/{sid}/slots`
+
+Returns all `TemplateSlot` entries for a job.
+
+**Response 200**
+
+```json
+[
+  {
+    "id": 55,
+    "template_code": "A4_DE_6x5_1",
+    "page_index": 0,
+    "status": "analyzed",
+    "scan_original_url": "/media/beefont/pages/c6fc5cc62cecfdb0/A4_DE_6x5_1_0_raw.png",
+    "scan_processed_url": "/media/beefont/pages/c6fc5cc62cecfdb0/A4_DE_6x5_1_0_processed.png",
+    "last_error_message": "",
+    "created_at": "2025-11-16T12:15:03.739976Z",
+    "updated_at": "2025-11-16T12:15:03.739980Z"
+  },
+  {
+    "id": 56,
+    "template_code": "A4_DE_6x5_2",
+    "page_index": 0,
+    "status": "no_scan",
+    "scan_original_url": null,
+    "scan_processed_url": null,
+    "last_error_message": ""
+  }
+]
+```
+
+---
+
+### 3.2 Upload scan for slot
+
+**POST** `/api/beefont/slots/{slot_id}/upload-scan`
+
+Upload a scan image for a specific TemplateSlot.
+
+**Request**
+
+* Content-Type: `multipart/form-data`
+* Field: `file` – the uploaded image (PNG/JPEG)
+
+Example using `curl`:
 
 ```bash
-# 1. Get demo token
-TOKEN=$(curl -sS -X POST http://localhost:9001/api/user/auth/demo/start/ \
-  | python -c 'import sys,json;print(json.load(sys.stdin)["access"])')
+curl -X POST \
+  -H "Authorization: Bearer <TOKEN>" \
+  -F "file=@/path/scan_page1.png" \
+  http://localhost:9001/api/beefont/slots/55/upload-scan
+```
 
-# 2. List DE templates
-curl -sS -H "Authorization: Bearer $TOKEN" \
-  'http://localhost:9001/api/beefont/templates?lang=DE' | jq .
+**Response 200**
 
-# 3. Download blank grid
-curl -sS -o blank.png \
-  'http://localhost:9001/api/beefont/templates/A4_DE_8x10/image?mode=blank'
-
-# 4. Download prefilled grid
-curl -sS -o prefill.png \
-  'http://localhost:9001/api/beefont/templates/A4_DE_8x10/image?mode=prefill'
-
-# 5. Create a job
-curl -sS -H "Authorization: Bearer $TOKEN" \
-  -F image=@django/media/beefont/uploads/grid_de.png \
-  -F family="BeeHand_DE" \
-  -F template_name="A4_DE_8x10" \
-  http://localhost:9001/api/beefont/jobs | jq .
-
-# 6. List my jobs
-curl -sS -H "Authorization: Bearer $TOKEN" \
-  http://localhost:9001/api/beefont/jobs | jq .
-
-# 7. Poll job by ID
-curl -sS -H "Authorization: Bearer $TOKEN" \
-  http://localhost:9001/api/beefont/jobs/$SID | jq .
-
-# 8. Download font
-curl -L -o out.ttf \
-  http://localhost:9001/api/beefont/jobs/$SID/download/ttf
-
-# 9. List segments
-curl -sS -H "Authorization: Bearer $TOKEN" \
-  http://localhost:9001/api/beefont/jobs/$SID/segments | jq .
-
-# 10. Delete job
-curl -X DELETE -H "Authorization: Bearer $TOKEN" \
-  http://localhost:9001/api/beefont/jobs/$SID
+```json
+{
+  "id": 55,
+  "template_code": "A4_DE_6x5_1",
+  "page_index": 0,
+  "status": "uploaded",
+  "scan_original_url": "/media/beefont/pages/c6fc5cc62cecfdb0/A4_DE_6x5_1_0_raw.png",
+  "scan_processed_url": null,
+  "last_error_message": ""
+}
 ```
 
 ---
 
-## Summary
+### 3.3 Analyse slot
 
-| Category  | Endpoint                            | Method   | Description                                |                                 |
-| --------- | ----------------------------------- | -------- | ------------------------------------------ | ------------------------------- |
-| Templates | `/templates?lang=XX`                | GET      | List templates for a language              |                                 |
-| Templates | `/templates/{name}/image?mode=blank | prefill` | GET                                        | Get blank or prefilled grid PNG |
-| Jobs      | `/jobs`                             | POST     | Upload scan and create font generation job |                                 |
-| Jobs      | `/jobs/{sid}`                       | GET      | Poll job status                            |                                 |
-| Jobs      | `/jobs`                             | GET      | List recent jobs                           |                                 |
-| Jobs      | `/jobs/{sid}/download/ttf`          | GET      | Download font                              |                                 |
-| Jobs      | `/jobs/{sid}/download/zip`          | GET      | Download font + assets bundle              |                                 |
-| Jobs      | `/jobs/{sid}/segments`              | GET      | List segmented glyph images                |                                 |
-| Jobs      | `/jobs/{sid}`                       | DELETE   | Delete a job and files                     |                                 |
+**POST** `/api/beefont/slots/{slot_id}/analyse`
+
+Run the full pipeline: masking, fiducials, warp, grid segmentation, variant extraction.
+
+**Request body**
+
+```json
+{}
+```
+
+**Response 200 (success)**
+
+```json
+{
+  "id": 55,
+  "template_code": "A4_DE_6x5_1",
+  "page_index": 0,
+  "status": "analyzed",
+  "scan_original_url": "/media/beefont/pages/c6fc5cc62cecfdb0/A4_DE_6x5_1_0_raw.png",
+  "scan_processed_url": "/media/beefont/pages/c6fc5cc62cecfdb0/A4_DE_6x5_1_0_processed.png",
+  "last_error_message": ""
+}
+```
+
+Side-effect: variant PNGs are created in
+`media/beefont/segments/<sid>/<TOKEN>_<page_index>.png`
+for every filled cell.
+
+**Response 200 (failure)**
+
+```json
+{
+  "id": 55,
+  "template_code": "A4_DE_6x5_1",
+  "page_index": 0,
+  "status": "error",
+  "scan_original_url": "/media/beefont/pages/c6fc5cc62cecfdb0/A4_DE_6x5_1_0_raw.png",
+  "scan_processed_url": null,
+  "last_error_message": "FIDUCIALS_NOT_FOUND"
+}
+```
 
 ---
 
-**Typical flow:**
+### 3.4 Retry slot
 
-1. `GET /templates?lang=DE` → find `A4_DE_8x10`
-2. `GET /templates/A4_DE_8x10/image?mode=prefill` → print sheet
-3. User fills sheet by hand and scans/photo uploads
-4. `POST /jobs` → upload image
-5. `GET /jobs/{sid}` → poll until `status=done`
-6. `GET /jobs/{sid}/download/ttf` → retrieve font
-7. (Optional) `GET /jobs/{sid}/segments` → preview glyphs
-8. (Optional) `DELETE /jobs/{sid}` → cleanup
+**POST** `/api/beefont/slots/{slot_id}/retry`
+
+User wants to redo this template sheet.
+The system creates a new `TemplateSlot` with `page_index = old_index + 1`.
+
+**Request body**
+
+```json
+{}
+```
+
+**Response 201**
+
+```json
+{
+  "id": 57,
+  "template_code": "A4_DE_6x5_1",
+  "page_index": 1,
+  "status": "no_scan",
+  "scan_original_url": null,
+  "scan_processed_url": null,
+  "last_error_message": ""
+}
+```
+
+The old slot (page_index=0) remains for reference; new scans go to the new slot.
 
 ---
 
+## 4. Glyphs (Variants and Selection)
+
+This part is based on filesystem inspection of `segments/<sid>`.
+
+### 4.1 List glyphs for a job
+
+**GET** `/api/beefont/jobs/{sid}/glyphs`
+
+Return, for each logical token, canonical status and list of variants.
+
+* `token` matches mapping token (e.g. `A`, `B`, `adieresis`, `germandbls`).
+* `character` is the actual Unicode character (`"A"`, `"ä"`, `"ß"`), if available from mapping.
+
+**Response 200**
+
+```json
+{
+  "sid": "c6fc5cc62cecfdb0",
+  "family": "BeeHand_DE",
+  "characters": "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß",
+  "glyphs": [
+    {
+      "token": "A",
+      "character": "A",
+      "canonical": {
+        "exists": true,
+        "url": "/media/beefont/segments/c6fc5cc62cecfdb0/A.png"
+      },
+      "variants": [
+        {
+          "page_index": 0,
+          "filename": "A_0.png",
+          "url": "/media/beefont/segments/c6fc5cc62cecfdb0/A_0.png",
+          "slot_template_code": "A4_DE_6x5_1"
+        },
+        {
+          "page_index": 2,
+          "filename": "A_2.png",
+          "url": "/media/beefont/segments/c6fc5cc62cecfdb0/A_2.png",
+          "slot_template_code": "A4_DE_6x5_3"
+        }
+      ]
+    },
+    {
+      "token": "adieresis",
+      "character": "ä",
+      "canonical": {
+        "exists": false,
+        "url": null
+      },
+      "variants": [
+        {
+          "page_index": 1,
+          "filename": "adieresis_1.png",
+          "url": "/media/beefont/segments/c6fc5cc62cecfdb0/adieresis_1.png",
+          "slot_template_code": "A4_DE_6x5_2"
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+### 4.2 Glyph detail
+
+**GET** `/api/beefont/jobs/{sid}/glyphs/{token}`
+
+Return details for a single token (e.g. `A`, `adieresis`, `germandbls`).
+
+**Response 200**
+
+```json
+{
+  "sid": "c6fc5cc62cecfdb0",
+  "token": "adieresis",
+  "character": "ä",
+  "canonical": {
+    "exists": false,
+    "url": null
+  },
+  "variants": [
+    {
+      "page_index": 1,
+      "filename": "adieresis_1.png",
+      "url": "/media/beefont/segments/c6fc5cc62cecfdb0/adieresis_1.png",
+      "slot_template_code": "A4_DE_6x5_2"
+    }
+  ]
+}
+```
+
+**Errors**
+
+* `404` if job or token has no variants and no canonical glyph.
+
+---
+
+### 4.3 Select glyph variant (make canonical)
+
+**POST** `/api/beefont/jobs/{sid}/glyphs/{token}/select`
+
+Choose which variant becomes canonical.
+
+**Request body**
+
+```json
+{
+  "page_index": 2
+}
+```
+
+Semantics:
+
+* Backend checks file `segments/<sid>/<token>_<page_index>.png`.
+* If exists, copy/overwrite to `segments/<sid>/<token>.png`.
+* Optionally set job status to `ready_for_font` if all required tokens now have canonical glyphs.
+
+**Response 200**
+
+```json
+{
+  "sid": "c6fc5cc62cecfdb0",
+  "token": "A",
+  "character": "A",
+  "canonical": {
+    "exists": true,
+    "url": "/media/beefont/segments/c6fc5cc62cecfdb0/A.png",
+    "source_page_index": 2
+  },
+  "variants": [
+    {
+      "page_index": 0,
+      "filename": "A_0.png",
+      "url": "/media/beefont/segments/c6fc5cc62cecfdb0/A_0.png"
+    },
+    {
+      "page_index": 2,
+      "filename": "A_2.png",
+      "url": "/media/beefont/segments/c6fc5cc62cecfdb0/A_2.png"
+    }
+  ]
+}
+```
+
+**Errors**
+
+* `400` if `page_index` is missing or invalid.
+* `404` if the corresponding variant file does not exist.
+
+---
+
+## 5. Status Flow (Summary)
+
+* **Job**
+
+  * `draft` → job created, slots known, no scans.
+  * `in_progress` → at least one scan uploaded / analyzed.
+  * `ready_for_font` → all required tokens have canonical PNGs.
+  * `font_generated` → TTF / ZIP built successfully.
+  * `cancelled` → job explicitly cancelled/deleted.
+
+* **TemplateSlot**
+
+  * `no_scan` → created, waiting for scan.
+  * `uploaded` → scan uploaded.
+  * `analyzed` → grid segmentation + variants done.
+  * `error` → analysis failed; error stored in `last_error_message`.
+  * `approved` (optional) → if you later add a UI step to “approve page”.
+  * `uploaded` / `analyzed` / `error` repeated on new `page_index` via `/retry`.
+
+---
  
