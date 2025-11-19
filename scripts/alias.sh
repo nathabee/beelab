@@ -521,12 +521,27 @@ dcdjseed_competence() {
   dcdjango python manage.py create_groups_and_permissions
   dcdjango python manage.py populate_demo 
 }
-dcdjseed_all() { dcdjseed_pomolobee && dcdjseed_competence; }
+dcdjseed_beefont() { 
+  _beelab_ensure_django
+
+  # KEINE MigrationRecorder-Manipulation mehr
+  # KEIN makemigrations / migrate mehr hier
+
+  # ggf. eigene Seed-Command
+  dcdjango python manage.py seed_beefont --mode copy --clear || true
+
+  # Fixtures laden
+  dcdjango python manage.py loaddata BeeFontCore/fixtures/initial_beefont_languages.json
+  dcdjango python manage.py loaddata BeeFontCore/fixtures/initial_beefont_templates.json
+}
+ 
+dcdjseed_all() { dcdjseed_pomolobee && dcdjseed_competence && dcdjseed_beefont; }
 
 # DEV RESET / RESEED HELPERS
 dcdjmm() {
   echo "🛠 django makemigrations/migrate (env=$BEELAB_ENV)"
   if [[ "$BEELAB_ENV" == "dev" ]]; then
+  
     dcdjango python manage.py makemigrations --noinput || true
   else
     echo "ℹ️ skipping makemigrations (not dev)"
@@ -573,6 +588,7 @@ EOF
         competencecore|competence) cores+=("CompetenceCore");;
         pomolobeecore|pomolobee)   cores+=("PomoloBeeCore");;
         usercore|user)             cores+=("UserCore");;
+        beefontcore|beefont)             cores+=("BeeFontCore");;
         *) echo "⚠️ Unknown core: $c (skipping)";;
       esac
     done
@@ -599,6 +615,7 @@ EOF
     case "$c" in
       CompetenceCore) echo "🌱 Seeding CompetenceCore ..."; dcdjseed_competence ;;
       PomoloBeeCore)  echo "🌱 Seeding PomoloBeeCore ...";  dcdjseed_pomolobee ;;
+      BeeFontCore)  echo "🌱 Seeding BeeFontCore ...";  dcdjseed_beefont ;;
       UserCore)       echo "🌱 Seeding UserCore fixtures ..."; __beelab_loaddata_all_json_in_core "UserCore" ;;
     esac
   done
@@ -609,7 +626,7 @@ EOF
 }
 
 # -------------------------------------------------------------------
-# BeeFont V2 aliases (externalised)
+# BeeFont aliases (externalised)
 # -------------------------------------------------------------------
 if [[ -f "$_BEELAB_ROOT/scripts/alias_beefont.sh" ]]; then
   # shellcheck source=/dev/null
@@ -671,6 +688,8 @@ dcwebup / dcwebdown  # start/stop web only
 ###### SEED / RESET ###
 dcdjseed_pomolobee   # seed pomolobee core (media + fixtures)
 dcdjseed_competence  # seed competence core (media + commands)
+
+dcdjseed_beefont  # seed beefont core (media + fixtures)
 dcdjseed_all         # seed both cores
 dcdjmm               # makemigrations (dev) + migrate
 dcdjreseed [mode] [cores]

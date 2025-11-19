@@ -22,4 +22,16 @@ docker compose exec django python manage.py copy_data_init || true
 docker compose exec django python manage.py populate_data_init || true
 docker compose exec django python manage.py create_groups_and_permissions || true
 docker compose exec django python manage.py populate_demo || true
- 
+  
+
+# --- load BeeFont fixtures -----------------------------------------  
+
+docker compose exec django python manage.py loaddata BeeFontCore/fixtures/initial_beefont_languages.json \
+  || echo "⚠️ BeeFont languages fixture failed"
+
+docker compose exec django python manage.py loaddata BeeFontCore/fixtures/initial_beefont_templates.json \
+  || echo "⚠️ BeeFont templates fixture failed"
+
+# Medien für BeeFont (Template-Bilder etc.)
+docker compose exec django python manage.py seed_beefont --mode=copy \
+  || echo "⚠️ BeeFont media seeding failed"

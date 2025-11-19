@@ -1,39 +1,84 @@
 
-# Test the API via curl (JWT from Demo flow)
 
-1. Start a demo session and grab the JWT:
+# DJANGO TEST
 
-```bash
-TOKEN=$(curl -sS -X POST http://localhost:9001/api/user/auth/demo/start/ \
-  | python3 -c 'import sys, json; print(json.load(sys.stdin)["access"])')
 
-echo "$TOKEN" | cut -c1-20
-```
 
-2. Create a tiny PNG on disk (for a valid upload):
+## initialise alias
+(start . ./scripts/alias.sh dev)
+beelab-dev
 
-```bash
-# 1×1 transparent PNG (portable; no ImageMagick needed)
-python3 - <<'PY'
-from PIL import Image; Image.new("RGBA",(1,1),(0,0,0,0)).save("tiny.png")
-print("tiny.png created")
+## reset django database migration and fixture init
+### make migration and seed 
+dcdjmm
+dcdjseed_beefont
+
+### make migration and reseed all apps
+dcdjmm
+dcseed_all
+oder :
+dcdjreseed --hard user beefont pomolobee competence
+
+
+
+
+### to force 
+ dcdjango python manage.py shell << 'PY'
+from django.db.migrations.recorder import MigrationRecorder
+
+qs = MigrationRecorder.Migration.objects.filter(app='beefontcore')
+print("Existing BeeFontCore migrations in DB:", list(qs.values_list('name', flat=True)))
+qs.delete()
+print("Deleted BeeFontCore migration records.")
 PY
-```
 
-3. Call BeeFont **with** Authorization:
+dcdjango python manage.py migrate beefontcore 0001_initial --fake-initial
 
-```bash
-curl -sS -H "Authorization: Bearer $TOKEN" \
-  -F image=@tiny.png -F family=BeeHand \
-  http://localhost:9001/api/beefont/jobs | jq .
-```
 
-4. Poll job status (replace SID):
 
-```bash
-SID=xxxxxxxxxxxx
-curl -sS -H "Authorization: Bearer $TOKEN" \
-  http://localhost:9001/api/beefont/jobs/$SID | jq .
-```
+## list of all alias
+beefonthelp
 
-That should return `status: done` plus `ttf_path/zip_path`. If `/media/` is served in dev, the links will download.
+  beefont_templates
+  beefont_template_image CODE [mode] [outfile.png]
+  beefont_languages
+  beefont_language_alphabet CODE
+  beefont_jobs
+  beefont_job_create NAME [BASE_FAMILY]
+  beefont_job SID
+  beefont_job_delete SID
+  beefont_rmjobs     # delete all jobs for current user
+  beefont_job_pages SID
+  beefont_job_page_create SID TEMPLATE_CODE PAGE_INDEX "LETTERS"
+  beefont_page SID PAGE_ID
+  beefont_page_delete SID PAGE_ID
+  beefont_page_upload_scan SID PAGE_ID scan.png
+  beefont_page_analyse SID PAGE_ID
+  beefont_page_retry_analysis SID PAGE_ID
+  beefont_glyphs SID [LETTER]
+  beefont_glyph SID LETTER
+  beefont_glyph_select SID LETTER GLYPH_ID
+  beefont_glyph_select SID LETTER VARIANT_INDEX --by-variant
+  beefont_build SID LANGUAGE
+  beefont_download_ttf SID LANGUAGE [outfile.ttf]
+  beefont_download_zip SID [outfile.zip]
+  beefont_languages_status SID
+  beefont_language_status SID LANGUAGE
+  beefont_demo_scenarioA [NAME] [LANG] [TEMPLATE_CODE] ["ALPHABET"]
+  demi_scenarioA ...   # alias auf beefont_demo_scenarioA
+  beefont_demo_scenarioB SID [DE_LANG] [TEMPLATE_CODE]
+
+
+## integration test with REST API
+
+  beefont_demo_scenarioA MyBeeFont DE 6x5 
+  
+  demi_scenarioA ...   # alias auf beefont_demo_scenarioA
+  beefont_demo_scenarioB SID [DE_LANG] [TEMPLATE_CODE]
+
+  example
+  beelab-dev
+     beefont_demo_scenarioA myfont de
+     if job 85fa2118b057450e86602801047f0f14 is created :
+   beefont_demo_scenarioB 85fa2118b057450e86602801047f0f14 fr
+   beefont_demo_scenarioC 85fa2118b057450e86602801047f0f14 fr  A4_6x5 ABC

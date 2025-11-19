@@ -1,695 +1,749 @@
 # BeeFontCore/views.py
-import io
-import json
+
 import os
-import shutil
-from pathlib import Path
-import secrets
+from datetime import datetime
 
 from django.conf import settings
-from django.http import JsonResponse, HttpResponse, Http404
-from django.views.decorators.http import require_GET
+from django.http import FileResponse, Http404, HttpResponse
+from django.shortcuts import get_object_or_404
+from django.utils.timezone import now
+from django.core.files.storage import default_storage
 
-from PIL import Image
-
-from rest_framework import status
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    parser_classes,
-)
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import generics, permissions, status 
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from .models import Job, TemplateSlot
-from .serializers import JobOut
-from .services import template_utils
-from .services.segment import analyse_template_slot  # you will implement this
-from .services.build_font import build_bundle        # you will adapt this
-from .services.jobs import init_template_slots_for_job
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 
-_TEMPLATE_DIR = Path(__file__).resolve().parent / "services" / "templates"
+from django.core.files.base import ContentFile
+import io
 
+from pathlib import Path
 
-# -----------------------------
-# Helpers / constants
-# -----------------------------
+import cv2
+import numpy as np
 
-ACTIVE_JOB_STATUSES = (
-    Job.STATUS_DRAFT,
-    Job.STATUS_IN_PROGRESS,
-    Job.STATUS_READY_FOR_FONT,
+from .models import (
+    SupportedLanguage,
+    TemplateDefinition,
+    FontJob,
+    JobPage,
+    Glyph,
+    FontBuild,
 )
-MAX_ACTIVE_JOBS_PER_USER = 3
+from .serializers import (
+    SupportedLanguageSerializer,
+    SupportedLanguageAlphabetSerializer,
+    TemplateDefinitionSerializer,
+    FontJobSerializer,
+    JobPageSerializer,
+    GlyphSerializer,
+    GlyphVariantSelectionSerializer,
+    FontBuildSerializer,
+    BuildRequestSerializer,
+    LanguageStatusSerializer,
+)
+ 
 
 
-def _get_job_or_404(sid: str) -> Job:
-    try:
-        return Job.objects.get(sid=sid)
-    except Job.DoesNotExist:
-        raise Http404("Job not found")
+ 
+from BeeFontCore.services import template_utils 
+from BeeFontCore.services.segment import analyse_job_page_scan 
+from BeeFontCore.services import build_font
 
 
-def _ensure_segments_dir(job: Job) -> Path:
-    if job.segments_dir:
-        segdir = Path(job.segments_dir)
-    else:
-        media_root = Path(settings.MEDIA_ROOT)
-        segdir = media_root / "beefont" / "segments" / job.sid
-        segdir.mkdir(parents=True, exist_ok=True)
-        job.segments_dir = str(segdir)
-        job.save(update_fields=["segments_dir"])
-    return segdir
+
+# -------------------------------------------------------------------
+# Helper
+# -------------------------------------------------------------------
 
 
-# -----------------------------
-# Templates catalogue
-# -----------------------------
+#def get_job_or_404_for_user(sid, user):
+#    return get_object_or_404(FontJob, sid=sid, user=user)
+
+def get_job_or_404_for_user(sid, user):
+    # Vorläufig: nur nach sid filtern, User ignorieren
+    return get_object_or_404(FontJob, sid=sid)
+
+
+def job_sid_media(job: FontJob): 
+    return os.path.join( "beefont", "jobs", job.sid)
+ 
+   
+ 
+
+
+
+# -------------------------------------------------------------------
+# Templates
+# -------------------------------------------------------------------
+
 
 @api_view(["GET"])
-@permission_classes([AllowAny])
+@permission_classes([permissions.IsAuthenticated])
 def list_templates(request):
+    qs = TemplateDefinition.objects.all()
+    serializer = TemplateDefinitionSerializer(qs, many=True)
+    return Response(serializer.data)
+
+ 
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])  # oder AllowAny, wenn du willst
+def template_image(request, code: str):
+
     """
-    List available template definitions (optionally filtered by lang).
-    Supports both:
-      - legacy: one template per JSON (paper+grid+order_file at root)
-      - new:    grouped JSON with paper+mapping_file+pages[]
+    Render PNG on the fly, ähnlich wie V2:
+    - mode=blank        → Grid + Indizes
+    - mode=blankpure    → nur Grid
+    - mode=prefill*     → Grid + vorgefüllte Zeichen (Platzhalter),
+                          Buchstaben kommen aus ?letters=...
+                          Suffix nach 'prefill' steuert Stil (b, i, m, ...)
     """
-    lang = (request.GET.get("lang") or "").upper()
-    items = []
+    mode_raw = request.GET.get("mode", "blank")
+    template = get_object_or_404(TemplateDefinition, code=code)
 
-    for p in sorted(_TEMPLATE_DIR.glob("*.json")):
-        data = json.loads(p.read_text(encoding="utf-8"))
-        filename = p.stem
+    tpl_cfg = template_utils.template_to_config(template)
 
-        # New format: grouped pages
-        if "pages" in data:
-            paper = data.get("paper", {})
-            mapping_file = data.get("mapping_file")
-            for page in data["pages"]:
-                name = page.get("name")
-                if not name:
-                    continue
+    # Kapazität des Rasters (z.B. 6x5 = 30)
+    try:
+        capacity = template.capacity
+    except AttributeError:
+        capacity = template.rows * template.cols
 
-                # language filter uses page name, e.g. "A4_DE_6x5_1"
-                if lang and f"_{lang}_" not in name:
-                    continue
+    # Default
+    prefill = False
+    prefill_style = None
 
-                order_file = page.get("order_file")
-                order_fp = _TEMPLATE_DIR / (order_file or "order/order_10x10.json")
-                if order_fp.exists():
-                    order = json.loads(order_fp.read_text(encoding="utf-8"))
-                else:
-                    order = []
-
-                items.append(
-                    {
-                        "name": name,
-                        "paper": paper,
-                        "grid": page.get("grid", {}),
-                        "order_len": len(order),
-                        "order_file": order_file,
-                        "mapping_file": mapping_file,
-                    }
-                )
-        else:
-            # Legacy format: single template per file
-            name = filename
-            if lang and f"_{lang}_" not in name:
-                continue
-
-            order_file = data.get("order_file", "order/order_10x10.json")
-            order_fp = _TEMPLATE_DIR / order_file
-            if order_fp.exists():
-                order = json.loads(order_fp.read_text(encoding="utf-8"))
-            else:
-                order = []
-
-            items.append(
-                {
-                    "name": name,
-                    "paper": data.get("paper", {}),
-                    "grid": data.get("grid", {}),
-                    "order_len": len(order),
-                    "order_file": order_file,
-                    "mapping_file": data.get("mapping_file"),
-                }
-            )
-
-    return Response({"lang": lang or None, "templates": items})
-
-
-def _find_template_page(name: str):
-    """
-    Locate a template page by its name (e.g. 'A4_DE_6x5_1').
-
-    Returns (tpl_page_dict, order_file) where tpl_page_dict has:
-      - paper
-      - grid
-      - fiducials
-      - mapping_file
-    """
-    for p in _TEMPLATE_DIR.glob("*.json"):
-        data = json.loads(p.read_text(encoding="utf-8"))
-
-        # New grouped format
-        if "pages" in data:
-            for page in data["pages"]:
-                if page.get("name") == name:
-                    tpl_page = {
-                        "paper": data.get("paper", {}),
-                        "grid": page.get("grid", {}),
-                        "fiducials": page.get(
-                            "fiducials", data.get("fiducials", {})
-                        ),
-                        "mapping_file": data.get("mapping_file"),
-                    }
-                    return tpl_page, page.get("order_file")
-
-        # Legacy single-page format
-        if p.stem == name:
-            tpl_page = data
-            return tpl_page, data.get("order_file")
-
-    return None, None
-
-
-@require_GET
-def template_image(request, name: str):
-    """
-    Return rendered PNG version of a template (blank or prefilled).
-    Supports grouped templates with pages[].
-    """
-    mode = request.GET.get("mode", "blank")
-    tpl, order_file = _find_template_page(name)
-    if not tpl:
-        raise Http404("unknown template")
-
-    order_fp = _TEMPLATE_DIR / (order_file or "order/order_10x10.json")
-    if order_fp.exists():
-        order = json.loads(order_fp.read_text(encoding="utf-8"))
+    if mode_raw.startswith("prefill"):
+        # prefill, prefill_b, prefilli, prefill_m ...
+        prefill = True
+        # alles nach "prefill" als Stil-Code interpretieren, z.B. "_b", "i", "_m"
+        suffix = mode_raw[len("prefill"):]
+        suffix = suffix.lstrip("_")  # "_b" → "b"
+        prefill_style = suffix or "default"
+        mode = "prefill"
     else:
-        order = []
+        mode = mode_raw
 
     if mode == "prefill":
+        letters_param = request.GET.get("letters", "")
+
+        if not letters_param:
+            order = []
+        else:
+            order = list(letters_param)
+            if len(order) > capacity:
+                order = order[:capacity]
+
         im = template_utils.render_template_png(
-            tpl, order, prefill=True, show_indices=False
+            tpl_cfg,
+            order,
+            prefill=True,
+            show_indices=False,
+            prefill_style=prefill_style,
         )
+
     elif mode == "blankpure":
         im = template_utils.render_template_png(
-            tpl, [], prefill=False, show_indices=False
+            tpl_cfg,
+            [],
+            prefill=False,
+            show_indices=False,
+            prefill_style=None,
         )
     else:  # "blank"
         im = template_utils.render_template_png(
-            tpl, order, prefill=False, show_indices=True
+            tpl_cfg,
+            [],
+            prefill=False,
+            show_indices=True,
+            prefill_style=None,
         )
 
     buf = io.BytesIO()
     im.save(buf, format="PNG")
+    buf.seek(0)
+
     resp = HttpResponse(buf.getvalue(), content_type="image/png")
+    # für den Dateinamen das originale mode_raw verwenden, damit man den Stil sieht
     resp["Cache-Control"] = "public, max-age=3600"
-    resp["Content-Disposition"] = f'inline; filename="{name}_{mode}.png"'
+    resp["Content-Disposition"] = f'inline; filename="{code}_{mode_raw}.png"'
     return resp
 
+# -------------------------------------------------------------------
+# Languages
+# -------------------------------------------------------------------
 
-# -----------------------------
-# Jobs: list / create
-# -----------------------------
 
-class JobListCreate(APIView):
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def list_languages(request):
+    qs = SupportedLanguage.objects.all()
+    serializer = SupportedLanguageSerializer(qs, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def language_alphabet(request, code: str):
+    lang = get_object_or_404(SupportedLanguage, code=code)
+    serializer = SupportedLanguageAlphabetSerializer(lang)
+    return Response(serializer.data)
+
+
+# -------------------------------------------------------------------
+# Jobs
+# -------------------------------------------------------------------
+
+
+class JobListCreate(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FontJobSerializer
+
+    def get_queryset(self):
+        return FontJob.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        job = serializer.save(user=self.request.user)
+
+        # Verzeichnisstruktur anlegen: media/beefont/jobs/<sid>/{pages,debug,glyphs}
+        root_rel = job_sid_media(job)  # z.B. "beefont/jobs/<sid>"
+        root_abs = os.path.join(settings.MEDIA_ROOT, root_rel)
+
+        for sub in ("", "pages", "debug", "glyphs", "build"):
+            os.makedirs(os.path.join(root_abs, sub), exist_ok=True)
+
+    def list(self, request, *args, **kwargs):
+        qs = self.get_queryset()
+        for job in qs:
+            job.page_count = job.pages.count()
+            job.glyph_count = job.glyphs.count()
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        job = FontJob.objects.get(pk=response.data["id"])
+        job.page_count = 0
+        job.glyph_count = 0
+        serializer = self.get_serializer(job)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+class JobDetailDelete(generics.RetrieveDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FontJobSerializer
+    lookup_field = "sid"
+
+    def get_queryset(self):
+        return FontJob.objects.filter(user=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        job = self.get_object()
+        job.page_count = job.pages.count()
+        job.glyph_count = job.glyphs.count()
+        serializer = self.get_serializer(job)
+        return Response(serializer.data)
+
+
+# -------------------------------------------------------------------
+# Job pages
+# -------------------------------------------------------------------
+
+class JobPageListCreate(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = JobPageSerializer
+
+    def get_job(self):
+        return get_job_or_404_for_user(self.kwargs["sid"], self.request.user)
+
+    def get_queryset(self):
+        job = self.get_job()
+        return JobPage.objects.filter(job=job).order_by("page_index")
+ 
+
+
+class JobPageDetail(generics.RetrieveDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = JobPageSerializer
+    lookup_url_kwarg = "page_id"
+
+    def get_queryset(self):
+        job = get_job_or_404_for_user(self.kwargs["sid"], self.request.user)
+        return JobPage.objects.filter(job=job)
+
+
+ 
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def create_page(request, sid: str):
     """
-    GET: list jobs for current user (or all, if no owner field yet)
-    POST: create new BeeFont job (no image upload here).
+    Create a JobPage (auto page_index if missing) and directly attach a scan.
+
+    Expect multipart/form-data with:
+      - template_code (str)
+      - letters (str, optional)
+      - page_index (int, optional; if missing → auto)
+      - file (the uploaded PNG/JPEG)
+      - auto_analyse (optional: "1"/"true" → run analyse_page immediately)
     """
+    job = get_job_or_404_for_user(sid, request.user)
 
-    permission_classes = [IsAuthenticated]
-    parser_classes = [JSONParser, FormParser]
+    template_code = request.data.get("template_code")
+    if not template_code:
+        return Response(
+            {"detail": "template_code is required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-    def get(self, request):
-        # When you add ownership, filter by owner=request.user
-        qs = Job.objects.order_by("-created_at")[:50]
-        data = [JobOut(j).data for j in qs]
-        return Response({"results": data})
+    template = get_object_or_404(TemplateDefinition, code=template_code)
+    letters = request.data.get("letters", "")
 
-    def post(self, request):
-        """
-        Create a new job:
-        payload:
-        {
-          "family": "MyHand",
-          "language": "DE",
-          "page_format": "A4",
-          "characters": "ABC...äöüß"
-        }
-        """
-        family = request.data.get("family") or "MyHand"
-        language = (request.data.get("language") or "DE").upper()
-        page_format = (request.data.get("page_format") or "A4").upper()
-        characters = request.data.get("characters") or ""
-
-        if not characters:
+    # page_index optional → auto assign if missing
+    page_index_raw = request.data.get("page_index", None)
+    if page_index_raw is None or page_index_raw == "":
+        last = (
+            JobPage.objects.filter(job=job)
+            .order_by("-page_index")
+            .first()
+        )
+        page_index = (last.page_index + 1) if last else 0
+    else:
+        try:
+            page_index = int(page_index_raw)
+        except ValueError:
             return Response(
-                {"detail": "characters required (string of glyphs to include)"},
+                {"detail": "page_index must be an integer"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # enforce per-user active job limit (when owner exists)
-        active_qs = Job.objects.filter(status__in=ACTIVE_JOB_STATUSES)
-         # TODO filter by owner later
-        
-        if active_qs.count() >= MAX_ACTIVE_JOBS_PER_USER:
+    # create page
+    page = JobPage.objects.create(
+        job=job,
+        template=template,
+        page_index=page_index,
+        letters=letters,
+    )
+
+    # handle file
+    file = request.FILES.get("file")
+    if not file:
+        return Response(
+            {"detail": "Kein Datei-Upload gefunden (expected 'file')."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    root_rel = job_sid_media(job)               # "beefont/jobs/<sid>"
+    rel_dir = os.path.join(root_rel, "pages")
+    filename = f"page_{page.page_index}_scan{os.path.splitext(file.name)[1]}"
+    rel_path = os.path.join(rel_dir, filename)
+
+    full_dir = os.path.join(settings.MEDIA_ROOT, rel_dir)
+    os.makedirs(full_dir, exist_ok=True)
+
+    saved_path = default_storage.save(rel_path, file)
+    page.scan_image_path = saved_path
+    page.save(update_fields=["scan_image_path"])
+
+    # optional auto analyse
+    auto_analyse = str(request.data.get("auto_analyse", "")).lower() in ("1", "true", "yes")
+    result_payload = JobPageSerializer(page).data
+
+    if auto_analyse:
+        try:
+            analysis_payload = _run_page_analysis(job, page)
+        except ValueError as e:
+            # missing scan should not happen here, but be explicit
             return Response(
                 {
-                    "detail": f"maximum of {MAX_ACTIVE_JOBS_PER_USER} active jobs reached"
+                    "page": result_payload,
+                    "analyse_error": {"detail": str(e)},
                 },
-                status=status.HTTP_403_FORBIDDEN,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except FileNotFoundError as e:
+            return Response(
+                {
+                    "page": result_payload,
+                    "analyse_error": {"detail": str(e)},
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "page": result_payload,
+                    "analyse_error": {
+                        "detail": "Analyse fehlgeschlagen",
+                        "error": str(e),
+                    },
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        sid = secrets.token_hex(8)  # e.g. 'a3b4c5d6e7f8abcd'
+        result_payload = {
+            "page": result_payload,
+            "analysis": analysis_payload,
+        }
 
-        job = Job.objects.create(
-            sid=sid,
-            user=request.user if getattr(request, "user", None) and request.user.is_authenticated else None,
-            family=family,
-            language=language,
-            page_format=page_format,
-            characters=characters,
-            status=Job.STATUS_DRAFT,
+    return Response(result_payload, status=status.HTTP_201_CREATED)
+
+
+def _run_page_analysis(job: FontJob, page: JobPage) -> dict:
+    """
+    Core analysis logic for a JobPage.
+    Returns a plain dict payload, raises exceptions on fatal errors.
+    """
+    from pathlib import Path
+    from .models import Glyph  # local import
+
+    if not page.scan_image_path:
+        raise ValueError("Für diese Seite ist noch kein Scan hochgeladen.")
+
+    media_root = Path(settings.MEDIA_ROOT)
+
+    scan_path = Path(page.scan_image_path)
+    if not scan_path.is_absolute():
+        abs_scan_path = media_root / scan_path
+    else:
+        abs_scan_path = scan_path
+
+    if not abs_scan_path.exists():
+        raise FileNotFoundError(f"Scan-Datei nicht gefunden: {abs_scan_path}")
+
+    # Job root: media/beefont/jobs/<sid>/
+    job_root_rel = job_sid_media(job)          # "beefont/jobs/<sid>"
+    job_root_abs = media_root / job_root_rel
+
+    # Debug directory for this page
+    dbg_dir = job_root_abs / "debug" / f"page_{page.page_index}"
+
+    # Template config from DB
+    template = page.template
+    tpl = template_utils.template_to_config(template)
+
+    glyphs_created = 0
+
+    # Segmentation
+    glyph_info = analyse_job_page_scan(
+        abs_scan_path=abs_scan_path,
+        tpl=tpl,
+        letters=page.letters or "",
+        dbg_dir=dbg_dir,
+    )
+
+    for cell_index, letter, im in glyph_info:
+        last = (
+            Glyph.objects.filter(job=job, letter=letter)
+            .order_by("-variant_index")
+            .first()
+        )
+        next_idx = (last.variant_index + 1) if last else 0
+
+        filename = f"{letter}_v{next_idx}.png"
+        rel_path = os.path.join(job_root_rel, "glyphs", filename)
+        abs_path = media_root / rel_path
+        abs_path.parent.mkdir(parents=True, exist_ok=True)
+
+        im.save(abs_path)
+
+        # no canonical <LETTER>.png anymore
+        Glyph.objects.create(
+            job=job,
+            page=page,
+            cell_index=cell_index,
+            letter=letter,
+            variant_index=next_idx,
+            image_path=str(rel_path).replace("\\", "/"),
+            is_default=(next_idx == 0),
         )
 
-        # Create slots from templates on disk (grouped or legacy)
-        init_template_slots_for_job(job)
+        glyphs_created += 1
 
-        return Response(JobOut(job).data, status=status.HTTP_201_CREATED)
- 
+    page.analysed_at = now()
+    page.save(update_fields=["analysed_at"])
 
-
-# -----------------------------
-# Job detail / delete
-# -----------------------------
-
-class JobDetailDelete(APIView):
-    """
-    GET: job detail
-    DELETE: delete job and all related files
-    """
-
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, sid):
-        job = _get_job_or_404(sid)
-        return Response(JobOut(job).data)
-
-    def delete(self, request, sid):
-        job = _get_job_or_404(sid)
-
-        # delete ttf + zip
-        media_root = Path(settings.MEDIA_ROOT)
-        for f in (job.ttf_path, job.zip_path):
-            if f:
-                try:
-                    (media_root / f.name).unlink(missing_ok=True)
-                except Exception:
-                    pass
-
-        # delete segments dir
-        if job.segments_dir:
-            try:
-                shutil.rmtree(job.segments_dir, ignore_errors=True)
-            except Exception:
-                pass
-
-        # delete scans directory if you have one on the model (optional)
-        # if job.scans_dir: ...
-
-        job.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    return {
+        "detail": "Analyse abgeschlossen.",
+        "glyph_variants_created": glyphs_created,
+    }
 
 
-# -----------------------------
-# Font build + download
-# -----------------------------
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def build_ttf(request, sid):
-    """
-    Trigger TTF build for a job (using canonical glyphs).
+@permission_classes([permissions.IsAuthenticated])
+def analyse_page(request, sid: str, page_id: int):
+    job = get_job_or_404_for_user(sid, request.user)
+    page = get_object_or_404(JobPage, job=job, pk=page_id)
 
-    Expects all required letters to have canonical glyphs.
-    """ 
-    job = _get_job_or_404(sid)
+    try:
+        payload = _run_page_analysis(job, page)
+    except ValueError as e:
+        # missing scan
+        return Response(
+            {"detail": str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except FileNotFoundError as e:
+        return Response(
+            {"detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+    except Exception as e:
+        return Response(
+            {"detail": "Analyse fehlgeschlagen", "error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
-    # Ensure segments dir exists
-    segdir = _ensure_segments_dir(job)
+    return Response(payload, status=status.HTTP_200_OK)
 
-    # You may want to validate that every required char has a canonical file here.
-    missing = []
-    chars = job.characters or ""
-    for ch in chars:
-        canonical = segdir / f"{ch}.png"
-        if not canonical.exists():
-            missing.append(ch)
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def retry_page_analysis(request, sid: str, page_id: int):
+    # Im einfachsten Fall rufst du einfach die gleiche Logik nochmal auf
+    return analyse_page(request, sid, page_id)
+
+
+# -------------------------------------------------------------------
+# Glyphs
+# -------------------------------------------------------------------
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def list_glyphs(request, sid: str):
+    job = get_job_or_404_for_user(sid, request.user)
+    qs = Glyph.objects.filter(job=job)
+
+    letter = request.GET.get("letter")
+    if letter:
+        qs = qs.filter(letter=letter)
+
+    qs = qs.order_by("letter", "variant_index")
+    serializer = GlyphSerializer(qs, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def glyph_detail(request, sid: str, letter: str):
+    job = get_job_or_404_for_user(sid, request.user)
+    qs = Glyph.objects.filter(job=job, letter=letter).order_by("variant_index")
+    serializer = GlyphSerializer(qs, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def select_glyph_variant(request, sid: str, letter: str):
+    job = get_job_or_404_for_user(sid, request.user)
+    serializer = GlyphVariantSelectionSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+
+    qs = Glyph.objects.filter(job=job, letter=letter)
+
+    if "glyph_id" in data:
+        glyph = get_object_or_404(qs, pk=data["glyph_id"])
+    else:
+        glyph = get_object_or_404(qs, variant_index=data["variant_index"])
+
+    # alle anderen Defaults für diesen Buchstaben zurücksetzen
+    qs.update(is_default=False)
+    glyph.is_default = True
+    glyph.save(update_fields=["is_default"])
+
+    return Response(GlyphSerializer(glyph).data, status=status.HTTP_200_OK)
+
+
+# -------------------------------------------------------------------
+# Font build + download
+# -------------------------------------------------------------------
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def build_ttf(request, sid: str):
+    job = get_job_or_404_for_user(sid, request.user)
+
+    # Sprache aus Request holen, z.B. {"language": "zz"}
+    req_serializer = BuildRequestSerializer(data=request.data)
+    req_serializer.is_valid(raise_exception=True)
+    language = req_serializer.validated_data["language"]
+
+    alphabet = language.alphabet or ""
+    alphabet_chars = list(alphabet)
+
+    # Default-Glyphs dieses Jobs
+    default_glyphs = Glyph.objects.filter(job=job, is_default=True)
+    covered = {g.letter for g in default_glyphs}
+    missing = [c for c in alphabet_chars if c not in covered]
 
     if missing:
+        status_data = {
+            "language": language.code,
+            "ready": False,
+            "required_chars": alphabet,
+            "missing_chars": "".join(missing),
+            "missing_count": len(missing),
+        }
         return Response(
             {
-                "detail": "missing canonical glyphs",
-                "missing": missing,
+                "detail": "Nicht alle Zeichen sind abgedeckt.",
+                "status": status_data,
             },
-            status=status.HTTP_409_CONFLICT,
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
+    # Pfad: media/beefont/jobs/<sid>/build/<JobName>_<lang>.ttf
+    media_root = Path(settings.MEDIA_ROOT)
+    job_root_rel = job_sid_media(job)            # "beefont/jobs/<sid>"
+    build_rel_dir = os.path.join(job_root_rel, "build")
+    filename = f"{job.name}_{language.code}.ttf".replace(" ", "_")
+    rel_path = os.path.join(build_rel_dir, filename)
+    full_path = media_root / rel_path
+    full_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Nur Default-Glyphs, die tatsächlich im Alphabet vorkommen
+    glyphs_for_lang = default_glyphs.filter(letter__in=alphabet_chars)
+
     try:
-        # adjust build_bundle to only rely on canonical glyphs for this job
-        ttf_path, zip_path = build_bundle(job, segdir)
-        media_root = Path(settings.MEDIA_ROOT)
-        rel_ttf = os.path.relpath(ttf_path, str(media_root)).replace("\\", "/")
-        rel_zip = os.path.relpath(zip_path, str(media_root)).replace("\\", "/")
-        job.ttf_path = rel_ttf
-        job.zip_path = rel_zip
-        job.status = "FONT_GENERATED"
-        job.save(update_fields=["ttf_path", "zip_path", "status"])
+        # HIER: Service-Funktion über das Modul aufrufen
+        build_font.build_ttf(job, language, glyphs_for_lang, full_path)
+        success = True
+        log = ""
     except Exception as e:
-        job.status = "FAILED"
-        job.log = str(e)[:4000]
-        job.save(update_fields=["status", "log"])
-        return Response(
-            {"detail": "font build failed", "error": job.log},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        success = False
+        log = str(e)
 
-    return Response(JobOut(job).data)
-
-
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def download_ttf(request, sid):
-    job = _get_job_or_404(sid)
-    if not job.ttf_path:
-        return Response({"detail": "TTF not ready"}, status=409)
-
-    media_root = Path(settings.MEDIA_ROOT)
-    # job.ttf_path is a FieldFile -> use .name or str()
-    rel_path = job.ttf_path.name
-    fp = media_root / rel_path
-
-    if not fp.exists():
-        raise Http404
-
-    with open(fp, "rb") as f:
-        resp = HttpResponse(f.read(), content_type="font/ttf")
-    resp["Content-Disposition"] = f'attachment; filename="{fp.name}"'
-    resp["Cache-Control"] = "public, max-age=86400"
-    return resp
-
-
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def download_zip(request, sid):
-    job = _get_job_or_404(sid)
-    if not job.zip_path:
-        return Response({"detail": "ZIP not ready"}, status=409)
-
-    media_root = Path(settings.MEDIA_ROOT)
-    rel_path = job.zip_path.name
-    fp = media_root / rel_path
-
-    if not fp.exists():
-        raise Http404
-
-    with open(fp, "rb") as f:
-        resp = HttpResponse(f.read(), content_type="application/zip")
-    resp["Content-Disposition"] = f'attachment; filename="{fp.name}"'
-    resp["Cache-Control"] = "public, max-age=86400"
-    return resp
-
-
-
-# -----------------------------
-# TemplateSlot: upload / analyse / retry
-# -----------------------------
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def list_slots(request, sid):
-    """
-    List TemplateSlots for a job.
-    """
-    job = _get_job_or_404(sid)
-    slots = TemplateSlot.objects.filter(job=job).order_by("id")
-    data = []
-    for s in slots:
-        data.append(
-            {
-                "id": s.id,
-                "template_code": s.template_code,
-                "page_index": s.page_index,
-                "status": s.status,
-                "scan_original_path": s.scan_original_path,
-                "scan_processed_path": s.scan_processed_path,
-            }
-        )
-    return Response({"results": data})
-
- 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser])
-def upload_slot_scan(request, slot_id: int):
-    """
-    Upload a scan for a given TemplateSlot (one page attempt).
-    """
-    try:
-        slot = TemplateSlot.objects.get(id=slot_id)
-    except TemplateSlot.DoesNotExist:
-        raise Http404("slot not found")
-
-    img = request.FILES.get("image")
-    if not img:
-        return Response({"detail": "image missing"}, status=400)
-    if not (img.content_type or "").startswith("image/"):
-        return Response({"detail": "image/* required"}, status=400)
-
-    job = slot.job
-    media_root = Path(settings.MEDIA_ROOT)
-
-    # NEW: store under media/beefont/pages/<sid>/
-    scans_dir = media_root / "beefont" / "pages" / job.sid
-    scans_dir.mkdir(parents=True, exist_ok=True)
-
-    raw_name = f"{slot.template_code}_{slot.page_index}_raw.png"
-    raw_path = scans_dir / raw_name
-
-    # Save raw image
-    with open(raw_path, "wb") as f:
-        for chunk in img.chunks():
-            f.write(chunk)
-
-    # Store RELATIVE path (cleaner, matches processed)
-    raw_rel = raw_path.relative_to(media_root)
-    slot.scan_original_path = str(raw_rel).replace("\\", "/")
-    slot.status = TemplateSlot.STATUS_UPLOADED
-    slot.save(update_fields=["scan_original_path", "status"])
-
-    return Response(
-        {
-            "slot_id": slot.id,
-            "scan_original_path": slot.scan_original_path,
-            "status": slot.status,
+    font_build, created = FontBuild.objects.update_or_create(
+        job=job,
+        language=language,
+        defaults={
+            "ttf_path": rel_path,  # RELATIV zu MEDIA_ROOT
+            "success": success,
+            "log": log,
         },
-        status=status.HTTP_200_OK,
     )
 
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def analyse_slot(request, slot_id: int):
-    """
-    Run analysis on a TemplateSlot's current scan.
-    This will:
-      - detect FIDs / grid
-      - extract non-empty glyphs
-      - write variant files segment/<job>/<LETTER>_<page_index>.png
-      - update scan_processed_path, status
-    """
-    try:
-        slot = TemplateSlot.objects.get(id=slot_id)
-    except TemplateSlot.DoesNotExist:
-        raise Http404("slot not found")
-
-    if not slot.scan_original_path:
+    if not success:
         return Response(
-            {"detail": "no scan uploaded for this slot"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    job = slot.job
-    segdir = _ensure_segments_dir(job)
-
-    try:
-        processed_path = analyse_template_slot(job, slot, segdir)
-        slot.scan_processed_path = str(processed_path)
-        slot.status = TemplateSlot.STATUS_ANALYZED
-        slot.save(update_fields=["scan_processed_path", "status"])
-    except Exception as e:
-        slot.status =  TemplateSlot.STATUS_ERROR
-        slot.last_error_message = str(e)[:1000]
-        slot.save(update_fields=["status", "last_error_message"])
-        return Response(
-            {"detail": "analysis failed", "error": slot.last_error_message},
+            {
+                "detail": "TTF-Build fehlgeschlagen.",
+                "log": log,
+            },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    return Response(
-        {
-            "slot_id": slot.id,
-            "scan_processed_path": slot.scan_processed_path,
-            "status": slot.status,
-        }
-    )
+    return Response(FontBuildSerializer(font_build).data, status=status.HTTP_200_OK)
 
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def retry_slot(request, slot_id: int):
-    """
-    Prepare a TemplateSlot for a new attempt:
-      - increment page_index
-      - clear scan paths and status
-    Next, frontend should upload a new scan to this slot.
-    """
-    try:
-        slot = TemplateSlot.objects.get(id=slot_id)
-    except TemplateSlot.DoesNotExist:
-        raise Http404("slot not found")
-
-    slot.page_index += 1
-    slot.scan_original_path = ""
-    slot.scan_processed_path = ""
-    slot.status =  TemplateSlot.STATUS_NO_SCAN
-    slot.save(update_fields=["page_index", "scan_original_path", "scan_processed_path", "status"])
-
-    return Response(
-        {
-            "slot_id": slot.id,
-            "page_index": slot.page_index,
-            "status": slot.status,
-        }
-    )
-
-
-# -----------------------------
-# Glyphs: variants + selection
-# -----------------------------
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def list_glyphs(request, sid):
-    """
-    List glyphs for a job:
-      - canonical file presence
-      - available variant files and page_index
-    """
-    job = _get_job_or_404(sid)
-    segdir = Path(job.segments_dir or "")
-    if not segdir.exists():
-        return Response({"glyphs": []})
-
-    chars = job.characters or ""
-
-    glyphs = []
-
-    for ch in chars:
-        canonical = segdir / f"{ch}.png"
-        variants = sorted(segdir.glob(f"{ch}_*.png"))
-        glyphs.append(
-            {
-                "letter": ch,
-                "canonical": canonical.name if canonical.exists() else None,
-                "variants": [p.name for p in variants],
-            }
-        )
-
-    return Response({"glyphs": glyphs})
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def glyph_detail(request, sid, letter):
+@permission_classes([permissions.IsAuthenticated])
+def download_ttf(request, sid: str, language: str):
+    job = get_job_or_404_for_user(sid, request.user)
+    lang = get_object_or_404(SupportedLanguage, code=language)
+    build = get_object_or_404(FontBuild, job=job, language=lang, success=True)
+
+    if not default_storage.exists(build.ttf_path):
+        raise Http404("TTF nicht gefunden")
+
+    file = default_storage.open(build.ttf_path, "rb")
+    filename = os.path.basename(build.ttf_path)
+    response = FileResponse(file, content_type="font/ttf")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def download_job_zip(request, sid: str):
     """
-    Detail for one letter: canonical and variant list.
+    Erzeuge ein ZIP mit allen erfolgreichen TTFs dieses Jobs.
+    Du kannst deine bestehende ZIP-Logik hier einbauen.
     """
-    job = _get_job_or_404(sid)
-    segdir = Path(job.segments_dir or "")
-    if not segdir.exists():
+    import io
+    import zipfile
+
+    job = get_job_or_404_for_user(sid, request.user)
+    builds = FontBuild.objects.filter(job=job, success=True)
+
+    if not builds.exists():
         return Response(
-            {"letter": letter, "canonical": None, "variants": []},
-            status=status.HTTP_200_OK,
-        )
-
-    canonical = segdir / f"{letter}.png"
-    variants = sorted(segdir.glob(f"{letter}_*.png"))
-    return Response(
-        {
-            "letter": letter,
-            "canonical": canonical.name if canonical.exists() else None,
-            "variants": [p.name for p in variants],
-        }
-    )
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def select_glyph_variant(request, sid, letter):
-    """
-    Promote one variant to canonical:
-      body: { "page_index": 5, "delete_others": true|false }
-      copies:
-        segment/<job>/<letter>_5.png -> segment/<job>/<letter>.png
-      optionally deletes other variants for that letter.
-    """
-    job = _get_job_or_404(sid)
-    segdir = _ensure_segments_dir(job)
-
-    try:
-        page_index = int(request.data.get("page_index"))
-    except (TypeError, ValueError):
-        return Response(
-            {"detail": "page_index (int) required"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    delete_others = bool(request.data.get("delete_others", False))
-
-    variant_path = segdir / f"{letter}_{page_index}.png"
-    if not variant_path.exists():
-        return Response(
-            {
-                "detail": "variant not found",
-                "expected": variant_path.name,
-            },
+            {"detail": "Keine erfolgreichen Builds für diesen Job."},
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    canonical_path = segdir / f"{letter}.png"
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for build in builds:
+            if default_storage.exists(build.ttf_path):
+                with default_storage.open(build.ttf_path, "rb") as f:
+                    data = f.read()
+                arcname = f"{job.name}_{build.language.code}.ttf".replace(" ", "_")
+                zf.writestr(arcname, data)
 
-    # copy variant -> canonical
-    canonical_path.write_bytes(variant_path.read_bytes())
+    buffer.seek(0)
+    filename = f"{job.name}_fonts.zip".replace(" ", "_")
+    response = HttpResponse(buffer, content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
 
-    # optionally delete other variants
-    if delete_others:
-        for p in segdir.glob(f"{letter}_*.png"):
-            if p.name != variant_path.name:
-                try:
-                    p.unlink()
-                except Exception:
-                    pass
 
-    return Response(
-        {
-            "letter": letter,
-            "canonical": canonical_path.name,
-            "used_variant": variant_path.name,
-        }
-    )
+# -------------------------------------------------------------------
+# Status per language
+# -------------------------------------------------------------------
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def job_languages_status(request, sid: str):
+    job = get_job_or_404_for_user(sid, request.user)
+    default_glyphs = Glyph.objects.filter(job=job, is_default=True)
+
+    results = []
+    for lang in SupportedLanguage.objects.all():
+        alphabet = lang.alphabet or ""
+        alphabet_chars = list(alphabet)
+        covered = {g.letter for g in default_glyphs}
+        missing = [c for c in alphabet_chars if c not in covered]
+
+        results.append(
+            {
+                "language": lang.code,
+                "ready": len(missing) == 0,
+                "required_chars": alphabet,
+                "missing_chars": "".join(missing),
+                "missing_count": len(missing),
+            }
+        )
+
+    serializer = LanguageStatusSerializer(results, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def job_language_status(request, sid: str, language: str):
+    job = get_job_or_404_for_user(sid, request.user)
+    lang = get_object_or_404(SupportedLanguage, code=language)
+
+    alphabet = lang.alphabet or ""
+    alphabet_chars = list(alphabet)
+    default_glyphs = Glyph.objects.filter(job=job, is_default=True)
+    covered = {g.letter for g in default_glyphs}
+    missing = [c for c in alphabet_chars if c not in covered]
+
+    payload = {
+        "language": lang.code,
+        "ready": len(missing) == 0,
+        "required_chars": alphabet,
+        "missing_chars": "".join(missing),
+        "missing_count": len(missing),
+    }
+    serializer = LanguageStatusSerializer(payload)
+    return Response(serializer.data)

@@ -1,106 +1,30 @@
 # BeeFontCore/services/segment.py
+#
+# V3-only:
+# - keine TemplateSlot-Modelle
+# - keine JSON-Template-Files
+# - arbeitet nur mit:
+#     * abs_scan_path (Pfad zur PNG)
+#     * tpl (Template-Config aus TemplateDefinition -> template_to_config)
+#     * letters (String "ABC...")
+#     * dbg_dir (Debugverzeichnis)
+# - gibt pro nicht-leerer Zelle (cell_index, letter, Image) zurück
 
-import json
 from pathlib import Path
 from typing import List, Tuple
 
 import cv2
 import numpy as np
 from PIL import Image
+
 from django.conf import settings
- 
-from ..models import TemplateSlot
-
- 
- 
-_TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
-_DEFAULT_TEMPLATE = _TEMPLATE_DIR / "A4_DE_6x5.json"
- 
-
 
 from .template_utils import (
     template_raster_size,
     grid_cells_px,
     DPI_DEFAULT,
 )
- 
 
-
-def _find_template_page(name: str):
-    """
-    Same as in views.py, but local to this module.
-    Returns (tpl_page_dict, order_file).
-    """
-    for p in _TEMPLATE_DIR.glob("*.json"):
-        data = json.loads(p.read_text(encoding="utf-8"))
-
-        # New grouped format
-        if "pages" in data:
-            for page in data["pages"]:
-                if page.get("name") == name:
-                    tpl_page = {
-                        "paper": data.get("paper", {}),
-                        "grid": page.get("grid", {}),
-                        "fiducials": page.get("fiducials", data.get("fiducials", {})),
-                        "mapping_file": data.get("mapping_file"),
-                    }
-                    return tpl_page, page.get("order_file")
-
-        # Legacy: single page per file
-        if p.stem == name:
-            tpl_page = data
-            return tpl_page, data.get("order_file")
-
-    return None, None
-
-
-
-# ---------------------------
-# Template loading helpers
-# ---------------------------
-
-def _load_template(name: str | None) -> dict:
-    """
-    Return a template dict, aware of grouped JSON (with pages[]).
-
-    - If name is like 'A4_DE_6x5_1', we try to find the matching page inside
-      any JSON under templates/.
-    - If not found, fall back to the default A4_10x10.json.
-    - We always set tpl["order_file"] so _glyph_order_for_template can use it.
-    """
-    tpl = None
-    order_file = None
-
-    if name:
-        # try grouped/single-page lookup first
-        from .segment import _find_template_page  # safe local import
-        try:
-            tpl, order_file = _find_template_page(name)
-        except NameError:
-            # if for some reason _find_template_page is not visible, ignore
-            tpl = None
-            order_file = None
-
-    if tpl is None:
-        # fallback: legacy default template
-        tpl = json.loads(_DEFAULT_TEMPLATE.read_text(encoding="utf-8"))
-        order_file = tpl.get("order_file", "order/order_10x10.json")
-
-    # ensure order_file is stored inside tpl for later
-    tpl["order_file"] = order_file or "order/order_10x10.json"
-    return tpl
-
-
-def _glyph_order_for_template(tpl: dict) -> list[str]:
-    """
-    Load the glyph order for this template from its order_file.
-    Works for both legacy and grouped templates.
-    """
-    order_rel = tpl.get("order_file", "order/order_10x10.json")
-    order_path = _TEMPLATE_DIR / order_rel
-    if not order_path.exists():
-        return []
-    return json.loads(order_path.read_text(encoding="utf-8"))
 
 # ---------------------------
 # Low-level image helpers
@@ -440,73 +364,49 @@ def _quad_ok_for_template(fid_pts, Wt, Ht) -> bool:
 
     return True
 
- 
-def analyse_template_slot(job, slot: TemplateSlot, seg_dir: Path) -> str:
+
+# -------------------------------------------------------------------
+# V3: Analyse für JobPage
+# -------------------------------------------------------------------
+
+def analyse_job_page_scan(
+    abs_scan_path: Path,
+    tpl: dict,
+    letters: str,
+    dbg_dir: Path,
+) -> list[tuple[int, str, Image.Image]]:
     """
-    V2 segmentation for a single TemplateSlot.
+    V3-Helfer: analysiert einen einzelnen Scan für eine JobPage.
 
-    Called from views as:
-        segdir = _ensure_segments_dir(job)
-        processed_path = analyse_template_slot(job, slot, segdir)
+    Parameter:
+      abs_scan_path : absoluter Pfad zur Scan-Datei
+      tpl           : Template-Config (aus TemplateDefinition → template_to_config)
+      letters       : String mit Buchstaben für diese Seite (z.B. "ABC...")
+      dbg_dir       : Verzeichnis für Debug-Ausgaben
 
-    - job: Job instance
-    - slot: TemplateSlot (has scan_original_path, template_code, page_index)
-    - seg_dir: Path to MEDIA_ROOT/beefont/segments/<job.sid> (already created)
-
-    Returns the *relative* processed path (string) that we store on the slot.
+    Rückgabe:
+      Liste von (cell_index, letter, PIL.Image.Image),
+      wobei das Image bereits auf 1024x1024 Canvas normalisiert ist.
     """
-    media_root = Path(settings.MEDIA_ROOT)
+    if not abs_scan_path.exists():
+        raise RuntimeError(f"scan file not found: {abs_scan_path}")
 
-    if not slot.scan_original_path:
-        raise RuntimeError("scan_original_path is empty on TemplateSlot")
-
-    # Accept both absolute and relative paths in scan_original_path
-    orig_path = Path(slot.scan_original_path)
-    if not orig_path.is_absolute():
-        upload_path = media_root / orig_path
-    else:
-        upload_path = orig_path
-
-    if not upload_path.exists():
-        raise RuntimeError(f"scan file not found: {upload_path}")
-
-    # Ensure segments dir exists (beefont/segments/<sid>, from views)
-    seg_dir.mkdir(parents=True, exist_ok=True)
-
-    # Debug directory per job+slot+page
-    dbg_dir = media_root / "beefont" / "debug" / job.sid / f"slot_{slot.id}_page_{slot.page_index}"
     dbg_dir.mkdir(parents=True, exist_ok=True)
 
-    debug_lines: list[str] = []
-    debug_lines.append(f"slot_id={slot.id}")
-    debug_lines.append(f"job_sid={job.sid}")
-    debug_lines.append(f"template_code={slot.template_code!r}")
-    debug_lines.append(f"page_index={slot.page_index}")
-    debug_lines.append(f"upload_path={upload_path}")
-
-    # Load original image
-    file_bytes = np.fromfile(str(upload_path), dtype=np.uint8)
+    # Scan laden
+    file_bytes = np.fromfile(str(abs_scan_path), dtype=np.uint8)
     img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
     if img is None:
-        raise RuntimeError(f"Could not read scan: {upload_path}")
+        raise RuntimeError(f"Could not read scan: {abs_scan_path}")
 
-    H0, W0 = img.shape[:2]
-    debug_lines.append(f"orig_img_shape={H0}x{W0}")
-
-    # Template + order (grouped-aware)
-    tpl = _load_template(slot.template_code)
-    order = _glyph_order_for_template(tpl)
-
-    # Target raster for warp
+    # Rastergröße laut Template
     Wt, Ht = template_raster_size(tpl, dpi=DPI_DEFAULT)
-    debug_lines.append(f"template_raster_size Wt={Wt} Ht={Ht}")
-    debug_lines.append(f"order_len={len(order)}")
 
-    # 1) global mask for fiducials
+    # 1) global binarisieren
     full_mask_raw = _binarize(img, dbg_dir=dbg_dir)
     cv2.imwrite(str(dbg_dir / "_debug_mask_prewarp.png"), (full_mask_raw * 255).astype(np.uint8))
 
-    # 2) fiducials
+    # 2) Fiducials
     fid, dbg_fid = None, None
     res = _find_fiducials_from_mask(full_mask_raw, dbg_dir=dbg_dir)
     if res is not None:
@@ -515,15 +415,17 @@ def analyse_template_slot(job, slot: TemplateSlot, seg_dir: Path) -> str:
         else:
             fid = res
 
-    # 3) optional warp
+    # 3) optional Warp
     if fid is not None and len(fid) == 4 and _quad_ok_for_template(fid, Wt, Ht):
         src = np.float32(fid)  # TL,TR,BR,BL
-        dst = np.float32([
-            [20, 20],
-            [Wt - 20, 20],
-            [Wt - 20, Ht - 20],
-            [20, Ht - 20],
-        ])
+        dst = np.float32(
+            [
+                [20, 20],
+                [Wt - 20, 20],
+                [Wt - 20, Ht - 20],
+                [20, Ht - 20],
+            ]
+        )
         M = cv2.getPerspectiveTransform(src, dst)
         try:
             ok_det = abs(np.linalg.det(M[:2, :2])) > 1e-8
@@ -537,109 +439,46 @@ def analyse_template_slot(job, slot: TemplateSlot, seg_dir: Path) -> str:
             mask_warp = cv2.warpPerspective(mask_u8, M, (Wt, Ht))
             full_mask = (mask_warp > 0).astype(np.uint8)
 
-            debug_lines.append("warp_applied=1")
-            debug_lines.append(f"warp_det={np.linalg.det(M[:2, :2]):.6e}")
-
             cv2.imwrite(str(dbg_dir / "_debug_warp.png"), img)
             cv2.imwrite(str(dbg_dir / "_debug_mask.png"), (full_mask * 255).astype(np.uint8))
         else:
             full_mask = full_mask_raw
             cv2.imwrite(str(dbg_dir / "_debug_warp_skipped_det.png"), img)
             cv2.imwrite(str(dbg_dir / "_debug_mask.png"), (full_mask * 255).astype(np.uint8))
-            debug_lines.append("warp_applied=0 (det too small)")
     else:
         full_mask = full_mask_raw
         cv2.imwrite(str(dbg_dir / "_debug_mask.png"), (full_mask * 255).astype(np.uint8))
         if dbg_fid is not None:
             cv2.imwrite(str(dbg_dir / "_debug_fiducials_REJECTED.png"), dbg_fid)
-        debug_lines.append("warp_applied=0 (no fid or quad rejected)")
 
-    # 4) fiducials meta
-    if fid is not None and len(fid) == 4:
-        (tlx, tly), (trx, try_), (brx, bry), (blx, bly) = fid
-        width_top = float(np.hypot(trx - tlx, try_ - tly))
-        width_bottom = float(np.hypot(brx - blx, bry - bly))
-        height_left = float(np.hypot(blx - tlx, bly - tly))
-        height_right = float(np.hypot(brx - trx, bry - try_))
+    # 4) Grid-Zellen
+    cells, _, _ = grid_cells_px(tpl, dpi=DPI_DEFAULT, W=Wt, H=Ht)
 
-        quad_w = 0.5 * (width_top + width_bottom)
-        quad_h = 0.5 * (height_left + height_right)
-        aspect_quad = quad_w / max(quad_h, 1e-6)
-        aspect_tpl = float(Wt) / max(float(Ht), 1e-6)
+    letters = letters or ""
+    n = min(len(cells), len(letters))
 
-        debug_txt = f"""FIDUCIAL DEBUG
-tl=({tlx:.1f},{tly:.1f})
-tr=({trx:.1f},{try_:.1f})
-br=({brx:.1f},{bry:.1f})
-bl=({blx:.1f},{bly:.1f})
-width_top={width_top:.1f}
-width_bottom={width_bottom:.1f}
-height_left={height_left:.1f}
-height_right={height_right:.1f}
-aspect_quad={aspect_quad:.3f}
-aspect_tpl={aspect_tpl:.3f}
-Wt={Wt} Ht={Ht}
-"""
-    else:
-        debug_txt = f"""FIDUCIAL DEBUG
-(no fiducials found or quad rejected)
-Wt={Wt} Ht={Ht}
-"""
-
-    (dbg_dir / "_debug_fiducials_meta.txt").write_text(debug_txt, encoding="utf-8")
-
-    # Refresh size after possible warp
-    H, W = img.shape[:2]
-    debug_lines.append(f"post_warp_img_shape={H}x{W}")
-
-    # Save processed (warped) scan next to original
-    #   foo_raw.png → foo_processed.png
-    stem = upload_path.stem
-    if stem.endswith("_raw"):
-        proc_stem = stem[:-4] + "_processed"
-    else:
-        proc_stem = stem + "_processed"
-    proc_path = upload_path.with_name(proc_stem + upload_path.suffix)
-
-    proc_path.parent.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(str(proc_path), img)
-
-    # Store relative path on slot
-    try:
-        proc_rel = proc_path.relative_to(media_root)
-    except ValueError:
-        proc_rel = proc_path
-    slot.scan_processed_path = str(proc_rel).replace("\\", "/")
-    slot.save(update_fields=["scan_processed_path"])
-
-    # --------------------
-    # GRID MODE (V2)
-    # --------------------
-    # Use template grid and order_file to cut cells.
-    cells, M_LEFT, GAP_X = grid_cells_px(tpl, dpi=DPI_DEFAULT, W=Wt, H=Ht)
-    debug_lines.append(f"grid_cells_count={len(cells)}")
-
-    n = min(len(cells), len(order))
-    saved = 0
+    results: list[tuple[int, str, Image.Image]] = []
 
     for i in range(n):
-        token = order[i]  # "A", "B", "Adieresis", ...
+        letter = letters[i]
+        if not letter:
+            continue
+
         y0, y1, x0, x1 = cells[i]
         cell = full_mask[y0:y1, x0:x1].copy()
         ch, cw = y1 - y0, x1 - x0
 
-        # Trim border to get rid of grid lines
-        border = max(2, min(ch, cw) // 50)  # ~2%
+        # Gridlinien trimmen
+        border = max(2, min(ch, cw) // 50)
         if ch > 2 * border and cw > 2 * border:
             cell = cell[border:ch - border, border:cw - border]
             ch, cw = cell.shape
 
-        # Nuke index mark (top-left corner)
-        idx_h = max(8, ch // 5)  # ~20%
+        # Index-Ecke killen
+        idx_h = max(8, ch // 5)  # ~20 %
         idx_w = max(8, cw // 5)
         cell[:idx_h, :idx_w] = 0
 
-        # Skip empty cells
         if cell.sum() < 50:
             continue
 
@@ -648,40 +487,6 @@ Wt={Wt} Ht={Ht}
             continue
 
         im = _place_on_canvas(cropped, size=1024, margin=96)
+        results.append((i, letter, im))
 
-        # Variant filename: TOKEN_<page_index>.png
-        out_name = f"{token}_{slot.page_index}.png"
-        variant_path = seg_dir / out_name
-        im.save(variant_path)
-        saved += 1
-
-        # ------------------------------------------------------------------
-        # Default canonical: if TOKEN.png does not exist yet, create it now.
-        # This means:
-        #   - first *non-empty* scan for a token sets the default canonical
-        #   - later scans only add TOKEN_<pageIndex>.png; they do not
-        #     overwrite TOKEN.png unless the selection API does it.
-        # ------------------------------------------------------------------
-        canonical_path = seg_dir / f"{token}.png"
-        if not canonical_path.exists():
-            try:
-                im.save(canonical_path)
-                debug_lines.append(
-                    f"default_canonical_created={canonical_path.name}"
-                )
-            except Exception as e:
-                debug_lines.append(
-                    f"default_canonical_error={canonical_path.name}: {e}"
-                )
-
-
-    debug_lines.append(f"glyph_variants_saved={saved}")
-    try:
-        (dbg_dir / "_debug_sizes_segments.txt").write_text(
-            "\n".join(debug_lines),
-            encoding="utf-8"
-        )
-    except Exception:
-        pass
-
-    return slot.scan_processed_path
+    return results

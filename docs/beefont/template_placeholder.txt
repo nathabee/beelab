@@ -1,1 +1,0 @@
-Design your A4 worksheet with fiducial marks. See template_A4_10x10.json.

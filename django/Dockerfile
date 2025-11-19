@@ -27,6 +27,7 @@ RUN set -eux; \
       fontforge \
       potrace \
       imagemagick \
+      postgresql-client \
     ; \
     rm -rf /var/lib/apt/lists/*
 
