@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Plugin Name:       Nutshell WP
+ * Plugin Name:       BeeFont WP
  * Description:       FSE blocks integrating with Django backend.
  * Version:           v1.1.9
  * Author:            Nathabee
@@ -17,55 +17,55 @@ if (function_exists('wp_register_block_types_from_metadata_collection')) {
 }
 
 // FIRST INIT
-register_activation_hook(__FILE__, 'nutshell_wp_create_pages');
+register_activation_hook(__FILE__, 'beefont_wp_create_pages');
  
 
-function nutshell_wp_create_pages()
+function beefont_wp_create_pages()
 {
     $pages = [
         // Visible in menu (we’ll add it deliberately in the nav) — keep a core page if you want
         [
-            'title' => 'Nutshell',
-            'slug'  => 'nutshell', 
-            'block' => '<!-- wp:nutshell/nutshell-app /-->',
+            'title' => 'BeeFont',
+            'slug'  => 'beefont', 
+            'block' => '<!-- wp:beefont/beefont-app /-->',
             'type'  => 'page',
         ],
         // Hidden from menus (CPT)
         [
             'title' => 'Login',
             'slug'  => 'login',  
-            'block' => '<!-- wp:nutshell/nutshell-app /-->',
-            'type'  => 'nutshell_page',
+            'block' => '<!-- wp:beefont/beefont-app /-->',
+            'type'  => 'beefont_page',
         ],
         [
             'title' => 'Home',
             'slug'  => 'home',
-            'block' => '<!-- wp:nutshell/nutshell-app /-->',
-            'type'  => 'nutshell_page',
+            'block' => '<!-- wp:beefont/beefont-app /-->',
+            'type'  => 'beefont_page',
         ],
         [
             'title' => 'Dashboard',
             'slug'  => 'dashboard',
-            'block' => '<!-- wp:nutshell/nutshell-app /-->',
-            'type'  => 'nutshell_page',
+            'block' => '<!-- wp:beefont/beefont-app /-->',
+            'type'  => 'beefont_page',
         ],
         [
             'title' => 'Error Management',
             'slug'  => 'error_mgt',
-            'block' => '<!-- wp:nutshell/nutshell-app /-->',
-            'type'  => 'nutshell_page',
+            'block' => '<!-- wp:beefont/beefont-app /-->',
+            'type'  => 'beefont_page',
         ],
         [
             'title' => 'Error',
             'slug'  => 'error',
-            'block' => '<!-- wp:nutshell/nutshell-app /-->',
-            'type'  => 'nutshell_page',
+            'block' => '<!-- wp:beefont/beefont-app /-->',
+            'type'  => 'beefont_page',
         ],
         [
             'title' => 'User Management',
             'slug'  => 'user_mgt',
-            'block' => '<!-- wp:nutshell/nutshell-app /-->',
-            'type'  => 'nutshell_page',
+            'block' => '<!-- wp:beefont/beefont-app /-->',
+            'type'  => 'beefont_page',
         ],
     ];
 
@@ -88,7 +88,7 @@ function nutshell_wp_create_pages()
 
 add_action('wp_enqueue_scripts', function () {
     wp_enqueue_style(
-        'nutshell-bootstrap',
+        'beefont-bootstrap',
         'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
     );
 });
@@ -98,59 +98,59 @@ add_action('wp_enqueue_scripts', function () {
  * SECTION FOR SETTINGS : ADMIN MENU AND ENQUEUE FOR VIEW.JS
  *****************************************************************/
 // 🔧 Register settings page and settings fields
-add_action('admin_menu', 'nutshell_register_settings_page');
-add_action('admin_init', 'nutshell_register_settings');
+add_action('admin_menu', 'beefont_register_settings_page');
+add_action('admin_init', 'beefont_register_settings');
 
 // ✅ Adds a new page under "Settings" in WP admin
-function nutshell_register_settings_page()
+function beefont_register_settings_page()
 {
     add_options_page(
-        'Nutshell Settings',
-        'Nutshell Settings',
+        'BeeFont Settings',
+        'BeeFont Settings',
         'manage_options',
-        'nutshell-settings',
-        'nutshell_settings_page_html'
+        'beefont-settings',
+        'beefont_settings_page_html'
     );
 }
 
 // ✅ Register the setting, section, and input field
-function nutshell_register_settings()
+function beefont_register_settings()
 {
-    register_setting('nutshell_settings_group', 'nutshell_api_url');
+    register_setting('beefont_settings_group', 'beefont_api_url');
 
     add_settings_section(
-        'nutshell_main_section',
+        'beefont_main_section',
         'Main Settings',
         null,
-        'nutshell-settings'
+        'beefont-settings'
     );
 
     add_settings_field(
-        'nutshell_api_url',
+        'beefont_api_url',
         'API Base URL',
-        'nutshell_api_url_render',
-        'nutshell-settings',
-        'nutshell_main_section'
+        'beefont_api_url_render',
+        'beefont-settings',
+        'beefont_main_section'
     );
 }
 
 // ✅ Renders the input box in the admin settings form
-function nutshell_api_url_render()
+function beefont_api_url_render()
 {
-    $value = get_option('nutshell_api_url', 'https://beelab-api.nathabee.de');
-    echo "<input type='text' name='nutshell_api_url' value='" . esc_attr($value) . "' size='50'>";
+    $value = get_option('beefont_api_url', 'https://beelab-api.nathabee.de');
+    echo "<input type='text' name='beefont_api_url' value='" . esc_attr($value) . "' size='50'>";
 }
 
 // ✅ Renders the full admin settings page HTML
-function nutshell_settings_page_html()
+function beefont_settings_page_html()
 {
 ?>
     <div class="wrap">
-        <h1>Nutshell Plugin Settings</h1>
+        <h1>BeeFont Plugin Settings</h1>
         <form method="post" action="options.php">
             <?php
-            settings_fields('nutshell_settings_group');
-            do_settings_sections('nutshell-settings');
+            settings_fields('beefont_settings_group');
+            do_settings_sections('beefont-settings');
             submit_button();
             ?>
         </form>
@@ -163,8 +163,8 @@ add_action('wp_print_scripts', function () {
     if (!is_admin()) {
         global $wp_scripts;
         foreach ($wp_scripts->registered as $handle => $script) {
-            if (strpos($handle, 'nutshell') !== false) {
-                error_log("🐝 Nutshell script handle found: $handle");
+            if (strpos($handle, 'beefont') !== false) {
+                error_log("🐝 BeeFont script handle found: $handle");
             }
         }
     }
@@ -174,30 +174,30 @@ add_action('wp_print_scripts', function () {
 add_action('wp_enqueue_scripts', function () {
     // Use the actual handle for your block view script if known. 
     // Keeping the same pattern you had:
-    $handle = 'nutshell-nutshell-app-view-script';
+    $handle = 'beefont-beefont-app-view-script';
 
     if (wp_script_is($handle, 'registered')) {
-        $api_url = get_option('nutshell_api_url', 'https://beelab-api.nathabee.de/api');
+        $api_url = get_option('beefont_api_url', 'https://beelab-api.nathabee.de/api');
         wp_add_inline_script(
             $handle,
-            'window.nutshellSettings = ' . wp_json_encode([
+            'window.beefontSettings = ' . wp_json_encode([
                 'apiUrl'   => $api_url,
-                'basename' => '/nutshell',
+                'basename' => '/beefont',
             ]) . ';',
             'before'
         );
     }
 }, 20);
 
-// CPT with rewrite /nutshell/...
+// CPT with rewrite /beefont/...
 add_action('init', function () {
-    register_post_type('nutshell_page', [
-        'label'               => 'Nutshell Pages',
+    register_post_type('beefont_page', [
+        'label'               => 'BeeFont Pages',
         'public'              => true,
         'show_ui'             => true,
         'show_in_rest'        => true,   // Gutenberg/Blocks
         'has_archive'         => false,
-        'rewrite'             => ['slug' => 'nutshell'], // /nutshell/...
+        'rewrite'             => ['slug' => 'beefont'], // /beefont/...
         'supports'            => ['title', 'editor'],
         'show_in_nav_menus'   => false,
         'exclude_from_search' => true,
