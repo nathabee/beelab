@@ -38,7 +38,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 import random, re
 from django.utils.text import slugify 
- 
+from django.conf import settings
+from django.apps import apps
+from django.db.models import Count
 from CompetenceCore.models import Catalogue  # <-- import catalogue model
 
 # keep your existing constants
@@ -378,3 +380,67 @@ def _issue_demo_response(request) -> Response:
         samesite="Lax",
     )
     return resp
+
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def info(_req):
+    """
+    Public, read-only system info.
+    Only aggregated data. Removes sensitive groups like 'admin'.
+    """
+
+    # Public-facing apps
+    public_apps = []
+    for app_cfg in apps.get_app_configs():
+        name = app_cfg.name
+        if name.startswith("django.") or name.startswith("rest_framework"):
+            continue
+        public_apps.append({
+            "label": app_cfg.label,
+            "name": name,
+        })
+
+    # Public roles only — NEVER expose internal/admin roles
+    allowed_public_roles = {"demo", "teacher", "farmer", "analytics", "statistics"}
+    roles = (
+        Group.objects
+        .filter(name__in=allowed_public_roles)
+        .values_list("name", flat=True)
+        .order_by("name")
+    )
+
+    # User stats (aggregate only)
+    total_users = CustomUser.objects.count()
+    active_demo = DemoAccount.objects.filter(
+        active=True, expires_at__gt=timezone.now()
+    ).count()
+
+    lang_stats = list(
+        CustomUser.objects
+        .values("lang")
+        .annotate(count=Count("id"))
+        .order_by("lang")
+    )
+
+    payload = {
+        "service": "django",
+        "timestamp": timezone.now().isoformat(),
+        "environment": "dev" if settings.DEBUG else "prod",
+
+        "apps": public_apps,
+
+        "auth": {
+            "roles": list(roles),   # ONLY the safe subset
+        },
+
+        "users": {
+            "total": total_users,
+            "demo_active": active_demo,
+            "by_language": lang_stats,
+        },
+    }
+
+    return Response(payload)
+

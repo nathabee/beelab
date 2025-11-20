@@ -18,7 +18,7 @@ const AppRoutes: React.FC = () => (
       element={
         <UserLogin
           plugin="nutshell"
-          initialDemoRoles={['admin']}
+          initialDemoRoles={['nutshell']}
           usePluginBootstrap={useBootstrapData}
           usePluginApis={() => ({ apiUser })}
         />
@@ -35,7 +35,7 @@ const AppRoutes: React.FC = () => (
     <Route path="/error" element={<ErrorPage plugin="nutshell" />} />
 
     {/* Root → redirect to /home */}
-    <Route path="/" element={<Navigate to="/home" replace />} />
+    <Route path="/" element={<Home />} />
   </Routes>
 );
 

@@ -1,56 +1,61 @@
-// src/hooks/useBootstrapData.ts
-//
-// Minimal bootstrap hook for the Nutshell template.
-// This is intentionally simple: it just tries to call /me/ on the UserCore API
-// to verify that auth / routing are working. The structure is kept generic
-// so it can be adapted per project.
+'use client';
 
-import { useEffect, useState } from 'react';
-import { apiUser } from '@utils/api';
+import { useUser } from '@bee/common';
+import { useApp } from '@context/AppContext';
+import { apiApp, authHeaders } from '@utils/api';
 
-export type NutshellBootstrapState = {
-  loading: boolean;
-  error: string | null;
-  data: any;
-};
+import type { InfoResponse, InfoMe } from '@mytypes/info';
 
-const useBootstrapData = (): NutshellBootstrapState => {
-  const [state, setState] = useState<NutshellBootstrapState>({
-    loading: true,
-    error: null,
-    data: null,
-  });
+type BootstrapOpts = { force?: boolean };
 
-  useEffect(() => {
-    let cancelled = false;
+export default function useBootstrapData() {
+  const { info, setInfo, setMe } = useApp();
+  const { token } = useUser();
 
-    async function run() {
-      try {
-        const res = await apiUser.get('/me/');
-        if (cancelled) return;
-        setState({
-          loading: false,
-          error: null,
-          data: res.data,
-        });
-      } catch (err) {
-        if (cancelled) return;
-        setState({
-          loading: false,
-          error: 'bootstrap-failed',
-          data: null,
-        });
+  /**
+   * Bootstrap: load public /info/ data.
+   * No auth, can be called on plugin init.
+   */
+  const fetchBootstrapData = async (opts: BootstrapOpts = {}) => {
+    const time = new Date().toLocaleTimeString('de-DE', { hour12: false });
+    console.log('[bootstrap] fetchBootstrapData @', time);
+
+    try {
+      if (opts.force || !info) {
+        const response = await apiApp.get<InfoResponse>('/info/');
+        setInfo(response.data);
       }
+    } catch (error) {
+      console.error('[bootstrap] Error fetching /info/:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Protected /me/ call.
+   * Use it for a "Who am I?" button in the Nutshell plugin.
+   */
+  const fetchMe = async (tokenParam?: string) => {
+    const t = tokenParam ?? token;
+    const time = new Date().toLocaleTimeString('de-DE', { hour12: false });
+    console.log('[bootstrap] fetchMe @', time);
+
+    if (!t) {
+      console.warn('[bootstrap] fetchMe: no token, bail');
+      setMe(null);
+      return;
     }
 
-    run();
+    const headers = authHeaders(t);
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    try {
+      const response = await apiApp.get<InfoMe>('/me/', { headers });
+      setMe(response.data);
+    } catch (error) {
+      console.error('[bootstrap] Error fetching /me/:', error);
+      throw error;
+    }
+  };
 
-  return state;
-};
-
-export default useBootstrapData;
+  return { fetchBootstrapData, fetchMe };
+}
