@@ -37,7 +37,7 @@ export const apiUser: AxiosInstance = createAxiosClient({
 // App-level client; same backend, separate "service" tag so errors/logging can distinguish calls.
 export const apiApp: AxiosInstance = createAxiosClient({
   baseUrl: BASE,
-  basePath: '/user',           // same base; example: GET /hello/ will hit the 'hello' view in UserCore
+  basePath: '/beefont',           // same base; example: GET /hello/ will hit the 'hello' view in UserCore
   service: 'beefont',
   nonceKeys: ['beeNonce', 'beefontSettings'],
   meta: pluginTag,

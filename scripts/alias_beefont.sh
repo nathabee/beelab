@@ -66,7 +66,7 @@ beefont_rmjobs() {
 # List templates
 # Usage: beefont_templates
 beefont_templates() {
-  _beefont_curl_auth "$(_beefont_base)/templates" \
+  _beefont_curl_auth "$(_beefont_base)/templates/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -79,7 +79,7 @@ beefont_template_image() {
   local OUT="${3:-template.png}"
   local LETTERS="${4:-}"
 
-  local URL="$(_beefont_base)/templates/${CODE}/image?mode=${MODE}"
+  local URL="$(_beefont_base)/templates/${CODE}/image/?mode=${MODE}"
 
   if [[ -n "$LETTERS" ]]; then
     # URL-encode via Python
@@ -117,7 +117,7 @@ beefont_template_image() {
 # List supported languages
 # Usage: beefont_languages
 beefont_languages() {
-  _beefont_curl_auth "$(_beefont_base)/languages" \
+  _beefont_curl_auth "$(_beefont_base)/languages/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -125,7 +125,7 @@ beefont_languages() {
 # Usage: beefont_language_alphabet CODE
 beefont_language_alphabet() {
   local CODE="${1:?language code missing}"
-  _beefont_curl_auth "$(_beefont_base)/languages/${CODE}/alphabet" \
+  _beefont_curl_auth "$(_beefont_base)/languages/${CODE}/alphabet/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -136,7 +136,7 @@ beefont_language_alphabet() {
 # List jobs
 # Usage: beefont_jobs
 beefont_jobs() {
-  _beefont_curl_auth "$(_beefont_base)/jobs" \
+  _beefont_curl_auth "$(_beefont_base)/jobs/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -166,7 +166,7 @@ beefont_job_create() {
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -d "$JSON" \
-    "$(_beefont_base)/jobs") || {
+    "$(_beefont_base)/jobs/") || {
       echo "BeeFont : job create request failed" >&2
       echo "Raw response (curl failed):" >&2
       printf '%s\n' "$RESP" >&2
@@ -191,7 +191,7 @@ beefont_job_create() {
 # Usage: beefont_job SID
 beefont_job() {
   local SID="${1:?sid missing}"
-  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}" \
+  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -204,7 +204,7 @@ beefont_job_delete() {
 
   curl -sS -X DELETE \
     -H "Authorization: Bearer $TOKEN" \
-    "$(_beefont_base)/jobs/${SID}" \
+    "$(_beefont_base)/jobs/${SID}/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -216,7 +216,7 @@ beefont_job_delete() {
 # Usage: beefont_job_pages SID
 beefont_job_pages() {
   local SID="${1:?sid missing}"
-  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/pages" \
+  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/pages/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -239,7 +239,7 @@ beefont_create_page() {
 
   local TOKEN URL
   TOKEN="$(_beefont_token)" || return 1
-  URL="$(_beefont_base)/jobs/${SID}/pages/create-with-scan"
+  URL="$(_beefont_base)/jobs/${SID}/pages/create/"
 
   if [[ -n "$PAGE_INDEX" ]]; then
     curl -sS -X POST \
@@ -275,7 +275,7 @@ beefont_page_delete() {
 
   curl -sS -X DELETE \
     -H "Authorization: Bearer $TOKEN" \
-    "$(_beefont_base)/jobs/${SID}/pages/${PAGE_ID}" \
+    "$(_beefont_base)/jobs/${SID}/pages/${PAGE_ID}/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -287,7 +287,7 @@ beefont_page_analyse() {
   local PAGE_ID="${2:?page_id missing}"
 
   _beefont_curl_auth -X POST \
-    "$(_beefont_base)/jobs/${SID}/pages/${PAGE_ID}/analyse" \
+    "$(_beefont_base)/jobs/${SID}/pages/${PAGE_ID}/analyse/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -298,7 +298,7 @@ beefont_page_retry_analysis() {
   local PAGE_ID="${2:?page_id missing}"
 
   _beefont_curl_auth -X POST \
-    "$(_beefont_base)/jobs/${SID}/pages/${PAGE_ID}/retry-analysis" \
+    "$(_beefont_base)/jobs/${SID}/pages/${PAGE_ID}/retry-analysis/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -311,7 +311,7 @@ beefont_page_retry_analysis() {
 beefont_glyphs() {
   local SID="${1:?sid missing}"
   local LETTER="${2:-}"
-  local URL="$(_beefont_base)/jobs/${SID}/glyphs"
+  local URL="$(_beefont_base)/jobs/${SID}/glyphs/"
   [[ -n "$LETTER" ]] && URL="${URL}?letter=${LETTER}"
 
   _beefont_curl_auth "$URL" \
@@ -323,7 +323,7 @@ beefont_glyphs() {
 beefont_glyph() {
   local SID="${1:?sid missing}"
   local LETTER="${2:?letter missing}"
-  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/glyphs/${LETTER}" \
+  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/glyphs/${LETTER}/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -351,7 +351,7 @@ beefont_glyph_select() {
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -d "$JSON" \
-    "$(_beefont_base)/jobs/${SID}/glyphs/${LETTER}/select" \
+    "$(_beefont_base)/jobs/${SID}/glyphs/${LETTER}/select/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -374,7 +374,7 @@ beefont_build() {
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -d "$JSON" \
-    "$(_beefont_base)/jobs/${SID}/build-ttf") || {
+    "$(_beefont_base)/jobs/${SID}/build-ttf/") || {
       # HTTP != 2xx → hier bist du im "Fehler" Zweig, z.B. 400 bei fehlenden Glyphen
       echo "$RESP" | (command -v jq >/dev/null 2>&1 && jq . || cat)
       return 1
@@ -396,7 +396,7 @@ beefont_download_ttf() {
 
   curl -fSL \
     -H "Authorization: Bearer $TOKEN" \
-    "$(_beefont_base)/jobs/${SID}/download/ttf/${LANG}" \
+    "$(_beefont_base)/jobs/${SID}/download/ttf/${LANG}/" \
     -o "$OUT" \
     && echo "saved → $OUT"
 }
@@ -412,7 +412,7 @@ beefont_download_zip() {
 
   curl -fSL \
     -H "Authorization: Bearer $TOKEN" \
-    "$(_beefont_base)/jobs/${SID}/download/zip" \
+    "$(_beefont_base)/jobs/${SID}/download/zip/" \
     -o "$OUT" \
     && echo "saved → $OUT"
 }
@@ -425,7 +425,7 @@ beefont_download_zip() {
 # Usage: beefont_languages_status SID
 beefont_languages_status() {
   local SID="${1:?sid missing}"
-  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/languages/status" \
+  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/languages/status/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
@@ -434,7 +434,7 @@ beefont_languages_status() {
 beefont_language_status() {
   local SID="${1:?sid missing}"
   local LANG="${2:?language missing}"
-  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/languages/${LANG}/status" \
+  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/languages/${LANG}/status/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 

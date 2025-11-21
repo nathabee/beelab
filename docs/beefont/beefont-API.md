@@ -44,7 +44,7 @@ Scope ist benutzerspezifisch.
 
 # **Templates**
 
-## **GET `/api/beefont/templates`**
+## **GET `/api/beefont/templates/`**
 
 Listet alle TemplateDefinition-Einträge.
 
@@ -64,7 +64,7 @@ Listet alle TemplateDefinition-Einträge.
 
 ---
 
-## **GET `/api/beefont/templates/<code>/image`**
+## **GET `/api/beefont/templates/<code>/image/`**
 
 Rendert das Template als PNG (blank, blankpure, prefill… über Query-Parameter).
 
@@ -72,13 +72,13 @@ Rendert das Template als PNG (blank, blankpure, prefill… über Query-Parameter
 
 # **Languages**
 
-## **GET `/api/beefont/languages`**
+## **GET `/api/beefont/languages/`**
 
 Listet alle Sprachen.
 
 ---
 
-## **GET `/api/beefont/languages/<code>/alphabet`**
+## **GET `/api/beefont/languages/<code>/alphabet/`**
 
 Alphabet für eine Sprache.
 
@@ -94,13 +94,13 @@ Alphabet für eine Sprache.
 
 # **Jobs**
 
-## **GET `/api/beefont/jobs`**
+## **GET `/api/beefont/jobs/`**
 
 Listet alle Jobs des Nutzers.
 
 ---
 
-## **POST `/api/beefont/jobs`**
+## **POST `/api/beefont/jobs/`**
 
 Erstellt einen neuen Job.
 
@@ -127,13 +127,13 @@ Response 201:
 
 ---
 
-## **GET `/api/beefont/jobs/<sid>`**
+## **GET `/api/beefont/jobs/<sid>/`**
 
 Job-Detail.
 
 ---
 
-## **DELETE `/api/beefont/jobs/<sid>`**
+## **DELETE `/api/beefont/jobs/<sid>/`**
 
 Löscht den gesamten Job.
 
@@ -143,27 +143,26 @@ Löscht den gesamten Job.
 
 Eine Page = Template-Raster + erwartete Buchstaben + ein Scan.
 
-## **GET `/api/beefont/jobs/<sid>/pages`**
+## **GET `/api/beefont/jobs/<sid>/pages/`**
 
 Listet alle Pages.
 
 ---
 
-## **GET `/api/beefont/jobs/<sid>/pages/<page_id>`**
+## **GET `/api/beefont/jobs/<sid>/pages/<page_id>/`**
 
 Detail einer Page.
 
 ---
 
-## **DELETE `/api/beefont/jobs/<sid>/pages/<page_id>`**
+## **DELETE `/api/beefont/jobs/<sid>/pages/<page_id>/`**
 
 Löscht Page + zugehörige Glyph-Varianten.
 
 ---
+ 
 
-## **NEU (High-Level)**
-
-# **POST `/api/beefont/jobs/<sid>/pages/create`**
+# **POST `/api/beefont/jobs/<sid>/pages/create/`**
 
 Erstellt eine neue Seite **und** lädt das Scanbild hoch.
 Optional führt die API die Analyse direkt durch.
@@ -181,7 +180,7 @@ Multipart-Form-Data Felder:
 **Beispiel:**
 
 ```
-POST /api/beefont/jobs/abcd1234/pages/create
+POST /api/beefont/jobs/abcd1234/pages/create/
 Content-Type: multipart/form-data
 
 template_code = A4_6x5
@@ -211,17 +210,15 @@ auto_analyse = true
 
 ---
 
-## **Low-Level Endpunkte (weiterhin verfügbar)**
+## **Low-Level Endpunkte  **
 
-### **POST `/api/beefont/jobs/<sid>/pages/<page_id>/upload-scan`**
+ 
 
-Nur Scan hochladen.
-
-### **POST `/api/beefont/jobs/<sid>/pages/<page_id>/analyse`**
+### **POST `/api/beefont/jobs/<sid>/pages/<page_id>/analyse/`**
 
 Manuelle Analyse.
 
-### **POST `/api/beefont/jobs/<sid>/pages/<page_id>/retry-analysis`**
+### **POST `/api/beefont/jobs/<sid>/pages/<page_id>/retry-analysis/`**
 
 Analyse überschreiben.
 
@@ -229,7 +226,7 @@ Analyse überschreiben.
 
 # **Glyphs**
 
-## **GET `/api/beefont/jobs/<sid>/glyphs`**
+## **GET `/api/beefont/jobs/<sid>/glyphs/`**
 
 Alle Glyphs eines Jobs.
 
@@ -237,13 +234,13 @@ Option: `?letter=X`
 
 ---
 
-## **GET `/api/beefont/jobs/<sid>/glyphs/<letter>`**
+## **GET `/api/beefont/jobs/<sid>/glyphs/<letter>/`**
 
 Alle Varianten eines Buchstabens.
 
 ---
 
-## **POST `/api/beefont/jobs/<sid>/glyphs/<letter>/select`**
+## **POST `/api/beefont/jobs/<sid>/glyphs/<letter>/select/`**
 
 Setzt die Default-Variante.
 
@@ -272,7 +269,7 @@ Response:
 
 # **Font Builds**
 
-## **POST `/api/beefont/jobs/<sid>/build-ttf`**
+## **POST `/api/beefont/jobs/<sid>/build-ttf/`**
 
 Erstellt ein TTF für eine bestimmte Sprache.
 
@@ -284,7 +281,7 @@ Body:
 
 ---
 
-## **GET `/api/beefont/jobs/<sid>/download/ttf/<language>`**
+## **GET `/api/beefont/jobs/<sid>/download/ttf/<language>/`**
 
 TTF herunterladen.
 
@@ -292,7 +289,7 @@ TTF herunterladen.
 
 # **Language-Status**
 
-### **GET `/api/beefont/jobs/<sid>/languages/status`**
+### **GET `/api/beefont/jobs/<sid>/languages/status/`**
 
 Status aller Sprachen für diesen Job.
 
@@ -317,7 +314,7 @@ Beispiel:
 
 ---
 
-### **GET `/api/beefont/jobs/<sid>/languages/<language>/status`**
+### **GET `/api/beefont/jobs/<sid>/languages/<language>/status/`**
 
 Status einer einzelnen Sprache.
 
@@ -325,7 +322,7 @@ Status einer einzelnen Sprache.
 
 # **ZIP-Download**
 
-## **GET `/api/beefont/jobs/<sid>/download/zip`**
+## **GET `/api/beefont/jobs/<sid>/download/zip/`**
 
 ZIP enthält:
 

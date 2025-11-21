@@ -203,6 +203,8 @@ class JobListCreate(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return FontJob.objects.filter(user=self.request.user)
+ 
+ 
 
     def perform_create(self, serializer):
         job = serializer.save(user=self.request.user)

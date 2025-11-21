@@ -3,7 +3,7 @@ import React from 'react';
 import { ErrorTestButtons, ErrorPage, ErrorHistoryPage } from '@bee/common';
 import { apiApp, apiUser } from '@utils/api';
 
-const ErrorMgt = () => (
+const ErrorMgtPage = () => (
   <>
     <h2>Debug phase: test some errors</h2>
     <ErrorTestButtons apiApp={apiApp} apiUser={apiUser} plugin="beefont" />
@@ -17,4 +17,4 @@ const ErrorMgt = () => (
   </>
 );
 
-export default ErrorMgt;
+export default ErrorMgtPage;
