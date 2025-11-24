@@ -39,11 +39,12 @@ const JobDetailPage: React.FC = () => {
     deletePage,
   } = usePages(sid);
 
-  // Hook nur für "build font", KEINE Auto-Fetches
+  // Hook only for build + download; no auto-fetches of history
   const {
     isBuilding,
     error: buildError,
     buildLanguage,
+    downloadTtf,
   } = useFontBuild(sid, { manual: true });
 
   const isLoading = isJobLoading || isPagesLoading;
@@ -83,15 +84,26 @@ const JobDetailPage: React.FC = () => {
     );
   };
 
-  // EIGENTLICHER Build-Handler: POST /build-ttf/, kein /builds/ davor
+  // Build handler: POST /jobs/{sid}/build-ttf/
   const handleBuild = (languageCode: string) => {
     buildLanguage(languageCode)
       .then(build => {
-        console.log('[JobDetail] Build OK:', build);
-        // wenn du willst, kannst du hier noch irgendwas nachziehen (Toast, reload languageStatuses, etc.)
+        console.log('[JobDetailPage] buildLanguage OK:', build);
+        // Optional: reload() if you want statuses refreshed immediately
       })
       .catch(err => {
-        console.error('[JobDetail] buildLanguage failed:', err);
+        console.error('[JobDetailPage] buildLanguage failed:', err);
+      });
+  };
+
+  // Download handler – goes through hook (with auth)
+  const handleDownloadTtf = (languageCode: string) => {
+    downloadTtf(languageCode)
+      .then(() => {
+        console.log('[JobDetailPage] downloadTtf OK for', languageCode);
+      })
+      .catch(err => {
+        console.error('[JobDetailPage] downloadTtf failed:', err);
       });
   };
 
@@ -192,8 +204,9 @@ const JobDetailPage: React.FC = () => {
 
             <LanguageStatusList
               items={languageStatuses}
-              onBuildFont={handleBuild}      // HIER: direkt buildLanguage nutzen
+              onBuildFont={handleBuild}
               onShowMissing={handleShowMissing}
+              onDownloadTtf={handleDownloadTtf}
             />
           </section>
 

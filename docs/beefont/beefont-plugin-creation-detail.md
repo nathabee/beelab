@@ -9,7 +9,7 @@ Init beefont plugin using the nutshell (see developper tipps)
 Use the frontend spec to define necessary page (UI interface)
 JobOverviewPage
 JobDetailPage
-TemplateAlphabetPage
+// TemplateAlphabetPage obsolete
 PrintUploadPage
 PageAnalysisRetryPage
 GlyphBrowserPage
@@ -38,6 +38,7 @@ hooks/useJobDetail.ts
 hooks/useJobs.ts
 hooks/useMissingCharacters.ts
 hooks/usePages.ts
+hooks/useTemplates.ts
 
 consistency check
 
@@ -46,7 +47,7 @@ component creation : identify possible component and make the code
 4 core components now and then build all pages on top of them:
 
 LanguageStatusList – shared between JobDetail + FontBuild
-AlphabetGrid – shared between TemplateAlphabet + MissingCharacters
+AlphabetGrid –   MissingCharacters
 PagesTable – shared between JobDetail + PageAnalysisRetry + maybe PrintUpload
 GlyphVariantsGrid – shared within GlyphBrowser
 
@@ -100,8 +101,7 @@ let start with JobOverviewPage # but f
 
 * Display characters in a grid with “covered” / “missing” styling.
 * Used by:
-
-  * `TemplateAlphabetPage` (full alphabet with coverage)
+ 
   * `MissingCharactersPage` (only missing chars)
 
 **File**: `src/components/AlphabetGrid.tsx`
@@ -109,16 +109,7 @@ let start with JobOverviewPage # but f
 
 **Usage sketch**
 
-* `TemplateAlphabetPage`:
-
-  * feed it with full alphabet:
-
-    ```ts
-    const alphabetItems = alphabet.map(ch => ({
-      char: ch.char,
-      isCovered: ch.isCovered,
-    }));
-    ```
+ 
 
 * `MissingCharactersPage`:
 

@@ -1,4 +1,3 @@
-// src/pages/GlyphBrowserPage.tsx
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -26,9 +25,7 @@ const GlyphBrowserPage: React.FC = () => {
     [sidParam, activeJob],
   );
 
-  // Debug: show clearly where sid came from
   useEffect(() => {
-    // Avoid noisy logs on every render, but keep it explicit for debugging
     console.debug('[GlyphBrowserPage] SID resolution', {
       sidParam,
       activeJobSid: activeJob?.sid ?? null,
@@ -37,6 +34,9 @@ const GlyphBrowserPage: React.FC = () => {
   }, [sidParam, activeJob, effectiveSid]);
 
   const [filterLetter, setFilterLetter] = useState<string>(initialLetter);
+
+  // NEW: scale of glyph thumbnails (1.0 = default)
+  const [glyphScale, setGlyphScale] = useState<number>(1.0);
 
   const {
     glyphs,
@@ -105,6 +105,25 @@ const GlyphBrowserPage: React.FC = () => {
     });
   };
 
+  // NEW: helpers for +/– and slider
+  const clampScale = (value: number) => {
+    const min = 0.5;
+    const max = 3.0;
+    return Math.min(max, Math.max(min, value));
+  };
+
+  const handleZoomOut = () => {
+    setGlyphScale(prev => clampScale(prev - 0.25));
+  };
+
+  const handleZoomIn = () => {
+    setGlyphScale(prev => clampScale(prev + 0.25));
+  };
+
+  const handleZoomSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setGlyphScale(clampScale(parseFloat(e.target.value)));
+  };
+
   return (
     <section className="bf-page bf-page--glyph-browser">
       <header className="bf-page__header">
@@ -163,6 +182,35 @@ const GlyphBrowserPage: React.FC = () => {
       <section className="bf-panel">
         <div className="bf-panel__header">
           <h2>Glyph variants</h2>
+
+          {/* NEW: glyph size controls */}
+          <div className="bf-glyph-browser__controls">
+            <span className="bf-glyph-browser__controls-label">Size</span>
+            <button
+              type="button"
+              className="bf-button bf-button--tiny"
+              onClick={handleZoomOut}
+            >
+              –
+            </button>
+            <input
+              type="range"
+              min={0.5}
+              max={3.0}
+              step={0.25}
+              value={glyphScale}
+              onChange={handleZoomSlider}
+              className="bf-glyph-browser__slider"
+            />
+            <button
+              type="button"
+              className="bf-button bf-button--tiny"
+              onClick={handleZoomIn}
+            >
+              +
+            </button>
+          </div>
+
           {(isLoading || isUpdating) && (
             <span className="bf-panel__status">
               {isLoading ? 'Loading… ' : ''}
@@ -185,6 +233,7 @@ const GlyphBrowserPage: React.FC = () => {
           <GlyphVariantsGrid
             glyphs={glyphs}
             onSetDefault={handleSetDefault}
+            scale={glyphScale}         
           />
         )}
       </section>

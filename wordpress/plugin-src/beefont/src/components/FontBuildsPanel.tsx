@@ -7,22 +7,18 @@ import useFontBuild from '@hooks/useFontBuild';
 import { friendlyMessage, type AppError } from '@bee/common/error';
 
 type FontBuildsPanelProps = {
-  /**
-   * Optional SID; falls leer, nimmt der Hook activeJob.sid aus dem AppContext.
-   */
   sid?: string;
 };
 
 const FontBuildsPanel: React.FC<FontBuildsPanelProps> = ({ sid = '' }) => {
-  // Diese Panel Instanz will die Liste automatisch laden:
   const {
     builds,
     isLoadingBuilds,
     isBuilding,
     error,
     fetchBuilds,
-    getTtfDownloadUrl,
-    getZipDownloadUrl,
+    downloadTtf,      // NEW
+    downloadZip,      // NEW
   } = useFontBuild(sid, { manual: false });
 
   const errorText = useMemo(
@@ -31,15 +27,15 @@ const FontBuildsPanel: React.FC<FontBuildsPanelProps> = ({ sid = '' }) => {
   );
 
   const handleDownloadZip = () => {
-    const url = getZipDownloadUrl();
-    if (!url) return;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    downloadZip().catch(err => {
+      console.error('[FontBuildsPanel] download ZIP failed:', err);
+    });
   };
 
   const handleDownloadTtf = (languageCode: string) => {
-    const url = getTtfDownloadUrl(languageCode);
-    if (!url) return;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    downloadTtf(languageCode).catch(err => {
+      console.error('[FontBuildsPanel] download TTF failed:', err);
+    });
   };
 
   return (

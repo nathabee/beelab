@@ -5,26 +5,12 @@
 import React from 'react';
 import type { LanguageStatus } from '@mytypes/languageStatus';
 
-export type LanguageStatusListProps = {
+type LanguageStatusListProps = {
   items: LanguageStatus[];
-
-  /**
-   * Called when the user clicks "Build font" for a language.
-   * You can wire this to useFontBuild.buildLanguage(language).
-   */
-  onBuildFont?: (languageCode: string) => void;
-
-  /**
-   * Called when the user clicks "Show missing characters".
-   * Typically pushes router to MissingCharactersPage.
-   */
-  onShowMissing?: (languageCode: string) => void;
-
-  /**
-   * Optional: URL generator for TTF downloads to show a direct link.
-   * If provided, a "Download TTF" link will be rendered.
-   */
-  getTtfUrl?: (languageCode: string) => string | null;
+  onBuildFont: (languageCode: string) => void;
+  onShowMissing: (languageCode: string) => void;
+  getTtfUrl?: (languageCode: string) => string | null;  // optional
+  onDownloadTtf: (languageCode: string) => void;
 };
 
 const LanguageStatusList: React.FC<LanguageStatusListProps> = ({
@@ -32,6 +18,7 @@ const LanguageStatusList: React.FC<LanguageStatusListProps> = ({
   onBuildFont,
   onShowMissing,
   getTtfUrl,
+  onDownloadTtf,
 }) => {
   if (!items || items.length === 0) {
     return <p>No languages available.</p>;
@@ -42,6 +29,10 @@ const LanguageStatusList: React.FC<LanguageStatusListProps> = ({
       {items.map(lang => {
         const isReady = lang.ready;
         const ttfUrl = getTtfUrl ? getTtfUrl(lang.language) : null;
+
+        // If getTtfUrl is provided (FontBuildPage), only enable when URL exists.
+        // If not provided (JobDetail), fall back to "ready".
+        const canDownload = getTtfUrl ? !!ttfUrl : isReady;
 
         return (
           <li key={lang.language} className="bf-language-list__item">
@@ -57,17 +48,15 @@ const LanguageStatusList: React.FC<LanguageStatusListProps> = ({
             </div>
 
             <div className="bf-language-list__actions">
-              {onBuildFont && (
-                <button
-                  type="button"
-                  disabled={!isReady}
-                  onClick={() => onBuildFont(lang.language)}
-                >
-                  Build font
-                </button>
-              )}
+              <button
+                type="button"
+                disabled={!isReady}
+                onClick={() => onBuildFont(lang.language)}
+              >
+                Build font
+              </button>
 
-              {!isReady && onShowMissing && (
+              {!isReady && (
                 <button
                   type="button"
                   onClick={() => onShowMissing(lang.language)}
@@ -76,14 +65,14 @@ const LanguageStatusList: React.FC<LanguageStatusListProps> = ({
                 </button>
               )}
 
-              {ttfUrl && (
-                <a
-                  href={ttfUrl}
-                  className="bf-link bf-link--download"
-                >
-                  Download TTF
-                </a>
-              )}
+              <button
+                type="button"
+                className="bf-link bf-link--download"
+                onClick={() => onDownloadTtf(lang.language)}
+                disabled={!canDownload}
+              >
+                Download TTF
+              </button>
             </div>
           </li>
         );

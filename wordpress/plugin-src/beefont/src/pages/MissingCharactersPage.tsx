@@ -55,13 +55,23 @@ const MissingCharactersPage: React.FC = () => {
   }, [status]);
 
   const handlePlanPages = () => {
-    // Go back to template + alphabet planning, pre-selecting the language.
+    if (!status || !status.missing_chars) {
+      // Should not happen because button is disabled when missingCells.length === 0,
+      // but be defensive.
+      return;
+    }
+
+    const missingLetters = status.missing_chars;
+
     navigate(
       `/printupload?sid=${encodeURIComponent(
         sid,
-      )}&language=${encodeURIComponent(language)}`,
+      )}&language=${encodeURIComponent(
+        language,
+      )}&letters=${encodeURIComponent(missingLetters)}`,
     );
   };
+
 
   return (
     <section className="bf-page bf-page--missing-characters">
@@ -174,6 +184,7 @@ const MissingCharactersPage: React.FC = () => {
           >
             Create pages for missing characters
           </button>
+
         </div>
       </section>
     </section>

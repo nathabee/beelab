@@ -1,10 +1,10 @@
 // src/pages/FontBuildPage.tsx
-//
 'use client';
 
 import React, { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { useApp } from '@context/AppContext';
 import useJobDetail from '@hooks/useJobDetail';
 import useFontBuild from '@hooks/useFontBuild';
 
@@ -16,15 +16,22 @@ const FontBuildPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const sid = searchParams.get('sid') ?? '';
+  const sidParam = searchParams.get('sid') ?? '';
   const preselectedLanguage = searchParams.get('language') ?? '';
+
+  const { activeJob } = useApp();
+
+  const effectiveSid = useMemo(
+    () => sidParam || activeJob?.sid || '',
+    [sidParam, activeJob],
+  );
 
   const {
     job,
     languageStatuses,
     isLoading: isJobLoading,
     error: jobError,
-  } = useJobDetail(sid || '');
+  } = useJobDetail(effectiveSid || '');
 
   const {
     builds,
@@ -32,9 +39,10 @@ const FontBuildPage: React.FC = () => {
     isBuilding,
     error: buildError,
     buildLanguage,
-    getTtfDownloadUrl,
-    getZipDownloadUrl,
-  } = useFontBuild(sid || '');
+    getTtfDownloadUrl, // ← bring this back
+    downloadTtf,       // authenticated helper
+    downloadZip,
+  } = useFontBuild(effectiveSid || '');
 
   const error = jobError ?? buildError ?? null;
 
@@ -43,20 +51,20 @@ const FontBuildPage: React.FC = () => {
     [error],
   );
 
-  if (!sid) {
+  if (!effectiveSid) {
     return (
       <section className="bf-page bf-page--font-build">
         <header className="bf-page__header">
           <h1>BeeFont – Builds and downloads</h1>
         </header>
         <div className="bf-alert bf-alert--error">
-          No job selected. Open this page from the job detail screen.
+          No job selected. Open this page from the job detail screen or select a job first.
         </div>
       </section>
     );
   }
 
-  // Derive which languages already have a successful build
+  // which languages actually have at least one successful build
   const languagesWithBuild = useMemo(() => {
     const set = new Set<string>();
     builds.forEach(b => {
@@ -68,7 +76,7 @@ const FontBuildPage: React.FC = () => {
   }, [builds]);
 
   const handleBackToJob = () => {
-    navigate(`/jobDetail?sid=${encodeURIComponent(sid)}`);
+    navigate(`/jobDetail?sid=${encodeURIComponent(effectiveSid)}`);
   };
 
   const handleBuildFont = async (languageCode: string) => {
@@ -80,15 +88,27 @@ const FontBuildPage: React.FC = () => {
   const handleShowMissing = (languageCode: string) => {
     navigate(
       `/missingcharacters?sid=${encodeURIComponent(
-        sid,
+        effectiveSid,
       )}&language=${encodeURIComponent(languageCode)}`,
     );
   };
 
+  // LOCAL helper: only used to decide if "Download TTF" should be enabled
   const getTtfUrl = (languageCode: string): string | null => {
-    // Only show a TTF link if there is at least one successful build for this language.
     if (!languagesWithBuild.has(languageCode)) return null;
     return getTtfDownloadUrl(languageCode);
+  };
+
+  const handleDownloadTtf = (languageCode: string) => {
+    downloadTtf(languageCode).catch(err => {
+      console.error('[FontBuildPage] downloadTtf failed:', err);
+    });
+  };
+
+  const handleDownloadZip = () => {
+    downloadZip().catch(err => {
+      console.error('[FontBuildPage] downloadZip failed:', err);
+    });
   };
 
   return (
@@ -158,17 +178,20 @@ const FontBuildPage: React.FC = () => {
             items={languageStatuses}
             onBuildFont={handleBuildFont}
             onShowMissing={handleShowMissing}
-            getTtfUrl={getTtfUrl}
+            getTtfUrl={getTtfUrl}              // now defined
+            onDownloadTtf={handleDownloadTtf}  // authenticated download
           />
         )}
 
         <div className="bf-panel__actions">
-          <a
-            href={getZipDownloadUrl()}
+          <button
+            type="button"
             className="bf-button bf-button--secondary"
+            onClick={handleDownloadZip}
+            disabled={builds.length === 0}
           >
             Download ZIP (all fonts)
-          </a>
+          </button>
         </div>
       </section>
 

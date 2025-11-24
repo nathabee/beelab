@@ -90,3 +90,91 @@
   pointer-events: none;
   text-decoration: none;
 }
+
+
+/* glyph browser layout */
+
+.bf-glyph-browser {
+  /* base scale 1.0, base thumb width 80px */
+  --bf-glyph-thumb-base: 80px;
+  --bf-glyph-scale: 1;
+}
+
+.bf-glyph-browser__group {
+  margin-bottom: 2rem;
+}
+
+.bf-glyph-browser__group-title {
+  margin-bottom: 0.5rem;
+}
+
+/* grid: many per line, wraps automatically */
+.bf-glyph-browser__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+/* each glyph item */
+.bf-glyph-browser__item {
+  border: 1px solid var(--bf-border-color, #ddd);
+  border-radius: 4px;
+  padding: 0.5rem;
+  background: #fff;
+}
+
+.bf-glyph-browser__item--default {
+  border-color: var(--bf-accent-color, #0073aa);
+  box-shadow: 0 0 0 1px var(--bf-accent-color, #0073aa);
+}
+
+/* thumbnail wrapper */
+.bf-glyph-browser__thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+/* image respects the scale */
+.bf-glyph-browser__thumb img {
+  display: block;
+  width: calc(var(--bf-glyph-thumb-base) * var(--bf-glyph-scale));
+  height: auto;
+}
+
+/* caption/meta */
+.bf-glyph-browser__caption {
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bf-glyph-browser__meta {
+  color: #555;
+}
+
+/* size control bar in the panel header */
+
+.bf-glyph-browser__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto; /* push against right edge of panel header */
+}
+
+.bf-glyph-browser__controls-label {
+  font-size: 0.85rem;
+}
+
+.bf-glyph-browser__slider {
+  width: 120px;
+}
+
+
+.bf-page--glyph-browser .bf-panel:last-of-type {
+  max-height: calc(100vh - 260px);  
+  overflow-y: auto;
+}

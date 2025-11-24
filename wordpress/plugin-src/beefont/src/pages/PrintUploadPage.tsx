@@ -1,5 +1,5 @@
 // src/pages/PrintUploadPage.tsx
-'use client';
+'use client'; 
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -20,6 +20,7 @@ const PrintUploadPage: React.FC = () => {
   const [searchParams] = useSearchParams();
 
   const sidParam = searchParams.get('sid') ?? '';
+  const lettersParam = searchParams.get('letters') ?? '';
   const languageFromUrl = searchParams.get('language') ?? '';
   const templateCodeFromUrl = searchParams.get('template') ?? '';
 
@@ -32,7 +33,9 @@ const PrintUploadPage: React.FC = () => {
 
   const [selectedLanguage, setSelectedLanguage] = useState<string>(languageFromUrl || '');
   const [selectedTemplate, setSelectedTemplate] = useState<string>(templateCodeFromUrl || '');
-  const [letters, setLetters] = useState<string>('');
+
+  // IMPORTANT: use lettersParam as initial value for the field actually used everywhere
+  const [letters, setLetters] = useState<string>(lettersParam);
 
   const [file, setFile] = useState<File | null>(null);
   const [autoAnalyse, setAutoAnalyse] = useState<boolean>(true);
@@ -67,17 +70,42 @@ const PrintUploadPage: React.FC = () => {
     return null;
   }, [localError, pagesError, alphabetError, templateImageError]);
 
+  // Auto-select a language if none chosen
   useEffect(() => {
     if (!selectedLanguage && languages && languages.length > 0) {
       setSelectedLanguage(languages[0].code);
     }
   }, [selectedLanguage, languages]);
 
+  // Auto-select a template:
+  // - if a template is preselected via URL, keep it
+  // - if we come from MissingCharacters (lettersParam set) and no template, pick the one with max capacity
+  // - otherwise fallback to the first template
   useEffect(() => {
-    if (!selectedTemplate && templates && templates.length > 0) {
-      setSelectedTemplate(templates[0].code);
+    if (!templates || templates.length === 0) return;
+    if (selectedTemplate) return; // already chosen (either URL or user)
+
+    let best = templates[0];
+
+    if (lettersParam) {
+      // choose template with maximum capacity
+      for (const tpl of templates) {
+        if ((tpl.capacity ?? 0) > (best.capacity ?? 0)) {
+          best = tpl;
+        }
+      }
     }
-  }, [selectedTemplate, templates]);
+
+    setSelectedTemplate(best.code);
+  }, [templates, selectedTemplate, lettersParam]);
+
+  // If the query param changes AFTER mount (rare, but keep it consistent),
+  // update letters only if the user has not typed anything yet.
+  useEffect(() => {
+    if (!letters && lettersParam) {
+      setLetters(lettersParam);
+    }
+  }, [lettersParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!effectiveSid) {
     return (
@@ -121,7 +149,7 @@ const PrintUploadPage: React.FC = () => {
     }));
   }, [alphabet, defaultCoveredLetters]);
 
-    const uploadDisabled =
+  const uploadDisabled =
     isUploading ||
     !selectedTemplate ||
     !selectedLanguage ||
