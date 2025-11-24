@@ -1,0 +1,9 @@
+{
+  "http_status": 404,
+  "response": {
+    "error": {
+      "code": "404_NOT_FOUND",
+      "message": "Image not found with {'id': 999999}"
+    }
+  }
+}

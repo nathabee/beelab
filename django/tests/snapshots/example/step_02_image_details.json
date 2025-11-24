@@ -1,0 +1,18 @@
+{
+  "status": "success",
+  "data": {
+    "image_id": 3,
+    "row_id": 1,
+    "field_id": 1,
+    "xy_location": null,
+    "fruit_type": "Cultivar Swing on CG1",
+    "user_fruit_plant": null,
+    "upload_date": "2025-04-17",
+    "date": "2024-03-14",
+    "image_url": "/media/images/image-3.jpg",
+    "original_filename": "orchard.jpg",
+    "processed": true,
+    "processed_at": "2025-04-17T08:12:45",
+    "status": "Done"
+  }
+}

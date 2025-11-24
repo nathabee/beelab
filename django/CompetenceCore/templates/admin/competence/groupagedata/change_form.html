@@ -1,0 +1,41 @@
+{% extends "admin/change_form.html" %}
+
+{% block content %}
+    <div class="image-preview-container">  <!-- Displaying the image first -->
+        <label>Current Image Preview:</label>
+        <img id="image-preview" src="{{ current_image_url }}" alt="Current Image Preview" />
+    </div>
+ 
+
+    <!-- Render the default form fields here -->
+    {{ block.super }}  <!-- Ensures you include the original form fields -->
+{% endblock %}
+
+{% block footer %}
+    {{ block.super }}  <!-- Ensures you don't lose other footer content -->
+    <script>
+        function updateImagePreview(selectElement) {
+            const imageId = selectElement.value;
+            const imagePreview = document.getElementById('image-preview');
+
+            if (imageId) {
+                const imageUrlMap = {
+                    {% for image in my_images %}
+                    '{{ image.id }}': '{{ image.icon.url|escapejs }}'{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                };
+
+                const url = imageUrlMap[imageId] || ''; 
+                imagePreview.src = url; 
+            } else {
+                imagePreview.src = ''; 
+            }
+        }
+
+        // Initial update of image preview on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectElement = document.getElementById('id_groupage_icon');
+            updateImagePreview(selectElement); 
+        });
+    </script>
+{% endblock %}

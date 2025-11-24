@@ -1,0 +1,10 @@
+id,description
+1,default rule
+2,Rule 2 : A NA
+3,Rule 3 : A ECA NA
+4,Rule 4 : Oui=1 Non=0
+5,Rule 5 : Oui=0 Non=1
+6,Rule 6 : Moins de 10  de 10 a 20 plus de 20 
+6,Rule 6 : Moins de 10  de 10 a 20 plus de 20 
+7,Rule 7 : toujours 0 point
+8,Rule 8 : points a la demande

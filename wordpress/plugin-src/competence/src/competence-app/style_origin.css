@@ -1,0 +1,386 @@
+/* style.css */
+
+ 
+
+/* Root variables for colors */
+:root {
+  --custom-blue: #d4f0eb;
+  --custom-blue-complement:  #deecbe;
+  --custom-warning: #fae46a;
+  --custom-dark: #22473f;
+  --custom-dark-shadow:  rgba(0, 0, 0, 0.1);
+  --custom-light: #d1f3f1;
+  /*--custom-light-pink: rgba(255, 235, 239, 0.8); /* Light pink with transparency */
+  /*--custom-dark-pink: rgba(255, 204, 213, 0.8); /* Darker pink with transparency */
+  --custom-transparent: rgba(255, 255, 255, 0); /* Fully transparent */
+  --custom-text: #343a40;
+  --custom-text-on-dark: white;
+  --custom-link-hover: #ff9100;
+  --custom-alert: #c4361d;
+  --custom-dropdown-bg: white;
+  --custom-dropdown-border: #9cee83;
+  --custom-gradient: linear-gradient(to right, var(--custom-blue-complement), var(--custom-blue));
+}
+
+
+
+/* Gradient background */
+body {
+  background:  var(--custom-gradient);
+  font-family: Arial, sans-serif; 
+  align-items: center; 
+}
+
+
+.container {
+  overflow: auto; /* Ensures dashboard content doesn't interfere */
+}
+
+
+.card {
+  background-color: var(--custom-blue);
+  box-shadow: 0 4px 8px var(--custom-dark-shadow); /* Optional for card elevation */
+  border-radius: 10px; /* Optional for rounded corners */
+}
+
+h2 {
+  margin-top: 2rem;   /* mt-4 ≈ 2rem */
+  margin-bottom: 1rem; /* mb-3 ≈ 1rem */
+}
+
+
+
+/* Ensure the container uses the full width and adapts */
+.container-fluid {
+  width: 100%;
+  padding: 0;
+}
+
+/* Table responsive to allow horizontal scroll */
+.table-responsive {
+  overflow-x: auto;
+  margin-bottom: 15px;
+}
+
+.table th, .table td {
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+
+.selected-row td {
+  background-color: var(--custom-blue) !important; /* Highlight selected rows */
+}
+
+
+
+
+
+
+
+
+/**************************************************/
+
+/* Navbar container */
+.navbar {
+  display: flex !important;
+  flex-direction: row !important;
+  background-color: var(--custom-dark);
+  color: var(--custom-text-on-dark);
+  height: 3rem; 
+  align-items: center;
+  justify-content: space-between; /* Space between hamburger and active data */
+  padding: 0 1rem;
+}
+ 
+
+
+/* Container for the active data in the navbar */
+.navbar-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* Active data section in the navbar */
+.navbar-active-data {
+  display: flex; /* Set flexbox for active data */
+  align-items: center;
+  justify-content: flex-start; /* Align items to the start */
+  flex-grow: 1; /* Grow to fill remaining space */
+  gap: 1rem; /* Add spacing between elements */
+  margin-left: 1rem; /* Add spacing to the left of the hamburger */ 
+}
+
+.navbar-button {
+  background-color: transparent;
+  color: var(--custom-text-on-dark); /* white */
+  border: 1px solid var(--custom-text-on-dark);
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+ 
+/* Catalogue container styled as flex column */
+.catalogue-container {
+  display: flex;
+  flex-direction: column;  
+  gap: 0.5rem;  
+}
+
+ 
+
+/* Sticky navbar styling */
+.sticky-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 9999; 
+  pointer-events: auto; /* Ensure clicks are allowed */
+}
+
+/* Hamburger icon remains fixed at top-left */
+.hamburger-icon {
+  font-size: 30px;
+  background-color: transparent;
+  border: none;
+  color: var(--custom-text-on-dark);
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+ 
+
+
+/* Sidebar styling */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 250px;
+  background-color: var(--custom-dark);
+  color: var(--custom-text-on-dark);
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(-100%);
+}
+
+.sidebar.open {
+  transform: translateX(0); /* Slide the sidebar open */
+}
+
+/* Responsive adjustments (optional) */
+@media (max-width: 768px) {
+  .navbar-active-data {
+    flex-direction: column; /* Stack active data vertically on smaller screens */
+  }
+}
+
+.content-container {
+  flex-grow: 1;
+  transition: margin-left 0.3s ease;
+  margin-top:  60px;
+  margin-left: 0;
+}
+
+.sidebar.open + .content-container {
+  margin-left: 250px;
+}
+
+/* Navbar links */
+.navbar .nav-link {
+  color: var(--custom-text-on-dark);
+  transition: color 0.3s;
+}
+
+.navbar .nav-link:hover {
+  color: var(--custom-link-hover);
+}
+
+
+/* CSS for warning message styling */
+.warning-message {
+  background-color: var(--custom-warning, #fae46a); /* Use fallback color in case variable isn't defined */
+  color: var(--custom-text, #343a40);
+  padding: 5px 10px;  /* Optional padding for better appearance */
+  border-radius: 5px; /* Optional rounded corners */
+  margin: 5px 0;      /* Optional margin for spacing */
+  display: inline-block; /* Ensures the message takes only as much space as needed */
+}
+
+/* Add this CSS for button styling */
+.button-warning {
+  background-color: var(--custom-warning, #fae46a);
+  color: var(--custom-text, #343a40);
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px; /* Optional spacing between buttons */
+}
+
+.button-transparent {
+  background-color: transparent;
+  color: var(--custom-text, #fae46a);
+  padding: 5px 10px;
+  border: 1px solid var(--custom-text);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+ /************************************************/
+ .shadow-container {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Light shadow effect */
+  border-radius: 8px; /* Rounded corners */
+  padding: 16px; /* Padding inside the container */
+  margin-bottom: 20px; /* Space between containers */
+  background-color: var(--custom-blue); /* White background for contrast */
+  color: var(--custom-text);
+  transition: box-shadow 0.3s ease; /* Smooth shadow transition on hover */
+}
+
+.shadow-container:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow on hover */
+}
+
+
+ /************************************************/
+
+
+.expandable-title {
+  cursor: pointer;
+  color: var(--custom-link-hover);
+}
+
+.expandable-title.expanded {
+  /* Optionally, add styles for when it's expanded */
+  font-weight: bold; /* For example, make it bold when expanded */
+}
+
+
+/*******************************************************/
+/* Help in drawer */
+/* global.css */
+.drawer-content  {
+  padding: 1rem;
+  background:  var(--custom-gradient);
+  font-family: Arial, sans-serif; 
+  color: var(--custom-text); /* Optional: Set text color for better contrast with the background */
+  border-radius: 0 5px 5px 0; /* Optional: Customize rounded edges */
+  transition: box-shadow 0.3s ease; /* Smooth shadow transition on hover */
+}
+
+
+.help-drawer-heading { 
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.help-drawer-subheading { 
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-top: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+.help-drawer-paragraph {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+@keyframes pulsate {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pulsating-text {
+  animation: pulsate 1.5s ease-in-out infinite;
+}
+
+/*****************************************/
+.carousel-navigation button {
+  margin: 10px;
+  padding: 10px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.carousel-navigation button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.info-layer {
+  margin-bottom: 20px;
+}
+
+.button-warning {
+  background-color: #ff9800;
+  color: white;
+}
+
+.button-transparent {
+  background-color: transparent;
+  border: 1px solid #007BFF;
+}
+
+/*****************************************/
+/* add for the home page */
+
+/* Flex container for the home page */
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Each item inside the flex container */
+.flex-item {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Make iframe full-width and styled */
+.iframe-container iframe {
+  width: 100%;
+  height: 400px;
+  border: 1px solid var(--custom-dark-shadow);
+  border-radius: 8px;
+}
+
+/* Info panel on the side */
+.info-container {
+  background-color: var(--custom-blue);
+  color: var(--custom-text);
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px var(--custom-dark-shadow);
+}
+
+/* GitHub and demo links */
+.icon-link {
+  color: var(--custom-link-hover);
+  text-decoration: none;
+}
+
+.icon-link:hover {
+  text-decoration: underline;
+}

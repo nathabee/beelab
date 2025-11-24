@@ -1,0 +1,67 @@
+{
+  "status": "success",
+  "data": {
+    "fruits": [
+      {
+        "fruit_id": 1,
+        "short_name": "Swing_CG1",
+        "name": "Cultivar Swing on CG1",
+        "description": "Late harvest, sweet, crisp texture, medium storage (3-4 months), aromatic",
+        "yield_start_date": "2025-09-15",
+        "yield_end_date": "2025-10-05",
+        "yield_avg_kg": 40,
+        "fruit_avg_kg": 0.2
+      },
+      {
+        "fruit_id": 2,
+        "short_name": "Ladina_CG1",
+        "name": "Cultivar Ladina on CG1",
+        "description": "Mid-late harvest, balanced sweetness and acidity, long storage (5-6 months), juicy",
+        "yield_start_date": "2025-09-25",
+        "yield_end_date": "2025-10-15",
+        "yield_avg_kg": 35,
+        "fruit_avg_kg": 0.22
+      },
+      {
+        "fruit_id": 3,
+        "short_name": "Gallwa_CG1",
+        "name": "Cultivar Gallwa on CG1",
+        "description": "Mid-season, high sweetness, slightly tangy, firm flesh, long storage (6+ months)",
+        "yield_start_date": "2025-09-15",
+        "yield_end_date": "2025-10-05",
+        "yield_avg_kg": 45,
+        "fruit_avg_kg": 0.24
+      },
+      {
+        "fruit_id": 4,
+        "short_name": "Pitch_M9",
+        "name": "Cultivar Pitch on M9",
+        "description": "Early harvest, very sweet, soft flesh, short storage (2-3 months), suitable for fresh eating",
+        "yield_start_date": "2025-09-01",
+        "yield_end_date": "2025-09-25",
+        "yield_avg_kg": 55,
+        "fruit_avg_kg": 0.18
+      },
+      {
+        "fruit_id": 5,
+        "short_name": "Pixie_CG1",
+        "name": "Cultivar Pixie on CG1",
+        "description": "Late-season, aromatic, slight bitterness, good for cider, long storage (6+ months)",
+        "yield_start_date": "2025-09-25",
+        "yield_end_date": "2025-10-15",
+        "yield_avg_kg": 30,
+        "fruit_avg_kg": 0.16
+      },
+      {
+        "fruit_id": 6,
+        "short_name": "EarlyCrunch_M9_Nakab",
+        "name": "Cultivar Early Crunch on M9 Nakab",
+        "description": "Very early harvest, crunchy, high acidity, short storage (1-2 months), refreshing taste",
+        "yield_start_date": "2025-08-05",
+        "yield_end_date": "2025-08-25",
+        "yield_avg_kg": 50,
+        "fruit_avg_kg": 0.17
+      }
+    ]
+  }
+}

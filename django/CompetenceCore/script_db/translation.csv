@@ -1,0 +1,557 @@
+id,key,ref_id,language,text
+1,niveau,1,fr,Classe indéfinie
+2,niveau,2,fr,Grande Section
+3,niveau,3,fr,CP
+4,niveau,4,fr,CE1
+5,niveau,5,fr,CE2
+6,niveau,6,fr,CM1
+7,niveau,7,fr,CM2
+8,niveau,1,de,Unbestimmte Klasse
+9,niveau,2,de,Große Kindergartenabteilung
+10,niveau,3,de,CP
+11,niveau,4,de,E1
+12,niveau,5,de,E2
+13,niveau,6,de,M1
+14,niveau,7,de,M2
+15,niveau,1,en,Undefined Class
+16,niveau,2,en,Large Kindergarten Section
+17,niveau,3,en,CP
+18,niveau,4,en,E1
+19,niveau,5,en,E2
+20,niveau,6,en,M1
+21,niveau,7,en,M2
+22,niveau,1,bz,Renk amspisaet
+23,niveau,2,bz,Rann vras (GS)
+24,niveau,3,bz,CP
+25,niveau,4,bz,E1
+26,niveau,5,bz,E2
+27,niveau,6,bz,M1
+28,niveau,7,bz,M2
+29,annee,1,fr,Actif depuis 2024
+30,annee,1,de,Seit 2024 aktiv
+31,annee,1,en,Active since 2024
+32,annee,1,bz,Oberiant abaoe 2024
+33,etape,1,fr,Étape par défaut
+34,etape,1,de,Standardstufe
+35,etape,1,en,Default stage
+36,etape,1,bz,Pazenn dre ziouer
+37,etape,2,fr,Étape repère
+38,etape,2,de,Referenzstufe
+39,etape,2,en,Reference stage
+40,etape,2,bz,Pazenn dave
+41,etape,3,fr,Point Étape
+42,etape,3,de,Zwischenstufe
+43,etape,3,en,Intermediate stage
+44,etape,3,bz,Pazenn etre daou
+45,etape,4,fr,Bilan fin d'année
+46,etape,4,de,Jahresendbilanz
+47,etape,4,en,End-of-year review
+48,etape,4,bz,Devezh fin bloaz
+49,catalogue,1,fr,CP Point Repere Mathematiques 24-25
+50,catalogue,2,fr,CP Point Etape Mathematiques 24-25
+51,catalogue,3,fr,CP Bilan Fin annee Mathematiques 24-25
+52,catalogue,4,fr,E1 Point Repere Mathematiques 24-25
+53,catalogue,5,fr,E1 Point Etape Mathematiques 24-25
+54,catalogue,6,fr,E1 Bilan Fin annee Mathematiques 24-25
+55,catalogue,7,fr,E2 Point Repere Mathematiques 24-25
+56,catalogue,8,fr,E2 Point Etape Mathematiques 24-25
+57,catalogue,9,fr,E2 Bilan Fin annee Mathematiques 24-25
+58,catalogue,10,fr,M1 Point Repere Mathematiques 24-25
+59,catalogue,11,fr,M1 Point Etape Mathematiques 24-25
+60,catalogue,12,fr,M1 Bilan Fin annee Mathematiques 24-25
+61,catalogue,13,fr,M2 Point Repere Mathematiques 24-25
+62,catalogue,14,fr,M2 Point Etape Mathematiques 24-25
+63,catalogue,15,fr,M2 Bilan Fin annee Mathematiques 24-25
+64,catalogue,16,fr,CP Point Repere Francais 24-25
+65,catalogue,17,fr,CP Point Etape Francais 24-25
+66,catalogue,18,fr,CP Bilan Fin annee Francais 24-25
+67,catalogue,19,fr,E1 Point Repere Francais 24-25
+68,catalogue,20,fr,E1 Point Etape Francais 24-25
+69,catalogue,21,fr,E1 Bilan Fin annee Francais 24-25
+70,catalogue,22,fr,E2 Point Repere Francais 24-25
+71,catalogue,23,fr,E2 Point Etape Francais 24-25
+72,catalogue,24,fr,E2 Bilan Fin annee Francais 24-25
+73,catalogue,25,fr,M1 Point Repere Francais 24-25
+74,catalogue,26,fr,M1 Point Etape Francais 24-25
+75,catalogue,27,fr,M1 Bilan Fin annee Francais 24-25
+76,catalogue,28,fr,M2 Point Repere Francais 24-25
+77,catalogue,29,fr,M2 Point Etape Francais 24-25
+78,catalogue,30,fr,M2 Bilan Fin annee Francais 24-25
+79,catalogue,31,fr,GS Point Repere - VERSION DETAILLEE
+80,catalogue,32,fr,GS Point Etape - VERSION DETAILLEE
+81,catalogue,33,fr,GS Point Repere - VERSION RAPIDE
+82,catalogue,34,fr,Grande Section Maternelle
+83,catalogue,35,fr,CP Test Mathematiques initial
+84,catalogue,36,fr,CP Test Language initial
+85,catalogue,34,en,Kindergarten Final Year
+86,catalogue,34,de,Große Vorschulstufe
+87,catalogue,34,bz,Rann vras Maternelle
+88,catalogue,35,en,CP Initial Mathematics Test
+89,catalogue,35,de,CP Einstufungstest Mathematik
+90,catalogue,35,bz,CP Test Mathematiques initial
+91,catalogue,36,en,CP Initial Language Test
+92,catalogue,36,de,CP Einstufungstest Sprache
+93,catalogue,36,bz,CP Test Language initial
+94,groupagedata,1,fr,évaluation repères CP : Comprendre des mots
+95,groupagedata,2,fr,évaluation repères CP : Comprendre des phrases
+96,groupagedata,3,fr,évaluation repères CP : Comprendre un texte
+97,groupagedata,4,fr,évaluation repères CP : Connaître le nom des lettres
+98,groupagedata,5,fr,évaluation repères CP : Manipuler des phonèmes
+99,groupagedata,6,fr,évaluation repères CP : Manipuler des syllabes
+100,groupagedata,7,fr,évaluation repères CP : Reconnaître des lettres
+101,groupagedata,8,fr,évaluation repères CP : Comparer des nombres
+102,groupagedata,9,fr,évaluation repères CP : Compter des objets
+103,groupagedata,10,fr,évaluation repères CP : Écrire des nombres
+104,groupagedata,11,fr,évaluation repères CP : Lire des nombres
+105,groupagedata,12,fr,évaluation repères CP : Placer un nombre sur une ligne graduée
+106,groupagedata,13,fr,évaluation repères CP : Résoudre les problèmes
+107,groupagedata,14,fr,évaluation repères CP : Résoudre un problème en géométrie
+108,groupagedata,15,fr,évaluation Point d'étape : Comprendre des phrases lues seul
+109,groupagedata,16,fr,évaluation Point d'étape : Comprendre des phrases
+110,groupagedata,17,fr,évaluation Point d'étape : Connaître le nom des lettres
+111,groupagedata,18,fr,évaluation Point d'étape : Écrire des mots
+112,groupagedata,19,fr,évaluation Point d'étape : Écrire des syllabes
+113,groupagedata,20,fr,évaluation Point d'étape : Lire à voix haute des mots
+114,groupagedata,21,fr,évaluation Point d'étape : Lire à voix haute un texte
+115,groupagedata,22,fr,évaluation Point d'étape :  Manipuler des phonèmes
+116,groupagedata,23,fr,évaluation Point d'étape CP : Additionner
+117,groupagedata,24,fr,évaluation Point d'étape CP : Comparer des nombres
+118,groupagedata,25,fr,évaluation Point d'étape CP : Écrire des nombres
+119,groupagedata,26,fr,évaluation Point d'étape CP : Placer un nombre sur une ligne graduée
+120,groupagedata,27,fr,évaluation Point d'étape CP : Résoudre des problèmes
+121,groupagedata,28,fr,évaluation Point d'étape CP : Soustraire
+122,groupagedata,29,fr,évaluation repères CE1 : Comprendre des mots
+123,groupagedata,30,fr,évaluation repères CE1 : Comprendre des phrases
+124,groupagedata,31,fr,évaluation repères CE1 : Comprendre des phrases lues seul
+125,groupagedata,32,fr,évaluation repères CE1 : Comprendre un texte lu seul
+126,groupagedata,33,fr,évaluation repères CE1 : Écrire des mots
+127,groupagedata,34,fr,évaluation repères CE1 : Écrire des syllabes
+128,groupagedata,35,fr,évaluation repères CE1 : Lire à voix haute des mots
+129,groupagedata,36,fr,évaluation repères CE1 : Lire à voix haute un texte
+130,groupagedata,37,fr,évaluation repères CE1 : Calculer mentalement
+131,groupagedata,38,fr,évaluation repères CE1 : Additionner
+132,groupagedata,39,fr,évaluation repères CE1 : Écrire des nombres
+133,groupagedata,40,fr,évaluation repères CE1 : Lire des nombres
+134,groupagedata,41,fr,évaluation repères CE1 : Placer un nombre sur une ligne graduée
+135,groupagedata,42,fr,évaluation repères CE1 : Résoudre des problèmes
+136,groupagedata,43,fr,évaluation repères CE1 : Résoudre un problème en géométrie
+137,groupagedata,44,fr,évaluation repères CE1 : Soustraire
+138,groupagedata,45,fr,évaluations repères CM1 : Comprendre un texte
+139,groupagedata,46,fr,évaluations repères CM1 : Comprendre un texte lu seul
+140,groupagedata,47,fr,évaluations repères CM1 : Lire à voix haute un texte
+141,groupagedata,48,fr,évaluations repères CM1 : Écrire des mots
+142,groupagedata,49,fr,évaluations repères CM1 : Reconnaître des synonymes
+143,groupagedata,50,fr,évaluations repères CM1 : Reconnaître des mots de la même famille
+144,groupagedata,51,fr,évaluations repères CM1 : Repérer le sujet et le verbe
+145,groupagedata,52,fr,évaluations repères CM1 : Accorder le nom et l’adjectif
+146,groupagedata,53,fr,évaluations repères CM1 : Accorder le sujet et le verbe
+147,groupagedata,54,fr,évaluations repères CM1 : Écrire des nombres entiers
+148,groupagedata,55,fr,évaluations repères CM1 : Placer un nombre sur une ligne graduée
+149,groupagedata,56,fr,évaluations repères CM1 : Résoudre des problèmes
+150,groupagedata,57,fr,évaluations repères CM1 : Connaître les tables de multiplication
+151,groupagedata,58,fr,évaluations repères CM1 : Calculer rapidement
+152,groupagedata,59,fr,évaluations repères CM1 : Poser et calculer
+153,groupagedata,60,fr,évaluations repères GS : LES COULEURS
+154,groupagedata,61,fr,évaluations repères GS : RECONNAISSANCE PRENOM
+155,groupagedata,62,fr,évaluations repères GS : REPÉRAGE SPATIAL ET TOPOLOGIE
+156,groupagedata,63,fr,évaluations repères GS : CATEGORISATION
+157,groupagedata,64,fr,évaluations repères GS : MEMORISATION HISTOIRE
+158,groupagedata,65,fr,évaluations repères GS : LA SUITE NUMÉRIQUE
+159,groupagedata,66,fr,évaluations repères GS : LA RÉSOLUTION DE PROBLEMES
+160,groupagedata,67,fr,évaluations repères GS : PHONOLOGIE
+161,groupagedata,68,fr,évaluations repères CM2 : PROBLEMES
+162,groupagedata,69,fr,évaluations repères CM2 : PHONOLOGIE
+163,groupagedata,70,fr,évaluations repères GS : LES COULEURS
+164,groupagedata,71,fr,évaluations repères GS : RECONNAISSANCE PRENOM
+165,groupagedata,72,fr,évaluations repères GS : REPÉRAGE SPATIAL ET TOPOLOGIE
+166,groupagedata,73,fr,évaluations repères GS : CATEGORISATION
+167,groupagedata,74,fr,évaluations repères GS : MEMORISATION HISTOIRE
+168,groupagedata,75,fr,évaluations repères GS : LA SUITE NUMÉRIQUE
+169,groupagedata,76,fr,évaluations repères GS : LA RÉSOLUTION DE PROBLEMES
+170,groupagedata,77,fr,évaluations repères GS : PHONOLOGIE
+171,groupagedata,78,fr,évaluations repères GS : LES COULEURS
+172,groupagedata,79,fr,évaluations repères GS : RECONNAISSANCE PRENOM
+173,groupagedata,80,fr,évaluations repères GS : REPÉRAGE SPATIAL ET TOPOLOGIE
+174,groupagedata,81,fr,évaluations repères GS : CATEGORISATION
+175,groupagedata,82,fr,évaluations repères GS : MEMORISATION HISTOIRE
+176,groupagedata,83,fr,évaluations repères GS : LA SUITE NUMÉRIQUE
+177,groupagedata,84,fr,évaluations repères GS : LA RÉSOLUTION DE PROBLEMES
+178,groupagedata,85,fr,évaluations repères GS : PHONOLOGIE
+179,groupagedata,78,en,benchmark preschool: COLORS
+180,groupagedata,79,en,benchmark preschool: RECOGNITION OF FIRST NAME
+181,groupagedata,80,en,benchmark preschool: SPATIAL AND TOPOLOGICAL ORIENTATION
+182,groupagedata,81,en,benchmark preschool: CATEGORIZATION
+183,groupagedata,82,en,benchmark preschool: STORY MEMORIZATION
+184,groupagedata,83,en,benchmark preschool: NUMERIC SEQUENCE
+185,groupagedata,84,en,benchmark preschool: PROBLEM SOLVING
+186,groupagedata,85,en,benchmark preschool: PHONOLOGY
+187,groupagedata,78,bz,bevenn skol-vamm : LIVIÑ
+188,groupagedata,79,bz,bevenn skol-vamm : ANV AR PRENAME
+189,groupagedata,80,bz,bevenn skol-vamm : RANNIEZH SPATIEL HA TOPOLOJEK
+190,groupagedata,81,bz,bevenn skol-vamm : KATEGORIZAÑ
+191,groupagedata,82,bz,bevenn skol-vamm : MIRAÑ ISTORIOÙ
+192,groupagedata,83,bz,bevenn skol-vamm : HEULIAD NIVEREL
+193,groupagedata,84,bz,bevenn skol-vamm : SOLIAD PROBLEM
+194,groupagedata,85,bz,bevenn skol-vamm : FONOLOJIEZH
+195,groupagedata,78,de,Referenz Kindergarten: FARBEN
+196,groupagedata,79,de,Referenz Kindergarten: ERKENNUNG DES VORNAMENS
+197,groupagedata,80,de,Referenz Kindergarten: RÄUMLICHE UND TOPOLOGISCHE ORIENTIERUNG
+198,groupagedata,81,de,Referenz Kindergarten: KATEGORISIERUNG
+199,groupagedata,82,de,Referenz Kindergarten: GESCHICHTENERINNERUNG
+200,groupagedata,83,de,Referenz Kindergarten: ZAHLENFOLGE
+201,groupagedata,84,de,Referenz Kindergarten: PROBLEMLÖSUNG
+202,groupagedata,85,de,Referenz Kindergarten: PHONOLOGIE
+203,groupagedata.label,1,fr,Comprendre des mots
+204,groupagedata.label,2,fr,Comprendre des phrases
+205,groupagedata.label,3,fr,Comprendre un texte
+206,groupagedata.label,4,fr,Connaître le nom des lettres
+207,groupagedata.label,5,fr,Manipuler des phonèmes
+208,groupagedata.label,6,fr,Manipuler des syllabes
+209,groupagedata.label,7,fr,Reconnaître des lettres
+210,groupagedata.label,8,fr,Comparer des nombres
+211,groupagedata.label,9,fr,Compter des objets
+212,groupagedata.label,10,fr,Écrire des nombres
+213,groupagedata.label,11,fr,Lire des nombres
+214,groupagedata.label,12,fr,Placer un nombre sur une ligne graduée
+215,groupagedata.label,13,fr,Résoudre les problèmes
+216,groupagedata.label,14,fr,Résoudre un problème en géométrie
+217,groupagedata.label,15,fr,Comprendre des phrases lues seul
+218,groupagedata.label,16,fr,Comprendre des phrases
+219,groupagedata.label,17,fr,Connaître le nom des lettres
+220,groupagedata.label,18,fr,Écrire des mots
+221,groupagedata.label,19,fr,Écrire des syllabes
+222,groupagedata.label,20,fr,Lire à voix haute des mots
+223,groupagedata.label,21,fr,Lire à voix haute un texte
+224,groupagedata.label,22,fr, Manipuler des phonèmes
+225,groupagedata.label,23,fr,Additionner
+226,groupagedata.label,24,fr,Comparer des nombres
+227,groupagedata.label,25,fr,Écrire des nombres
+228,groupagedata.label,26,fr,Placer un nombre sur une ligne graduée
+229,groupagedata.label,27,fr,Résoudre des problèmes
+230,groupagedata.label,28,fr,Soustraire
+231,groupagedata.label,29,fr,Comprendre des mots
+232,groupagedata.label,30,fr,Comprendre des phrases
+233,groupagedata.label,31,fr,Comprendre des phrases lues seul
+234,groupagedata.label,32,fr,Comprendre un texte lu seul
+235,groupagedata.label,33,fr,Écrire des mots
+236,groupagedata.label,34,fr,Écrire des syllabes
+237,groupagedata.label,35,fr,Lire à voix haute des mots
+238,groupagedata.label,36,fr,Lire à voix haute un texte
+239,groupagedata.label,37,fr,Calculer mentalement
+240,groupagedata.label,38,fr,Additionner
+241,groupagedata.label,39,fr,Écrire des nombres
+242,groupagedata.label,40,fr,Lire des nombres
+243,groupagedata.label,41,fr,Placer un nombre sur une ligne graduée
+244,groupagedata.label,42,fr,Résoudre des problèmes
+245,groupagedata.label,43,fr,Résoudre un problème en géométrie
+246,groupagedata.label,44,fr,Soustraire
+247,groupagedata.label,45,fr,Comprendre un texte
+248,groupagedata.label,46,fr,Comprendre un texte lu seul
+249,groupagedata.label,47,fr,Lire à voix haute un texte
+250,groupagedata.label,48,fr,Écrire des mots
+251,groupagedata.label,49,fr,Reconnaître des synonymes
+252,groupagedata.label,50,fr,Reconnaître des mots de la même famille
+253,groupagedata.label,51,fr,Repérer le sujet et le verbe
+254,groupagedata.label,52,fr,Accorder le nom et l’adjectif
+255,groupagedata.label,53,fr,Accorder le sujet et le verbe
+256,groupagedata.label,54,fr,Écrire des nombres entiers
+257,groupagedata.label,55,fr,Placer un nombre sur une ligne graduée
+258,groupagedata.label,56,fr,Résoudre des problèmes
+259,groupagedata.label,57,fr,Connaître les tables de multiplication
+260,groupagedata.label,58,fr,Calculer rapidement
+261,groupagedata.label,59,fr,Poser et calculer
+262,groupagedata.label,60,fr,LES COULEURS
+263,groupagedata.label,61,fr,RECONNAISSANCE PRENOM
+264,groupagedata.label,62,fr,REPÉRAGE SPATIAL ET TOPOLOGIE
+265,groupagedata.label,63,fr,CATEGORISATION
+266,groupagedata.label,64,fr,MEMORISATION HISTOIRE
+267,groupagedata.label,65,fr,LA SUITE NUMÉRIQUE
+268,groupagedata.label,66,fr,LA RÉSOLUTION DE PROBLEMES
+269,groupagedata.label,67,fr,PHONOLOGIE
+270,groupagedata.label,68,fr,PROBLEMES
+271,groupagedata.label,69,fr,PHONOLOGIE
+272,groupagedata.label,70,fr,LES COULEURS
+273,groupagedata.label,71,fr,RECONNAISSANCE PRENOM
+274,groupagedata.label,72,fr,REPÉRAGE SPATIAL ET TOPOLOGIE
+275,groupagedata.label,73,fr,CATEGORISATION
+276,groupagedata.label,74,fr,MEMORISATION HISTOIRE
+277,groupagedata.label,75,fr,LA SUITE NUMÉRIQUE
+278,groupagedata.label,76,fr,LA RÉSOLUTION DE PROBLEMES
+279,groupagedata.label,77,fr,PHONOLOGIE
+280,groupagedata.label,78,fr,LES COULEURS
+281,groupagedata.label,79,fr,RECONNAISSANCE PRENOM
+282,groupagedata.label,80,fr,REPÉRAGE SPATIAL ET TOPOLOGIE
+283,groupagedata.label,81,fr,CATEGORISATION
+284,groupagedata.label,82,fr,MEMORISATION HISTOIRE
+285,groupagedata.label,83,fr,LA SUITE NUMÉRIQUE
+286,groupagedata.label,84,fr,LA RÉSOLUTION DE PROBLEMES
+287,groupagedata.label,85,fr,PHONOLOGIE
+288,groupagedata.label,78,en,COLORS
+289,groupagedata.label,79,en,NAME RECOGNITION
+290,groupagedata.label,80,en,SPATIAL ORIENTATION
+291,groupagedata.label,81,en,CATEGORIZATION
+292,groupagedata.label,82,en,STORY MEMORIZATION
+293,groupagedata.label,83,en,NUMERIC SEQUENCE
+294,groupagedata.label,84,en,PROBLEM SOLVING
+295,groupagedata.label,85,en,PHONOLOGY
+296,groupagedata.label,78,bz,LIVIÑ
+297,groupagedata.label,79,bz,ANV AR PRENAME
+298,groupagedata.label,80,bz,RANNIEZH SPATIEL
+299,groupagedata.label,81,bz,KATEGORIZAÑ
+300,groupagedata.label,82,bz,MIRAÑ ISTORIOÙ
+301,groupagedata.label,83,bz,HEULIAD NIVEREL
+302,groupagedata.label,84,bz,SOLIAD PROBLEM
+303,groupagedata.label,85,bz,FONOLOJIEZH
+304,groupagedata.label,78,de,FARBEN
+305,groupagedata.label,79,de,NAME ERKENNUNG
+306,groupagedata.label,80,de,RÄUMLICHE ORIENTIERUNG
+307,groupagedata.label,81,de,KATEGORISIERUNG
+308,groupagedata.label,82,de,GESCHICHTENERINNERUNG
+309,groupagedata.label,83,de,ZAHLENFOLGE
+310,groupagedata.label,84,de,PROBLEMLÖSUNG
+311,groupagedata.label,85,de,PHONOLOGIE
+312,matiere,1,fr,
+313,matiere,2,fr,francais
+314,matiere,3,fr,mathematiques
+315,matiere,1,de,
+316,matiere,2,de,Deustch
+317,matiere,3,de,Mathe
+318,matiere,1,en,
+319,matiere,2,en,englich
+320,matiere,3,en,math
+321,matiere,1,bz,
+322,matiere,2,bz,Brezoneg
+323,matiere,3,bz,Math
+324,item,2,fr,Comprendre des mots
+325,item,3,fr,Comprendre des phrases
+326,item,4,fr,Comprendre un texte
+327,item,5,fr,Connaître le nom des lettres
+328,item,6,fr,Manipuler des phonèmes
+329,item,7,fr,Manipuler des syllabes
+330,item,8,fr,Reconnaître des lettres
+331,item,9,fr,Comparer des nombres
+332,item,10,fr,Compter des objets
+333,item,11,fr,Écrire des nombres
+334,item,12,fr,Lire des nombres
+335,item,13,fr,Placer un nombre sur une ligne graduée
+336,item,14,fr,Résoudre les problèmes
+337,item,15,fr,Résoudre un problème en géométrie
+338,item,16,fr,Comprendre des phrases lues seul
+339,item,17,fr,Comprendre des phrases
+340,item,18,fr,Connaître le nom des lettres
+341,item,19,fr,Écrire des mots
+342,item,20,fr,Écrire des syllabes
+343,item,21,fr,Lire à voix haute des mots
+344,item,22,fr,Lire à voix haute un texte
+345,item,23,fr, Manipuler des phonèmes
+346,item,24,fr,Additionner
+347,item,25,fr,Comparer des nombres
+348,item,26,fr,Écrire des nombres
+349,item,27,fr,Placer un nombre sur une ligne graduée
+350,item,28,fr,Résoudre des problèmes
+351,item,29,fr,Soustraire
+352,item,30,fr,Comprendre des mots
+353,item,31,fr,Comprendre des phrases
+354,item,32,fr,Comprendre des phrases lues seul
+355,item,33,fr,Comprendre un texte lu seul
+356,item,34,fr,Écrire des mots
+357,item,35,fr,Écrire des syllabes
+358,item,36,fr,Lire à voix haute des mots
+359,item,37,fr,Lire à voix haute un texte
+360,item,38,fr,Calculer mentalement
+361,item,39,fr,Additionner
+362,item,40,fr,Écrire des nombres
+363,item,41,fr,Lire des nombres
+364,item,42,fr,Placer un nombre sur une ligne graduée
+365,item,43,fr,Résoudre des problèmes
+366,item,44,fr,Résoudre un problème en géométrie
+367,item,45,fr,Soustraire
+368,item,46,fr,Comprendre un texte
+369,item,47,fr,Comprendre un texte lu seul
+370,item,48,fr,Lire à voix haute un texte
+371,item,49,fr,Écrire des mots
+372,item,50,fr,Reconnaître des synonymes
+373,item,51,fr,Reconnaître des mots de la même famille
+374,item,52,fr,Repérer le sujet et le verbe
+375,item,53,fr,Accorder le nom et l’adjectif
+376,item,54,fr,Accorder le sujet et le verbe
+377,item,55,fr,Écrire des nombres entiers
+378,item,56,fr,Placer un nombre sur une ligne graduée
+379,item,57,fr,Résoudre des problèmes
+380,item,58,fr,Connaître les tables de multiplication
+381,item,59,fr,Calculer rapidement
+382,item,60,fr,Poser et calculer
+383,item,61,fr,identifier et nommer une couleur: Bleu
+384,item,62,fr,identifier et nommer une couleur: Rouge
+385,item,63,fr,identifier et nommer une couleur: Jaune
+386,item,64,fr,identifier et nommer une couleur: Vert
+387,item,65,fr,identifier et nommer une couleur: Orange
+388,item,66,fr,identifier et nommer une couleur: Rose
+389,item,67,fr,identifier et nommer une couleur: Violet
+390,item,68,fr,identifier et nommer une couleur: Blanc
+391,item,69,fr,identifier et nommer une couleur: Noir
+392,item,70,fr,identifier et nommer une couleur: Gris
+393,item,71,fr,identifier et nommer une couleur: Marron
+394,item,72,fr,reconnaitre une carte par le nom de sa couleur: Bleu
+395,item,73,fr,reconnaitre une carte par le nom de sa couleur: Rouge
+396,item,74,fr,reconnaitre une carte par le nom de sa couleur: Jaune
+397,item,75,fr,reconnaitre une carte par le nom de sa couleur: Vert
+398,item,76,fr,reconnaitre une carte par le nom de sa couleur: Orange
+399,item,77,fr,reconnaitre une carte par le nom de sa couleur: Rose
+400,item,78,fr,reconnaitre une carte par le nom de sa couleur: Violet
+401,item,79,fr,reconnaitre une carte par le nom de sa couleur: Blanc
+402,item,80,fr,reconnaitre une carte par le nom de sa couleur: Noir
+403,item,81,fr,reconnaitre une carte par le nom de sa couleur: Gris
+404,item,82,fr,reconnaitre une carte par le nom de sa couleur: Marron
+405,item,83,fr,Reconnaissance de son prénom en majuscule d'imprimerie
+406,item,84,fr,Reconnaissance prénom en cursive
+407,item,85,fr,Main d'écriture
+408,item,86,fr,Choix de l'outils scripteurs
+409,item,87,fr,Sens de l'écriture 
+410,item,88,fr,Sens d'écriture des lettres
+411,item,89,fr,Geste graphique
+412,item,90,fr,Tenue de l'outils scripteurs (photo)
+413,item,91,fr,désigner la position d'objets nommés par l'enseignant: Au-dessus
+414,item,92,fr,désigner la position d'objets nommés par l'enseignant: En-dessous
+415,item,93,fr,désigner la position d'objets nommés par l'enseignant: À droite
+416,item,94,fr,désigner la position d'objets nommés par l'enseignant: À gauche
+417,item,95,fr,désigner la position d'objets nommés par l'enseignant: Dedans
+418,item,96,fr,désigner la position d'objets nommés par l'enseignant: Dehors
+419,item,97,fr,désigner la position d'objets nommés par l'enseignant: À l'intérieur
+420,item,98,fr,désigner la position d'objets nommés par l'enseignant: À l'extérieur
+421,item,99,fr,Nommer la position d'objets nommés par l'enseignant: Au-dessus
+422,item,100,fr,Nommer la position d'objets nommés par l'enseignant: En-dessous
+423,item,101,fr,Nommer la position d'objets nommés par l'enseignant: À droite
+424,item,102,fr,Nommer la position d'objets nommés par l'enseignant: À gauche
+425,item,103,fr,Nommer la position d'objets nommés par l'enseignant: Dedans
+426,item,104,fr,Nommer la position d'objets nommés par l'enseignant: Dehors
+427,item,105,fr,Nommer la position d'objets nommés par l'enseignant: À l'intérieur
+428,item,106,fr,Nommer la position d'objets nommés par l'enseignant: À l'extérieur
+429,item,107,fr,L'élève nomme l'ensemble des objets présentés
+430,item,108,fr,L'élève mémorise les objets qu'il ne connaît pas présentés par l'adulte
+431,item,109,fr,L'élève est capable de catégoriser l'ensemble des objets
+432,item,110,fr,L'élève est capable de nommer la famille de l'objet
+433,item,111,fr,L'élève est capable de revenir sur une erreur seul
+434,item,112,fr,En cas d'erreur
+435,item,113,fr,L'élève est capable d'écouter une histoire
+436,item,114,fr,L'élève a mémorisé l'histoire et la verbalise
+437,item,115,fr,L'élève utilise le vocabulaire utilisé dans l'histoire
+438,item,116,fr,L'élève présente les personnages de l'histoire
+439,item,117,fr,L'élève remet les images dans l'ordre chronologique de l'histoire
+440,item,118,fr,- sens de la lecture et de l'écriture (ne pas induire)
+441,item,119,fr,-mise en place des images
+442,item,120,fr,L'élève connaît la suite numérique orale jusqu'à .....
+443,item,121,fr,L'élève met en lien la suite numérique oral et écrite jusqu'à ...
+444,item,122,fr,L'élève fait émerger la notion de chiffre etde nombre
+445,item,123,fr,L'élève confond les notions de lettres et de chiffres
+446,item,124,fr,L'élève nomme les 5 cartes nombres
+447,item,125,fr,L'élève met en lien les quotités et les quantités
+448,item,126,fr,L'élève précise les quantités contenues dans chaque collection
+449,item,127,fr,L'élève met en lien les quantités et les quotités
+450,item,128,fr,verbaliser le problème et demander la solution présentant 3 cartes réponses
+451,item,129,fr,présenter un problème à l'aide d'images et demande la solution avec 3 cartes réponses
+452,item,130,fr,présenter 1 image et poser questions 
+453,item,131,fr,L'élève entend le son A
+454,item,132,fr,L'élève entend le son E
+455,item,133,fr,L'élève entend le son I
+456,item,134,fr,L'élève entend le son O
+457,item,135,fr,L'élève entend le son U
+458,item,136,fr,L'élève nomme les 5 objets ou images
+459,item,137,fr,L'élève verbalise ceux où il entend le son A
+460,item,138,fr,L'élève nomme les 5 objets ou images
+461,item,139,fr,L'élève verbalise ceux où il entend le son E
+462,item,140,fr,L'élève nomme les 5 objets ou images
+463,item,141,fr,L'élève verbalise ceux où il entend le son I
+464,item,142,fr,L'élève nomme les 5 objets ou images
+465,item,143,fr,L'élève verbalise ceux où il entend le son O
+466,item,144,fr,L'élève nomme les 5 objets ou images
+467,item,145,fr,L'élève verbalise ceux où il entend le son U
+468,item,146,fr,Observations complémentaires de l'enseignant sur les conditions de passation.
+469,item,147,fr,item1 cm2 mathematiques
+470,item,148,fr,item2 cm2 mathematiques
+471,item,149,fr,item1 cm2 francais
+472,item,150,fr,item2 cm2 francais
+473,item,151,fr,LES COULEURS
+474,item,152,fr,RECONNAISSANCE PRENOM
+475,item,153,fr,REPÉRAGE SPATIAL ET TOPOLOGIE
+476,item,154,fr,CATEGORISATION
+477,item,155,fr,MEMORISATION HISTOIRE
+478,item,156,fr,LA SUITE NUMÉRIQUE
+479,item,157,fr,LA RÉSOLUTION DE PROBLEMES
+480,item,158,fr,PHONOLOGIE
+481,item,161,en,COLORS
+482,item,162,en,RECOGNITION OF FIRST NAME
+483,item,163,en,SPATIAL AND TOPOLOGICAL ORIENTATION
+484,item,164,en,CATEGORIZATION
+485,item,165,en,STORY MEMORIZATION
+486,item,166,en,NUMERIC SEQUENCE
+487,item,167,en,PROBLEM SOLVING
+488,item,168,en,PHONOLOGY
+489,item,161,fr,LES COULEURS
+490,item,162,fr,RECONNAISSANCE PRENOM
+491,item,163,fr,REPÉRAGE SPATIAL ET TOPOLOGIE
+492,item,164,fr,CATEGORISATION
+493,item,165,fr,MEMORISATION HISTOIRE
+494,item,166,fr,LA SUITE NUMÉRIQUE
+495,item,167,fr,LA RÉSOLUTION DE PROBLEMES
+496,item,168,fr,PHONOLOGIE
+497,item,161,bz,LIVIÑ
+498,item,162,bz,ANV AR PRENAME
+499,item,163,bz,RANNIEZH SPATIEL HA TOPOLOJEK
+500,item,164,bz,KATEGORIZAÑ
+501,item,165,bz,MIRAÑ ISTORIOÙ
+502,item,166,bz,HEULIAD NIVEREL
+503,item,167,bz, SOLIAD PROBLEM
+504,item,168,bz,FONOLOJIEZH
+505,item,161,de,FARBEN
+506,item,162,de,ERKENNUNG DES VORNAMENS
+507,item,163,de,RÄUMLICHE UND TOPOLOGISCHE ORIENTIERUNG
+508,item,164,de,KATEGORISIERUNG
+509,item,165,de,GESCHICHTENERINNERUNG
+510,item,166,de,ZAHLENFOLGE
+511,item,167,de,PROBLEMLÖSUNG
+512,item,168,de,PHONOLOGIE
+513,temps,1,fr,Temps X
+514,temps,2,fr,Temps 1
+515,temps,3,fr,Temps 2
+516,temps,4,fr,évaluations repères GS : LES COULEURS
+517,temps,5,fr,évaluations repères GS : RECONNAISSANCE PRENOM
+518,temps,6,fr,évaluations repères GS : REPÉRAGE SPATIAL ET TOPOLOGIE
+519,temps,7,fr,évaluations repères GS : CATEGORISATION
+520,temps,8,fr,évaluations repères GS : MEMORISATION HISTOIRE
+521,temps,9,fr,évaluations repères GS : LA SUITE NUMÉRIQUE
+522,temps,10,fr,évaluations repères GS : LA RÉSOLUTION DE PROBLEMES
+523,temps,11,fr,évaluations repères GS : PHONOLOGIE
+524,temps,1,en,Temps 1
+525,temps,2,en,Temps 2
+526,temps,3,en,Temps 3
+527,temps,4,en,benchmark preschool: COLORS
+528,temps,5,en,benchmark preschool: RECOGNITION OF FIRST NAME
+529,temps,6,en,benchmark preschool: SPATIAL AND TOPOLOGICAL ORIENTATION
+530,temps,7,en,benchmark preschool: CATEGORIZATION
+531,temps,8,en,benchmark preschool: STORY MEMORIZATION
+532,temps,9,en,benchmark preschool: NUMERIC SEQUENCE
+533,temps,10,en,benchmark preschool: PROBLEM SOLVING
+534,temps,11,en,benchmark preschool: PHONOLOGY
+535,temps,1,bz,T1
+536,temps,2,bz,T2
+537,temps,3,bz,T3
+538,temps,4,bz,LIVIÑ
+539,temps,5,bz,ANV AR PRENAME
+540,temps,6,bz,RANNIEZH SPATIEL HA TOPOLOJEK
+541,temps,7,bz,KATEGORIZAÑ
+542,temps,8,bz,MIRAÑ ISTORIOÙ
+543,temps,9,bz,HEULIAD NIVEREL
+544,temps,10,bz, SOLIAD PROBLEM
+545,temps,11,bz,FONOLOJIEZH
+546,temps,1,de,Zeit 1
+547,temps,2,de,Zeit 2
+548,temps,3,de,Zeit 3
+549,temps,4,de,FARBEN
+550,temps,5,de,ERKENNUNG DES VORNAMENS
+551,temps,6,de,RÄUMLICHE UND TOPOLOGISCHE ORIENTIERUNG
+552,temps,7,de,KATEGORISIERUNG
+553,temps,8,de,GESCHICHTENERINNERUNG
+554,temps,9,de,ZAHLENFOLGE
+555,temps,10,de,PROBLEMLÖSUNG
+556,temps,11,de,PHONOLOGIE

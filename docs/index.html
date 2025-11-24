@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>beelab Project Portal</title>
+  <link rel="icon" type="image/svg+xml" href="beelab.svg">
+
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    // Make sure headings get predictable ids so #anchors work
+    marked.setOptions({ headerIds: true, mangle: false });
+  </script>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: false });
+    window.mermaid = mermaid;
+  </script>
+
+</head>
+
+<body>
+  <button id="backToTop">⬆️ Top</button>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <svg id="logo" xmlns="http://www.w3.org/2000/svg" width="512" height="160" viewBox="0 0 512 160"
+          aria-label="DJANGO ML">
+          <rect width="100%" height="100%" fill="none" />
+          <g id="wordmark" transform="translate(256,70)">
+            <text text-anchor="middle" dominant-baseline="central"
+              font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif"
+              font-size="64" font-weight="800" letter-spacing="1.5">
+              <tspan class="django">Bee</tspan>
+              <tspan class="ml">Lab</tspan>
+            </text>
+          </g>
+          <g id="tagline" transform="translate(256,120)">
+            <text text-anchor="middle" dominant-baseline="central" font-family="Inter, system-ui, sans-serif"
+              font-size="28" font-weight="600" letter-spacing="1">
+              <tspan class="powered">Powered by Docker</tspan>
+            </text>
+          </g>
+        </svg>
+
+      </div>
+
+      <div class="translate-box">
+        🌐 Translate: <span id="google_translate_element"></span>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          { pageLanguage: 'en' },
+          'google_translate_element'
+        );
+      }
+    </script>
+    <script type="text/javascript"
+      src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+
+
+
+    <p style="margin-top: 1rem;">
+      🔗 View the full source code and documentation on
+      <a href="https://github.com/nathabee/beelab" target="_blank">GitHub Repository</a>
+    </p>
+
+    <h2>📚 Project Documentation</h2>
+    <div class="doc-list">
+
+      <details>
+        <summary><strong>🧭 Overview</strong></summary>
+        <ul>
+          <li><a href="presentation.md">📖 Project Presentation</a></li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>💻 Installation</strong></summary>
+        <ul>
+          <li><a href="installation-vps.md">☁️ Installation on a VPS</a></li>
+          <li><a href="installation-vps-dns.md">☁️ DNS and Apache</a></li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>🐳 Docker</strong></summary>
+        <ul>
+          <li><a href="docker-build.md">🔨 Docker container build</a></li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>📰 WordPress Service</strong></summary>
+        <ul>
+          <li><a href="wordpress.md">🌐 Overview of WordPress in BeeLab</a></li>
+          <li><a href="wordpress-beelab-theme.md">🎨 Customized BeeLab Theme</a></li>
+          <li><a href="wordpress-plugins.md">🔌 Rebuilding WordPress Plugins</a></li>
+          <li><a href="wordpress-plugins-php.md">💻 Role of PHP in Plugins</a></li>
+          <li><a href="wordpress-plugins-tree.md">🌲 Plugin Structure</a></li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>🐍 Django Service</strong></summary>
+        <ul>
+          <li><a href="django.md">📘 Overview</a></li>
+          <li><a href="django-swagger.md">📑 Swagger Schema Docs</a></li>
+          <li><a href="django-demo-user.md">Demo User Solution</a></li>
+
+        </ul>
+      </details>
+
+
+
+      <details>
+        <summary><strong>🌐 Web Service</strong></summary>
+        <ul>
+          <li><a href="web.md">📄 List of all Webpages</a></li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>Development</strong></summary>
+        <ul>
+          <li><a href="workflow.md">⚙️ Developer Workflow</a></li>
+          <li><a href="developper-tipps.md">📄 Developper Tipps </a></li>
+          <summary><strong>Plugins overviews</strong></summary>
+          <ul> 
+            <li><a href="developper-tipps-wordpress-plugin.md">📄 General Tipps for plugin development</a></li>
+            <li><a href="developper-tipps-wordpress-plugin-shared-error.md">Error shared libraries </a></li>
+            <li><a href="developper-tipps-wordpress-plugin-shared-user.md">User shared libraries </a></li>
+            <li><a href="developper-tipps-wordpress-plugin-nutshell.md">create a new plugin using our nutshell</a></li>
+          <summary><strong>Beefont</strong></summary>
+          <ul>
+            <li><a href="./beefont/beefont-spec.md">Specification </a></li>
+            <li><a href="./beefont/beefont-Workflow.md">Workflow</a></li>
+            <li><a href="./beefont/beefont-API.md">Beefont django-wordpress REST API </a></li>
+            <li><a href="./beefont/beefont-plugin-creation-detail.md">Frontend developpement</a></li>
+            <li><a href="./beefont/beefont-test-django.md">Backend </a></li>
+          </ul>
+
+
+          <summary><strong>For dummies </strong></summary>
+          <ul>
+            <li><a href="developper-for-dummies-too-many-render.md">too many render </a></li>
+          </ul>
+        </ul>
+      </details>
+
+
+      <details>
+        <summary><strong>Test</strong></summary>
+        <ul>
+
+          <li><a href="developper-tests-django.md">🐍 Django Test - pytest </a></li>
+          <li><a href="developper-tests-django-integration.md">🐍 Django integration test </a></li>
+          <li>
+            <div class="menu">Check List installation docker <button onclick="loadChecklist()">✅ App Test
+                Checklist</button> </div>
+          </li>
+
+        </ul>
+      </details>
+
+
+    </div>
+
+
+
+
+
+
+    <div id="content"></div>
+  </div>
+
+  <script src="main.js"></script>
+
+
+
+
+</body>
+
+</html>

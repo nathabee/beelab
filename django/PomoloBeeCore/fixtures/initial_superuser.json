@@ -1,0 +1,17 @@
+[
+  {
+    "model": "usercore.customuser",
+    "fields": {
+      "username": "pomofarmer",
+      "password": "pbkdf2_sha256$600000$UjP0VuVtpCaz3W1AaRbwRH$GqDA+F5F0TgFJ8TT9U0AaYb6YlmMlgEn8CtT9fxNe5k=",
+      "is_superuser": true,
+      "is_staff": true,
+      "is_active": true,
+      "email": "farmer@example.com",
+      "first_name": "Pomo",
+      "last_name": "Farmer",
+      "lang": "en",
+      "groups": [["farmer"]]
+    }
+  }
+]

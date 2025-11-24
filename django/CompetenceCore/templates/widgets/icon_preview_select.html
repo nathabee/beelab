@@ -1,0 +1,32 @@
+<select name="{{ widget.name }}" id="{{ widget.attrs.id }}" class="custom-select">
+    {% for option in widget.choices %}
+        {% with option.0 as value %}
+            <option value="{{ value }}">{{ option.1 }}</option>
+        {% endwith %}
+    {% endfor %}
+</select>
+
+<style>
+    .custom-select {
+        display: block;
+        position: relative;
+    }
+
+    .custom-select option {
+        display: flex;
+        align-items: center;
+    }
+
+    .custom-select option img {
+        width: 20px;
+        height: 20px;
+        margin-right: 5px;
+    }
+</style>
+
+<script>
+    const selectElement = document.getElementById('{{ widget.attrs.id }}');
+    selectElement.addEventListener('change', function() {
+        // Handle selection change if needed
+    });
+</script>

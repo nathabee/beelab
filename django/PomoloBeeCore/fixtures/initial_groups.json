@@ -1,0 +1,3 @@
+[
+  { "model": "auth.group", "fields": { "name": "farmer" } }
+]

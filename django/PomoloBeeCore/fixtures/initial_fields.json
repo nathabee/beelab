@@ -1,0 +1,77 @@
+[
+    {
+      "model": "pomolobeecore.field",
+      "pk": 1,
+      "fields": {
+        "farm": 2,
+        "short_name": "C1",
+        "name": "ChampMaison",
+        "description": "Champ situé sur la parcelle de la maison",
+        "orientation": "NW",
+        "svg_map": "/pomolobee/fields/svg/C1_map.svg"
+      }
+    },
+    {
+      "model": "pomolobeecore.field",
+      "pk": 2,
+      "fields": {
+        "farm": 1,
+        "short_name": "C2",
+        "name": "ChampSud",
+        "description": "Champ situé au sud de la propriété, très ensoleillé.",
+        "orientation": "S",
+        "svg_map": "/pomolobee/fields/svg/C2_map.svg",
+        "background_image": "/pomolobee/fields/background/C2.png"
+      }
+    },
+    {
+      "model": "pomolobeecore.field",
+      "pk": 3,
+      "fields": {
+        "farm": 1,
+        "short_name": "C3",
+        "name": "VergerHaut",
+        "description": "Verger en hauteur avec terre calcaire.",
+        "orientation": "E",
+        "svg_map": "/pomolobee/fields/svg/C3_map.svg",
+        "background_image": "/pomolobee/fields/background/C3.png"
+      }
+    },
+    {
+      "model": "pomolobeecore.field",
+      "pk": 4,
+      "fields": {
+        "farm": 1,
+        "short_name": "C4",
+        "name": "VergerBas",
+        "description": "Verger en contrebas, plus humide.",
+        "orientation": "W",
+        "svg_map": "/pomolobee/fields/svg/C4_map.svg"
+      }
+    },
+    {
+      "model": "pomolobeecore.field",
+      "pk": 5,
+      "fields": {
+        "farm": 1,
+        "short_name": "C5",
+        "name": "PlaineOuest",
+        "description": "Grande plaine à l'ouest, sol fertile.",
+        "orientation": "W",
+        "svg_map": "/pomolobee/fields/svg/C5_map.svg"
+      }
+    },
+    {
+      "model": "pomolobeecore.field",
+      "pk": 6,
+      "fields": {
+        "farm": 1,
+        "short_name": "C6",
+        "name": "TestZone",
+        "description": "Petite parcelle expérimentale.",
+        "orientation": "N",
+        "svg_map": "/pomolobee/fields/svg/default_map.svg"
+      }
+    }
+  ]
+  

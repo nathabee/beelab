@@ -1,0 +1,144 @@
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1599" height="978" viewBox="0 0 1599 978">
+<path d="m 143.60378,323.4691 340.4507,-253.236389 34.40508,-7.068942 24.27446,7.046493 41.41209,18.472555 43.18562,30.682233 47.23828,50.22378 40.87885,26.27819 114.14959,42.73756 111.49627,28.63825 24.08599,22.82358 20.72842,29.484 -6.02945,38.80453 -208.10155,290.12809 -26.11279,2.46891 L 529.78462,541.92747 155.59271,361.6804 139.21222,341.76497 Z" id="path178" style="fill:none;stroke:#000000;stroke-width:3px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
+<path d="M 178 346 L 229 276" id="row_28_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 200 363 L 292 232" id="row_27_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 220 376 L 347 190" id="row_26_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 244 388 L 412 145" id="row_25_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 267 399 L 466 106" id="row_24_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 290 409 L 518 63" id="row_23_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 313 419 L 543 70" id="row_22_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 328 428 L 558 92" id="row_21_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 345 438 L 580 106" id="row_20_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 366 449 L 599 113" id="row_19_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 390 455 L 615 130" id="row_18_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 413 465 L 636 150" id="row_17_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 428 479 L 653 167" id="row_16_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 458 490 L 675 170" id="row_15_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 472 501 L 689 195" id="row_14_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 499 509 L 715 196" id="row_13_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 521 520 L 733 219" id="row_12_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 541 529 L 755 230" id="row_11_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 560 542 L 781 239" id="row_10_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 583 552 L 802 248" id="row_9_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 606 562 L 830 239" id="row_8_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 627 570 L 857 261" id="row_7_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 651 581 L 878 266" id="row_6_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 675 596 L 903 273" id="row_5_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 694 607 L 923 277" id="row_4_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 715 615 L 948 295" id="row_3_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 737 630 L 963 312" id="row_2_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 758 637 L 965 350" id="row_1_hit" style="fill:none;stroke:blue;stroke-opacity:0;stroke-width:20"/>
+<path d="M 178 346 L 229 276" id="row_28" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 200 363 L 292 232" id="row_27" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 220 376 L 347 190" id="row_26" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 244 388 L 412 145" id="row_25" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 267 399 L 466 106" id="row_24" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 290 409 L 518 63" id="row_23" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 313 419 L 543 70" id="row_22" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 328 428 L 558 92" id="row_21" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 345 438 L 580 106" id="row_20" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 366 449 L 599 113" id="row_19" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 390 455 L 615 130" id="row_18" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 413 465 L 636 150" id="row_17" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 428 479 L 653 167" id="row_16" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 458 490 L 675 170" id="row_15" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 472 501 L 689 195" id="row_14" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 499 509 L 715 196" id="row_13" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 521 520 L 733 219" id="row_12" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 541 529 L 755 230" id="row_11" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 560 542 L 781 239" id="row_10" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 583 552 L 802 248" id="row_9" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 606 562 L 830 239" id="row_8" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 627 570 L 857 261" id="row_7" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 651 581 L 878 266" id="row_6" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 675 596 L 903 273" id="row_5" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 694 607 L 923 277" id="row_4" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 715 615 L 948 295" id="row_3" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 737 630 L 963 312" id="row_2" style="fill:none;stroke:#000;stroke-width:6"/>
+<path d="M 758 637 L 965 350" id="row_1" style="fill:none;stroke:#000;stroke-width:6"/>
+<text fill="red" font-size="16">
+<textPath href="#row_28" startOffset="50%" text-anchor="middle">row_28</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_27" startOffset="50%" text-anchor="middle">row_27</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_26" startOffset="50%" text-anchor="middle">row_26</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_25" startOffset="50%" text-anchor="middle">row_25</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_24" startOffset="50%" text-anchor="middle">row_24</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_23" startOffset="50%" text-anchor="middle">row_23</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_22" startOffset="50%" text-anchor="middle">row_22</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_21" startOffset="50%" text-anchor="middle">row_21</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_20" startOffset="50%" text-anchor="middle">row_20</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_19" startOffset="50%" text-anchor="middle">row_19</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_18" startOffset="50%" text-anchor="middle">row_18</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_17" startOffset="50%" text-anchor="middle">row_17</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_16" startOffset="50%" text-anchor="middle">row_16</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_15" startOffset="50%" text-anchor="middle">row_15</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_14" startOffset="50%" text-anchor="middle">row_14</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_13" startOffset="50%" text-anchor="middle">row_13</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_12" startOffset="50%" text-anchor="middle">row_12</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_11" startOffset="50%" text-anchor="middle">row_11</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_10" startOffset="50%" text-anchor="middle">row_10</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_9" startOffset="50%" text-anchor="middle">row_9</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_8" startOffset="50%" text-anchor="middle">row_8</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_7" startOffset="50%" text-anchor="middle">row_7</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_6" startOffset="50%" text-anchor="middle">row_6</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_5" startOffset="50%" text-anchor="middle">row_5</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_4" startOffset="50%" text-anchor="middle">row_4</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_3" startOffset="50%" text-anchor="middle">row_3</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_2" startOffset="50%" text-anchor="middle">row_2</textPath>
+</text>
+<text fill="red" font-size="16">
+<textPath href="#row_1" startOffset="50%" text-anchor="middle">row_1</textPath>
+</text>
+</svg>

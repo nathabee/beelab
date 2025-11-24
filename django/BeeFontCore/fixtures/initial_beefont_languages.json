@@ -1,0 +1,34 @@
+[
+  {
+    "model": "beefontcore.supportedlanguage",
+    "pk": "de",
+    "fields": {
+      "name": "Deutsch",
+      "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜßabcdefghijklmnopqrstuvwxyzäöüß0123456789"
+    }
+  },
+  {
+    "model": "beefontcore.supportedlanguage",
+    "pk": "fr",
+    "fields": {
+      "name": "Français",
+      "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZÀÂÇÉÈÊËÎÏÔÙÛÜŸabcdefghijklmnopqrstuvwxyzàâçéèêëîïôùûüÿ0123456789"
+    }
+  },
+  {
+    "model": "beefontcore.supportedlanguage",
+    "pk": "en",
+    "fields": {
+      "name": "English",
+      "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    }
+  },
+  {
+    "model": "beefontcore.supportedlanguage",
+    "pk": "n1",
+    "fields": {
+      "name": "Numero Uno",
+      "alphabet": "0123456789"
+    }
+  }
+]

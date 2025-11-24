@@ -1,0 +1,42 @@
+<div>
+    {% if widget.value %}
+        <label for="{{ widget.attrs.id }}">Current image preview:</label>
+        <br>
+        <img id="image-preview" src="{{ widget.value.url }}" style="max-height: 200px;  "  alt="Current image preview">
+    {% endif %}
+</div>
+
+ 
+<br>
+
+<!-- Render the file input element to allow file selection -->
+<input type="{{ widget.type }}" name="{{ widget.name }}" id="{{ widget.attrs.id }}" accept="image/*" />
+
+<script type="text/javascript">
+    document.getElementById("{{ widget.attrs.id }}").onchange = function(event) {
+        // Create a new FileReader to read the selected image file
+        var reader = new FileReader();
+        
+        reader.onload = function(e) {
+            // Check if there's an existing preview, or create a new one
+            var preview = document.getElementById('image-preview');
+            
+            if (preview) {
+                // Update the image source with the selected file data
+                preview.src = e.target.result;
+            } else {
+                // Create a new preview image if none exists
+                var newPreview = document.createElement('img');
+                newPreview.id = 'image-preview';
+                newPreview.src = e.target.result;
+                newPreview.style.maxHeight = '200px';
+                
+                // Insert the new preview just before the file input
+                event.target.parentElement.insertBefore(newPreview, event.target);
+            }
+        };
+        
+        // Read the selected file (this will trigger the onload function)
+        reader.readAsDataURL(event.target.files[0]);
+    };
+</script>

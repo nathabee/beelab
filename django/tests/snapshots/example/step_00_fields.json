@@ -1,0 +1,61 @@
+{
+  "status": "success",
+  "data": {
+    "fields": [
+      {
+        "field_id": 1,
+        "short_name": "C1",
+        "name": "ChampMaison",
+        "description": "Champ situé sur la parcelle de la maison",
+        "orientation": "NW",
+        "svg_map_url": "/media/fields/svg/C1_map.svg",
+        "background_image_url": "/media/fields/background/C1.jpeg"
+      },
+      {
+        "field_id": 2,
+        "short_name": "C2",
+        "name": "ChampSud",
+        "description": "Champ situé au sud de la propriété, très ensoleillé.",
+        "orientation": "S",
+        "svg_map_url": "/media/fields/svg/C2_map.svg",
+        "background_image_url": null
+      },
+      {
+        "field_id": 3,
+        "short_name": "C3",
+        "name": "VergerHaut",
+        "description": "Verger en hauteur avec terre calcaire.",
+        "orientation": "E",
+        "svg_map_url": "/media/fields/svg/C3_map.svg",
+        "background_image_url": null
+      },
+      {
+        "field_id": 4,
+        "short_name": "C4",
+        "name": "VergerBas",
+        "description": "Verger en contrebas, plus humide.",
+        "orientation": "W",
+        "svg_map_url": "/media/fields/svg/C4_map.svg",
+        "background_image_url": null
+      },
+      {
+        "field_id": 5,
+        "short_name": "C5",
+        "name": "PlaineOuest",
+        "description": "Grande plaine à l'ouest, sol fertile.",
+        "orientation": "W",
+        "svg_map_url": "/media/fields/svg/C5_map.svg",
+        "background_image_url": null
+      },
+      {
+        "field_id": 6,
+        "short_name": "C6",
+        "name": "TestZone",
+        "description": "Petite parcelle expérimentale.",
+        "orientation": "N",
+        "svg_map_url": "/media/fields/svg/default_map.svg",
+        "background_image_url": null
+      }
+    ]
+  }
+}

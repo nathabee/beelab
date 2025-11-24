@@ -1,0 +1,1 @@
+export default function Welcome(){return(<main style={{fontFamily:"system-ui, sans-serif",padding:"2rem"}}><h1>Welcome</h1><p>This is a simple Next.js page served from the web container.</p><p>Go back to the <a href="/">home</a> page.</p></main>);}

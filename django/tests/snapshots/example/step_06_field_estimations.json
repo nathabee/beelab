@@ -1,0 +1,79 @@
+{
+  "status": "success",
+  "data": {
+    "estimations": [
+      {
+        "estimation_id": 4,
+        "image_id": 4,
+        "date": "2024-03-14",
+        "timestamp": "2025-04-17T08:12:50",
+        "row_id": 15,
+        "row_name": "Rang 15 cote maison Pitch 2",
+        "field_id": 1,
+        "field_name": "ChampMaison",
+        "fruit_type": "Cultivar Pitch on M9",
+        "plant_kg": 18,
+        "row_kg": 702,
+        "maturation_grade": 0,
+        "confidence_score": 0.85,
+        "source": "Machine Learning (Image)",
+        "fruit_plant": 100,
+        "status": "done"
+      },
+      {
+        "estimation_id": 3,
+        "image_id": 3,
+        "date": "2024-03-14",
+        "timestamp": "2025-04-17T08:12:45",
+        "row_id": 1,
+        "row_name": "Rang 1 cote maison Swing 1",
+        "field_id": 1,
+        "field_name": "ChampMaison",
+        "fruit_type": "Cultivar Swing on CG1",
+        "plant_kg": 20,
+        "row_kg": 760,
+        "maturation_grade": 0,
+        "confidence_score": 0.85,
+        "source": "Machine Learning (Image)",
+        "fruit_plant": 100,
+        "status": "done"
+      },
+      {
+        "estimation_id": 2,
+        "image_id": 2,
+        "date": "2024-04-15",
+        "timestamp": "2025-04-17T08:12:42",
+        "row_id": 1,
+        "row_name": "Rang 1 cote maison Swing 1",
+        "field_id": 1,
+        "field_name": "ChampMaison",
+        "fruit_type": "Cultivar Swing on CG1",
+        "plant_kg": 1.6,
+        "row_kg": 60.8,
+        "maturation_grade": 0,
+        "confidence_score": 0.7,
+        "source": "User manual estimation",
+        "fruit_plant": 8,
+        "status": "done"
+      },
+      {
+        "estimation_id": 1,
+        "image_id": 1,
+        "date": "2024-04-15",
+        "timestamp": "2025-04-17T08:12:42",
+        "row_id": 1,
+        "row_name": "Rang 1 cote maison Swing 1",
+        "field_id": 1,
+        "field_name": "ChampMaison",
+        "fruit_type": "Cultivar Swing on CG1",
+        "plant_kg": 1.8,
+        "row_kg": 68.4,
+        "maturation_grade": 0,
+        "confidence_score": 0.6,
+        "source": "User manual estimation",
+        "fruit_plant": 9,
+        "status": "done"
+      }
+    ]
+  }
+}

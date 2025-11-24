@@ -1,0 +1,318 @@
+@media print {
+
+  /* Define A4 page size and orientation */
+  @page {
+    size: A4 portrait;
+  }
+}
+
+
+/*******************************************/
+/* Overview of the difficulties */
+
+.print-container .table {
+  width: 100%;
+  /* Ensure the table fits the full width of the page */
+  font-size: 8px;
+  /* Reduce font size for printing */
+  border-collapse: collapse;
+  /* Merge borders for cleaner look */
+  margin: 0;
+  /* Remove margins for compact layout */
+}
+
+.print-container .table thead th {
+  background-color: hsl(177, 56%, 56%);
+  /* Light background for headers */
+  font-weight: bold;
+  /* Ensure headers stand out */
+  border: 1px solid #ddd;
+  /* Light border */
+  padding: 4px;
+  /* Compact padding */
+  text-align: center;
+  /* Center header text */
+}
+
+.print-container .table tbody td {
+  border: 1px solid #070844;
+  /* Light border for table cells */
+  padding: 4px;
+  /* Compact padding for all table cells */
+  text-align: center;
+  /* Center align all content */
+  vertical-align: left;
+  /* Vertical center alignment */
+  word-wrap: break-word;
+  /* Allow wrapping in case of long text */
+}
+
+/* Compact the images in the last column */
+.print-container .table tbody td img {
+  width: 30px;
+  /* Reduce image width */
+  height: 15px;
+  /* Reduce image height */
+  margin-right: 5px;
+  /* Slight margin between image and text */
+}
+
+/* Reduce padding for the observation/details rows */
+.print-container .table tbody tr td[colspan="2"] {
+  padding-left: 15px;
+  /* Indent the details row slightly */
+}
+
+/* Ensure detailed rows are smaller and more compact */
+.print-container .table tbody tr {
+  line-height: 1.2;
+  /* Reduce line height for compact rows */
+}
+
+/* Prevent page breaks inside the table */
+.print-container .table {
+  page-break-inside: avoid;
+}
+
+/* Specific adjustments for print footer */
+.print-footer {
+  margin-top: 1cm;
+  /* Add margin at the bottom for space */
+}
+
+ 
+body {
+  margin: 2cm 2cm 2cm 2cm;
+  padding: 0;
+}
+
+/* General PDF Styling */
+.print-container {
+  width: 210mm;
+  /* A4 width */
+  height: 297mm;
+  /* A4 height */
+  margin: 0 auto;
+  /* Center content horizontally */
+  padding: 10mm;
+  /* Add padding for margins */
+  font-family: Arial, sans-serif;
+  background-color: #ffffff;
+  /* Ensure canvas background is white */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Contain content inside the print container */
+}
+
+/**************************************************************/
+/* Header */
+/**************************************************************/
+.print-header-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #000;
+  height: 15%;
+  width: 100%;
+  font-size: 15px;
+}
+
+.print-header-logo-container {
+  flex: 0 0 40%;
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+}
+
+.print-header-logo {
+  display: flex;
+  justify-content: center;
+  align-items: left;
+  width: 100%;
+}
+
+.print-header-logo canvas {
+  width: auto;
+}
+
+/* Header School Name Section */
+.print-header-school {
+  display: flex;
+  flex: 0 0 25%;
+  justify-content: left;
+  align-items: left;
+  text-align: left;
+  font-size: 15px;
+}
+
+ 
+
+/* Header Info */
+.print-header-info {
+  display: flex;
+  flex: 0 0 50%;
+  flex-direction: column;
+  align-items: left;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 0 1cm;
+}
+
+/* Print Banner */
+.print-banner {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+  overflow: hidden;
+}
+
+.print-header-gap {
+  flex: 0 0 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: left;
+}
+
+.print-header-professeur {
+  height: 50px;
+  justify-content: left;
+  align-items: center;
+  text-align: left;
+}
+
+.print-header-eleve {
+  height: 50px;
+  justify-content: right;
+  align-items: center;
+  text-align: left;
+  font-weight: bold;
+}
+
+
+/*********************************************************************/
+/* Banner Styling */
+.print-banner {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 0%;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/*********************************************************************/
+/* Chart Title Styling */
+.print-chart-title {
+  text-align: center;
+  font-size: 15px;
+  color: #000000;
+  height: 2%;
+  width: 100%;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+/*********************************************************************/
+/* Chart Container */
+.print-charts-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  height: 40%;
+  gap: 1cm;
+  overflow: hidden;
+}
+
+.print-chart {
+  height: 10cm; /* Set a specific height */
+  display: flex;
+  justify-content: center;
+  align-items: center; 
+  box-sizing: border-box;
+}
+
+.print-charts-container .print-chart {
+  flex-grow: 1;
+  max-height: calc(50% - 1cm);
+}
+
+.print-charts-container .print-chart:only-child {
+  flex-grow: 1;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+.print-chart canvas {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  box-sizing: border-box;
+}
+
+/*********************************************************************/
+/* Footer */
+/*********************************************************************/
+.print-footer {
+  display: flex;
+  flex-wrap: wrap;
+  height: 30%;
+  width: 100%;
+  text-align: left;
+  font-size: 15px;
+  margin-top: 0.5cm;
+}
+
+/* New class-based footer selectors */
+.print-footer-message1 {
+  margin-bottom: 0.5cm;
+}
+
+.print-footer-message2 {
+  margin-top: 0.5cm;
+}
+
+/* Avoid page breaks inside key sections */
+.print-header,
+.print-banner,
+.print-charts,
+.print-footer {
+  page-break-inside: avoid;
+}
+
+/* Score Overview Table Styling */
+.print-footer-scoreoverview table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.print-footer-scoreoverview th,
+.print-footer-scoreoverview td {
+  padding: 2px;
+  text-align: left;
+  vertical-align: middle;
+  border: 1px solid #ddd;
+  line-height: 1.2;
+}
+
+.print-footer-scoreoverview th {
+  font-weight: bold;
+}
+
+.print-footer-scoreoverview td {
+  font-size: 10px;
+}
+
+/******************************/
+.spacing {
+  margin-top: 20px; /* Adjust the value to your liking */
+}

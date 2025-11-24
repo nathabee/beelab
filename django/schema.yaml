@@ -1,0 +1,3465 @@
+openapi: 3.0.3
+info:
+  title: BeeLab API
+  version: 0.1.0
+  description: Django backend for PomoloBee and Competence.
+  contact:
+    name: BeeLab API Support
+    email: nathabee123@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+paths:
+  /api/competence/annees/:
+    get:
+      operationId: competence_annees_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Annee'
+          description: ''
+    post:
+      operationId: competence_annees_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnneeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AnneeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AnneeRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annee'
+          description: ''
+  /api/competence/annees/{id}/:
+    get:
+      operationId: competence_annees_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this annee.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annee'
+          description: ''
+    put:
+      operationId: competence_annees_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this annee.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnneeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AnneeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AnneeRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annee'
+          description: ''
+    patch:
+      operationId: competence_annees_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this annee.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAnneeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAnneeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAnneeRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annee'
+          description: ''
+    delete:
+      operationId: competence_annees_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this annee.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/catalogues/:
+    get:
+      operationId: competence_catalogues_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Catalogue'
+          description: ''
+    post:
+      operationId: competence_catalogues_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogueRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CatalogueRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CatalogueRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalogue'
+          description: ''
+  /api/competence/catalogues/{id}/:
+    get:
+      operationId: competence_catalogues_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this catalogue.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalogue'
+          description: ''
+    put:
+      operationId: competence_catalogues_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this catalogue.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogueRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CatalogueRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CatalogueRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalogue'
+          description: ''
+    patch:
+      operationId: competence_catalogues_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this catalogue.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCatalogueRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCatalogueRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCatalogueRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalogue'
+          description: ''
+    delete:
+      operationId: competence_catalogues_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this catalogue.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/eleve/{eleve_id}/reports/:
+    get:
+      operationId: competence_eleve_reports_retrieve
+      parameters:
+      - in: path
+        name: eleve_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: competence_eleve_reports_create
+      parameters:
+      - in: path
+        name: eleve_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: competence_eleve_reports_update
+      parameters:
+      - in: path
+        name: eleve_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: competence_eleve_reports_destroy
+      parameters:
+      - in: path
+        name: eleve_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/eleves/:
+    get:
+      operationId: competence_eleves_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Eleve'
+          description: ''
+    post:
+      operationId: competence_eleves_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EleveRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EleveRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EleveRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Eleve'
+          description: ''
+  /api/competence/eleves/{id}/:
+    get:
+      operationId: competence_eleves_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this eleve.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Eleve'
+          description: ''
+    put:
+      operationId: competence_eleves_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this eleve.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EleveRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EleveRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EleveRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Eleve'
+          description: ''
+    patch:
+      operationId: competence_eleves_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this eleve.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEleveRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEleveRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEleveRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Eleve'
+          description: ''
+    delete:
+      operationId: competence_eleves_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this eleve.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/etapes/:
+    get:
+      operationId: competence_etapes_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Etape'
+          description: ''
+    post:
+      operationId: competence_etapes_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtapeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EtapeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EtapeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Etape'
+          description: ''
+  /api/competence/etapes/{id}/:
+    get:
+      operationId: competence_etapes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this etape.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Etape'
+          description: ''
+    put:
+      operationId: competence_etapes_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this etape.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtapeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EtapeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EtapeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Etape'
+          description: ''
+    patch:
+      operationId: competence_etapes_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this etape.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEtapeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEtapeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEtapeRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Etape'
+          description: ''
+    delete:
+      operationId: competence_etapes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this etape.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/fullreports/:
+    get:
+      operationId: competence_fullreports_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FullReport'
+          description: ''
+    post:
+      operationId: competence_fullreports_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FullReportRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FullReportRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FullReportRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullReport'
+          description: ''
+  /api/competence/fullreports/{id}/:
+    get:
+      operationId: competence_fullreports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this report.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullReport'
+          description: ''
+    put:
+      operationId: competence_fullreports_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this report.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FullReportRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FullReportRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FullReportRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullReport'
+          description: ''
+    patch:
+      operationId: competence_fullreports_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this report.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFullReportRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFullReportRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFullReportRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullReport'
+          description: ''
+    delete:
+      operationId: competence_fullreports_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this report.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/groupages/:
+    get:
+      operationId: competence_groupages_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupageData'
+          description: ''
+    post:
+      operationId: competence_groupages_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupageDataRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupageDataRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupageDataRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupageData'
+          description: ''
+  /api/competence/groupages/{id}/:
+    get:
+      operationId: competence_groupages_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this groupage data.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupageData'
+          description: ''
+    put:
+      operationId: competence_groupages_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this groupage data.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupageDataRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupageDataRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupageDataRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupageData'
+          description: ''
+    patch:
+      operationId: competence_groupages_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this groupage data.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupageDataRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupageDataRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupageDataRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupageData'
+          description: ''
+    delete:
+      operationId: competence_groupages_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this groupage data.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/items/:
+    get:
+      operationId: competence_items_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+          description: ''
+    post:
+      operationId: competence_items_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+  /api/competence/items/{id}/:
+    get:
+      operationId: competence_items_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this item.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+    put:
+      operationId: competence_items_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this item.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+    patch:
+      operationId: competence_items_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this item.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedItemRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+    delete:
+      operationId: competence_items_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this item.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/matieres/:
+    get:
+      operationId: competence_matieres_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Matiere'
+          description: ''
+    post:
+      operationId: competence_matieres_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatiereRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MatiereRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MatiereRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Matiere'
+          description: ''
+  /api/competence/matieres/{id}/:
+    get:
+      operationId: competence_matieres_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this matiere.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Matiere'
+          description: ''
+    put:
+      operationId: competence_matieres_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this matiere.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatiereRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MatiereRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MatiereRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Matiere'
+          description: ''
+    patch:
+      operationId: competence_matieres_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this matiere.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMatiereRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMatiereRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMatiereRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Matiere'
+          description: ''
+    delete:
+      operationId: competence_matieres_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this matiere.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/myimage/{myimage_id}/base64/:
+    get:
+      operationId: competence_myimage_base64_retrieve
+      parameters:
+      - in: path
+        name: myimage_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/competence/niveaux/:
+    get:
+      operationId: competence_niveaux_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Niveau'
+          description: ''
+    post:
+      operationId: competence_niveaux_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NiveauRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NiveauRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NiveauRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Niveau'
+          description: ''
+  /api/competence/niveaux/{id}/:
+    get:
+      operationId: competence_niveaux_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this niveau.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Niveau'
+          description: ''
+    put:
+      operationId: competence_niveaux_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this niveau.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NiveauRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NiveauRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NiveauRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Niveau'
+          description: ''
+    patch:
+      operationId: competence_niveaux_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this niveau.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedNiveauRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedNiveauRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedNiveauRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Niveau'
+          description: ''
+    delete:
+      operationId: competence_niveaux_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this niveau.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/overview/:
+    get:
+      operationId: competence_overview_retrieve
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/competence/pdf_layouts/:
+    get:
+      operationId: competence_pdf_layouts_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PDFLayout'
+          description: ''
+    post:
+      operationId: competence_pdf_layouts_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PDFLayoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PDFLayoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PDFLayoutRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PDFLayout'
+          description: ''
+  /api/competence/pdf_layouts/{id}/:
+    get:
+      operationId: competence_pdf_layouts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pdf layout.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PDFLayout'
+          description: ''
+    put:
+      operationId: competence_pdf_layouts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pdf layout.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PDFLayoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PDFLayoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PDFLayoutRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PDFLayout'
+          description: ''
+    patch:
+      operationId: competence_pdf_layouts_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pdf layout.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPDFLayoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPDFLayoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPDFLayoutRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PDFLayout'
+          description: ''
+    delete:
+      operationId: competence_pdf_layouts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pdf layout.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/scorerulepoints/:
+    get:
+      operationId: competence_scorerulepoints_list
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScoreRulePoint'
+          description: ''
+    post:
+      operationId: competence_scorerulepoints_create
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoreRulePointRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScoreRulePointRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScoreRulePointRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreRulePoint'
+          description: ''
+  /api/competence/scorerulepoints/{id}/:
+    get:
+      operationId: competence_scorerulepoints_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this score rule point.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreRulePoint'
+          description: ''
+    put:
+      operationId: competence_scorerulepoints_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this score rule point.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoreRulePointRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScoreRulePointRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScoreRulePointRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreRulePoint'
+          description: ''
+    patch:
+      operationId: competence_scorerulepoints_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this score rule point.
+        required: true
+      tags:
+      - competence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedScoreRulePointRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedScoreRulePointRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedScoreRulePointRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreRulePoint'
+          description: ''
+    delete:
+      operationId: competence_scorerulepoints_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this score rule point.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/competence/shortreports/:
+    get:
+      operationId: competence_shortreports_list
+      description: |-
+        A viewset that provides read-only access (list and retrieve)
+        for report data, ordered by 'updated_at' in descending order.
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShortReport'
+          description: ''
+  /api/competence/shortreports/{id}/:
+    get:
+      operationId: competence_shortreports_retrieve
+      description: |-
+        A viewset that provides read-only access (list and retrieve)
+        for report data, ordered by 'updated_at' in descending order.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this report.
+        required: true
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortReport'
+          description: ''
+  /api/competence/translations/:
+    get:
+      operationId: competence_translations_retrieve
+      tags:
+      - competence
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pomolobee/farms/:
+    get:
+      operationId: pomolobee_farms_list
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FarmWithFields'
+          description: ''
+  /api/pomolobee/farms/{id}/:
+    get:
+      operationId: pomolobee_farms_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmWithFields'
+          description: ''
+  /api/pomolobee/fields/:
+    get:
+      operationId: pomolobee_fields_list
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Field'
+          description: ''
+  /api/pomolobee/fields/{field_id}/estimations/:
+    get:
+      operationId: pomolobee_fields_estimations_retrieve
+      parameters:
+      - in: path
+        name: field_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pomolobee/fields/{id}/:
+    get:
+      operationId: pomolobee_fields_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this field.
+        required: true
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Field'
+          description: ''
+  /api/pomolobee/fruits/:
+    get:
+      operationId: pomolobee_fruits_list
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Fruit'
+          description: ''
+  /api/pomolobee/fruits/{id}/:
+    get:
+      operationId: pomolobee_fruits_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this fruit.
+        required: true
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fruit'
+          description: ''
+  /api/pomolobee/images/:
+    post:
+      operationId: pomolobee_images_create
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pomolobee/images/{image_id}/:
+    delete:
+      operationId: pomolobee_images_destroy
+      parameters:
+      - in: path
+        name: image_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/pomolobee/images/{image_id}/details/:
+    get:
+      operationId: pomolobee_images_details_retrieve
+      parameters:
+      - in: path
+        name: image_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pomolobee/images/{image_id}/estimations/:
+    get:
+      operationId: pomolobee_images_estimations_retrieve
+      parameters:
+      - in: path
+        name: image_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pomolobee/images/{image_id}/ml_result/:
+    post:
+      operationId: pomolobee_images_ml_result_create
+      parameters:
+      - in: path
+        name: image_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pomolobee/images/list/:
+    get:
+      operationId: pomolobee_images_list_retrieve
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pomolobee/locations/:
+    get:
+      operationId: pomolobee_locations_retrieve
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pomolobee/manual_estimation/:
+    post:
+      operationId: pomolobee_manual_estimation_create
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pomolobee/ml/version/:
+    get:
+      operationId: pomolobee_ml_version_retrieve
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/pomolobee/retry_processing/:
+    post:
+      operationId: pomolobee_retry_processing_create
+      tags:
+      - pomolobee
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/user/auth/login/:
+    post:
+      operationId: user_auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/user/auth/refresh/:
+    post:
+      operationId: user_auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/user/hello/:
+    get:
+      operationId: user_hello_retrieve
+      tags:
+      - user
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/user/me/:
+    get:
+      operationId: user_me_retrieve
+      tags:
+      - user
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/user/roles/:
+    get:
+      operationId: user_roles_retrieve
+      tags:
+      - user
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Annee:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        is_active:
+          type: boolean
+        start_date:
+          type: string
+          format: date
+        stop_date:
+          type: string
+          format: date
+        description:
+          type: string
+          nullable: true
+          maxLength: 100
+      required:
+      - id
+    AnneeRequest:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+        start_date:
+          type: string
+          format: date
+        stop_date:
+          type: string
+          format: date
+        description:
+          type: string
+          nullable: true
+          maxLength: 100
+    Catalogue:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        niveau_id:
+          type: integer
+        etape_id:
+          type: integer
+        annee_id:
+          type: integer
+        matiere_id:
+          type: integer
+        description:
+          type: string
+          nullable: true
+        niveau:
+          allOf:
+          - $ref: '#/components/schemas/Niveau'
+          readOnly: true
+        etape:
+          allOf:
+          - $ref: '#/components/schemas/Etape'
+          readOnly: true
+        annee:
+          allOf:
+          - $ref: '#/components/schemas/Annee'
+          readOnly: true
+        matiere:
+          allOf:
+          - $ref: '#/components/schemas/Matiere'
+          readOnly: true
+      required:
+      - annee
+      - annee_id
+      - etape
+      - etape_id
+      - id
+      - matiere
+      - matiere_id
+      - niveau
+      - niveau_id
+    CatalogueDescription:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        description:
+          type: string
+          nullable: true
+      required:
+      - id
+    CatalogueDescriptionRequest:
+      type: object
+      properties:
+        description:
+          type: string
+          nullable: true
+    CatalogueRequest:
+      type: object
+      properties:
+        niveau_id:
+          type: integer
+        etape_id:
+          type: integer
+        annee_id:
+          type: integer
+        matiere_id:
+          type: integer
+        description:
+          type: string
+          nullable: true
+      required:
+      - annee_id
+      - etape_id
+      - matiere_id
+      - niveau_id
+    Eleve:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nom:
+          type: string
+          maxLength: 100
+        prenom:
+          type: string
+          maxLength: 100
+        niveau:
+          type: integer
+        niveau_description:
+          type: string
+          readOnly: true
+        datenaissance:
+          type: string
+          format: date
+          nullable: true
+        professeurs_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+          readOnly: true
+      required:
+      - id
+      - niveau
+      - niveau_description
+      - nom
+      - prenom
+      - professeurs_details
+    EleveRequest:
+      type: object
+      properties:
+        nom:
+          type: string
+          minLength: 1
+          maxLength: 100
+        prenom:
+          type: string
+          minLength: 1
+          maxLength: 100
+        niveau:
+          type: integer
+        datenaissance:
+          type: string
+          format: date
+          nullable: true
+        professeurs:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+      required:
+      - niveau
+      - nom
+      - prenom
+    Etape:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        etape:
+          type: string
+          maxLength: 10
+        description:
+          type: string
+          nullable: true
+          maxLength: 30
+      required:
+      - etape
+      - id
+    EtapeRequest:
+      type: object
+      properties:
+        etape:
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          type: string
+          nullable: true
+          maxLength: 30
+      required:
+      - etape
+    FarmWithFields:
+      type: object
+      properties:
+        farm_id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldBasic'
+          readOnly: true
+      required:
+      - farm_id
+      - fields
+      - name
+    Field:
+      type: object
+      properties:
+        field_id:
+          type: integer
+          readOnly: true
+        short_name:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        orientation:
+          type: string
+          nullable: true
+          maxLength: 50
+        svg_map_url:
+          type: string
+          readOnly: true
+        background_image_url:
+          type: string
+          readOnly: true
+      required:
+      - background_image_url
+      - field_id
+      - name
+      - short_name
+      - svg_map_url
+    FieldBasic:
+      type: object
+      properties:
+        field_id:
+          type: integer
+          readOnly: true
+        short_name:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+      required:
+      - field_id
+      - name
+      - short_name
+    Fruit:
+      type: object
+      properties:
+        fruit_id:
+          type: integer
+          readOnly: true
+        short_name:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        yield_start_date:
+          type: string
+          format: date
+        yield_end_date:
+          type: string
+          format: date
+        yield_avg_kg:
+          type: number
+          format: double
+        fruit_avg_kg:
+          type: number
+          format: double
+      required:
+      - fruit_avg_kg
+      - fruit_id
+      - name
+      - short_name
+      - yield_avg_kg
+      - yield_end_date
+      - yield_start_date
+    FullReport:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        eleve:
+          type: integer
+        professeur:
+          type: integer
+        pdflayout:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        report_catalogues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportCatalogue'
+          readOnly: true
+      required:
+      - created_at
+      - eleve
+      - id
+      - pdflayout
+      - professeur
+      - report_catalogues
+      - updated_at
+    FullReportRequest:
+      type: object
+      properties:
+        eleve:
+          type: integer
+        professeur:
+          type: integer
+        pdflayout:
+          type: integer
+        catalogue_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
+        report_catalogues_data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportCatalogueRequest'
+          writeOnly: true
+      required:
+      - eleve
+      - pdflayout
+      - professeur
+    GroupageData:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        catalogue:
+          type: integer
+        groupage_icon_id:
+          type: integer
+        catalogue_id:
+          type: integer
+          readOnly: true
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        desc_groupage:
+          type: string
+          maxLength: 100
+        label_groupage:
+          type: string
+          maxLength: 100
+        link:
+          type: string
+          maxLength: 500
+        max_point:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        seuil1:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        seuil2:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        max_item:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+          readOnly: true
+      required:
+      - catalogue
+      - catalogue_id
+      - desc_groupage
+      - id
+      - items
+      - label_groupage
+      - link
+      - max_item
+      - max_point
+      - position
+      - seuil1
+      - seuil2
+    GroupageDataRequest:
+      type: object
+      properties:
+        catalogue:
+          type: integer
+        groupage_icon_id:
+          type: integer
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        desc_groupage:
+          type: string
+          minLength: 1
+          maxLength: 100
+        label_groupage:
+          type: string
+          minLength: 1
+          maxLength: 100
+        link:
+          type: string
+          minLength: 1
+          maxLength: 500
+        max_point:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        seuil1:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        seuil2:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        max_item:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - catalogue
+      - desc_groupage
+      - label_groupage
+      - link
+      - max_item
+      - max_point
+      - position
+      - seuil1
+      - seuil2
+    Item:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        temps:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 255
+        observation:
+          type: string
+          nullable: true
+        scorerule:
+          type: integer
+        max_score:
+          type: number
+          format: double
+        itempos:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        link:
+          type: string
+          maxLength: 500
+      required:
+      - description
+      - id
+      - itempos
+      - link
+      - max_score
+      - temps
+    ItemRequest:
+      type: object
+      properties:
+        temps:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+        observation:
+          type: string
+          nullable: true
+        scorerule:
+          type: integer
+        max_score:
+          type: number
+          format: double
+        itempos:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        link:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+      - description
+      - itempos
+      - link
+      - max_score
+      - temps
+    LangEnum:
+      enum:
+      - en
+      - fr
+      - br
+      - de
+      type: string
+      description: |-
+        * `en` - English
+        * `fr` - Francais
+        * `br` - Breton
+        * `de` - Deutsch
+    Matiere:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        matiere:
+          type: string
+          maxLength: 1
+        description:
+          type: string
+          nullable: true
+          maxLength: 30
+      required:
+      - id
+      - matiere
+    MatiereRequest:
+      type: object
+      properties:
+        matiere:
+          type: string
+          minLength: 1
+          maxLength: 1
+        description:
+          type: string
+          nullable: true
+          maxLength: 30
+      required:
+      - matiere
+    Nested:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        temps:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 255
+        observation:
+          type: string
+          nullable: true
+        max_score:
+          type: number
+          format: double
+        itempos:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        link:
+          type: string
+          maxLength: 500
+        groupagedata:
+          type: integer
+        scorerule:
+          type: integer
+      required:
+      - description
+      - groupagedata
+      - id
+      - itempos
+      - link
+      - max_score
+      - temps
+    NestedRequest:
+      type: object
+      properties:
+        temps:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+        observation:
+          type: string
+          nullable: true
+        max_score:
+          type: number
+          format: double
+        itempos:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        link:
+          type: string
+          minLength: 1
+          maxLength: 500
+        groupagedata:
+          type: integer
+        scorerule:
+          type: integer
+      required:
+      - description
+      - groupagedata
+      - itempos
+      - link
+      - max_score
+      - temps
+    Niveau:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        niveau:
+          type: string
+          maxLength: 10
+        description:
+          type: string
+          nullable: true
+          maxLength: 30
+      required:
+      - id
+      - niveau
+    NiveauRequest:
+      type: object
+      properties:
+        niveau:
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          type: string
+          nullable: true
+          maxLength: 30
+      required:
+      - niveau
+    PDFLayout:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        header_icon:
+          type: string
+          format: uri
+          readOnly: true
+        header_icon_base64:
+          type: string
+          readOnly: true
+        schule_name:
+          type: string
+          nullable: true
+        header_message:
+          type: string
+          nullable: true
+        footer_message1:
+          type: string
+          nullable: true
+        footer_message2:
+          type: string
+          nullable: true
+      required:
+      - header_icon
+      - header_icon_base64
+      - id
+    PDFLayoutRequest:
+      type: object
+      properties:
+        schule_name:
+          type: string
+          nullable: true
+        header_message:
+          type: string
+          nullable: true
+        footer_message1:
+          type: string
+          nullable: true
+        footer_message2:
+          type: string
+          nullable: true
+    PatchedAnneeRequest:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+        start_date:
+          type: string
+          format: date
+        stop_date:
+          type: string
+          format: date
+        description:
+          type: string
+          nullable: true
+          maxLength: 100
+    PatchedCatalogueRequest:
+      type: object
+      properties:
+        niveau_id:
+          type: integer
+        etape_id:
+          type: integer
+        annee_id:
+          type: integer
+        matiere_id:
+          type: integer
+        description:
+          type: string
+          nullable: true
+    PatchedEleveRequest:
+      type: object
+      properties:
+        nom:
+          type: string
+          minLength: 1
+          maxLength: 100
+        prenom:
+          type: string
+          minLength: 1
+          maxLength: 100
+        niveau:
+          type: integer
+        datenaissance:
+          type: string
+          format: date
+          nullable: true
+        professeurs:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+    PatchedEtapeRequest:
+      type: object
+      properties:
+        etape:
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          type: string
+          nullable: true
+          maxLength: 30
+    PatchedFullReportRequest:
+      type: object
+      properties:
+        eleve:
+          type: integer
+        professeur:
+          type: integer
+        pdflayout:
+          type: integer
+        catalogue_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
+        report_catalogues_data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportCatalogueRequest'
+          writeOnly: true
+    PatchedGroupageDataRequest:
+      type: object
+      properties:
+        catalogue:
+          type: integer
+        groupage_icon_id:
+          type: integer
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        desc_groupage:
+          type: string
+          minLength: 1
+          maxLength: 100
+        label_groupage:
+          type: string
+          minLength: 1
+          maxLength: 100
+        link:
+          type: string
+          minLength: 1
+          maxLength: 500
+        max_point:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        seuil1:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        seuil2:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        max_item:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+    PatchedItemRequest:
+      type: object
+      properties:
+        temps:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+        observation:
+          type: string
+          nullable: true
+        scorerule:
+          type: integer
+        max_score:
+          type: number
+          format: double
+        itempos:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        link:
+          type: string
+          minLength: 1
+          maxLength: 500
+    PatchedMatiereRequest:
+      type: object
+      properties:
+        matiere:
+          type: string
+          minLength: 1
+          maxLength: 1
+        description:
+          type: string
+          nullable: true
+          maxLength: 30
+    PatchedNiveauRequest:
+      type: object
+      properties:
+        niveau:
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          type: string
+          nullable: true
+          maxLength: 30
+    PatchedPDFLayoutRequest:
+      type: object
+      properties:
+        schule_name:
+          type: string
+          nullable: true
+        header_message:
+          type: string
+          nullable: true
+        footer_message1:
+          type: string
+          nullable: true
+        footer_message2:
+          type: string
+          nullable: true
+    PatchedScoreRulePointRequest:
+      type: object
+      properties:
+        scorerule:
+          type: integer
+        scorelabel:
+          type: string
+          minLength: 1
+          maxLength: 20
+        score:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        description:
+          type: string
+          nullable: true
+          maxLength: 50
+    ReportCatalogue:
+      type: object
+      properties:
+        id:
+          type: integer
+        catalogue:
+          allOf:
+          - $ref: '#/components/schemas/CatalogueDescription'
+          readOnly: true
+        resultats:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resultat'
+      required:
+      - catalogue
+      - id
+      - resultats
+    ReportCatalogueRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        resultats:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultatRequest'
+      required:
+      - id
+      - resultats
+    Resultat:
+      type: object
+      properties:
+        id:
+          type: integer
+        groupage:
+          $ref: '#/components/schemas/GroupageData'
+        score:
+          type: number
+          format: double
+          default: -1.0
+        seuil1_percent:
+          type: number
+          format: double
+          default: -1.0
+        seuil2_percent:
+          type: number
+          format: double
+          default: -1.0
+        seuil3_percent:
+          type: number
+          format: double
+          default: -1.0
+        resultat_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultatDetail'
+      required:
+      - groupage
+      - id
+      - resultat_details
+    ResultatDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        item:
+          allOf:
+          - $ref: '#/components/schemas/Nested'
+          readOnly: true
+        score:
+          type: number
+          format: double
+          default: -1.0
+        scorelabel:
+          type: string
+          nullable: true
+          default: '?'
+          maxLength: 50
+        observation:
+          type: string
+          nullable: true
+          default: ''
+      required:
+      - id
+      - item
+    ResultatDetailRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        item_id:
+          type: integer
+          writeOnly: true
+        score:
+          type: number
+          format: double
+          default: -1.0
+        scorelabel:
+          type: string
+          nullable: true
+          default: '?'
+          maxLength: 50
+        observation:
+          type: string
+          nullable: true
+          default: ''
+      required:
+      - id
+    ResultatRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        groupage:
+          $ref: '#/components/schemas/GroupageDataRequest'
+        score:
+          type: number
+          format: double
+          default: -1.0
+        seuil1_percent:
+          type: number
+          format: double
+          default: -1.0
+        seuil2_percent:
+          type: number
+          format: double
+          default: -1.0
+        seuil3_percent:
+          type: number
+          format: double
+          default: -1.0
+        resultat_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultatDetailRequest'
+      required:
+      - groupage
+      - id
+      - resultat_details
+    ScoreRulePoint:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        scorerule:
+          type: integer
+        scorelabel:
+          type: string
+          maxLength: 20
+        score:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        description:
+          type: string
+          nullable: true
+          maxLength: 50
+      required:
+      - id
+      - score
+      - scorelabel
+    ScoreRulePointRequest:
+      type: object
+      properties:
+        scorerule:
+          type: integer
+        scorelabel:
+          type: string
+          minLength: 1
+          maxLength: 20
+        score:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        description:
+          type: string
+          nullable: true
+          maxLength: 50
+      required:
+      - score
+      - scorelabel
+    ShortGroupageData:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        desc_groupage:
+          type: string
+          readOnly: true
+        label_groupage:
+          type: string
+          readOnly: true
+        position:
+          type: integer
+          readOnly: true
+        max_point:
+          type: integer
+          readOnly: true
+        seuil1:
+          type: integer
+          readOnly: true
+        seuil2:
+          type: integer
+          readOnly: true
+      required:
+      - desc_groupage
+      - id
+      - label_groupage
+      - max_point
+      - position
+      - seuil1
+      - seuil2
+    ShortReport:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        eleve:
+          type: string
+          readOnly: true
+        professeur:
+          type: string
+          readOnly: true
+        report_catalogues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShortReportCatalogue'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - eleve
+      - id
+      - professeur
+      - report_catalogues
+      - updated_at
+    ShortReportCatalogue:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        catalogue:
+          type: string
+          readOnly: true
+        resultats:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShortResultat'
+          readOnly: true
+      required:
+      - catalogue
+      - id
+      - resultats
+    ShortResultat:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        score:
+          type: number
+          format: double
+          readOnly: true
+        seuil1_percent:
+          type: number
+          format: double
+          readOnly: true
+        seuil2_percent:
+          type: number
+          format: double
+          readOnly: true
+        seuil3_percent:
+          type: number
+          format: double
+          readOnly: true
+        groupage:
+          allOf:
+          - $ref: '#/components/schemas/ShortGroupageData'
+          readOnly: true
+      required:
+      - groupage
+      - id
+      - score
+      - seuil1_percent
+      - seuil2_percent
+      - seuil3_percent
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        lang:
+          $ref: '#/components/schemas/LangEnum'
+      required:
+      - id
+      - username
+    UserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        roles:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+        lang:
+          $ref: '#/components/schemas/LangEnum'
+      required:
+      - password
+      - roles
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+servers:
+- url: http://localhost:9001

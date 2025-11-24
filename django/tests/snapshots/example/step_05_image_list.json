@@ -1,0 +1,85 @@
+{
+  "status": "success",
+  "data": {
+    "total": 5,
+    "limit": 100,
+    "offset": 0,
+    "images": [
+      {
+        "image_id": 1,
+        "row_id": 1,
+        "field_id": 1,
+        "xy_location": "",
+        "fruit_type": "Cultivar Swing on CG1",
+        "user_fruit_plant": 9,
+        "upload_date": "2025-04-17",
+        "date": "2024-04-15",
+        "image_url": "/media/images/image_default.jpg",
+        "original_filename": null,
+        "processed": true,
+        "processed_at": "2025-04-17T08:12:42",
+        "status": "Done"
+      },
+      {
+        "image_id": 2,
+        "row_id": 1,
+        "field_id": 1,
+        "xy_location": null,
+        "fruit_type": "Cultivar Swing on CG1",
+        "user_fruit_plant": 8,
+        "upload_date": "2025-04-17",
+        "date": "2024-04-15",
+        "image_url": "/media/images/image-2.jpg",
+        "original_filename": "orchard.jpg",
+        "processed": true,
+        "processed_at": "2025-04-17T08:12:42",
+        "status": "Done"
+      },
+      {
+        "image_id": 3,
+        "row_id": 1,
+        "field_id": 1,
+        "xy_location": null,
+        "fruit_type": "Cultivar Swing on CG1",
+        "user_fruit_plant": null,
+        "upload_date": "2025-04-17",
+        "date": "2024-03-14",
+        "image_url": "/media/images/image-3.jpg",
+        "original_filename": "orchard.jpg",
+        "processed": true,
+        "processed_at": "2025-04-17T08:12:45",
+        "status": "Done"
+      },
+      {
+        "image_id": 4,
+        "row_id": 15,
+        "field_id": 1,
+        "xy_location": null,
+        "fruit_type": "Cultivar Pitch on M9",
+        "user_fruit_plant": 105,
+        "upload_date": "2025-04-17",
+        "date": "2024-03-14",
+        "image_url": "/media/images/image-4.jpg",
+        "original_filename": "orchard.jpg",
+        "processed": true,
+        "processed_at": "2025-04-17T08:12:50",
+        "status": "Done"
+      },
+      {
+        "image_id": 5,
+        "row_id": 25,
+        "field_id": 1,
+        "xy_location": null,
+        "fruit_type": "Cultivar Early Crunch on M9 Nakab",
+        "user_fruit_plant": 105,
+        "upload_date": "2025-04-17",
+        "date": "2024-03-14",
+        "image_url": "/media/images/image-5.jpg",
+        "original_filename": "orchard.jpg",
+        "processed": false,
+        "processed_at": null,
+        "status": "Processing"
+      }
+    ]
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "meta": {
+    "date": "2025-08-23",
+    "tester": "Your Name",
+    "host": "Local Dev Machine",
+    "os": "Ubuntu 22.04",
+    "dockerVersion": ">=24.x",
+    "composeVersion": "v2",
+    "project": "beelab",
+    "projectVersion": "v0.1.0",
+    "branch": "main"
+  },
+  "sections": [
+    {
+      "section": "Init & Build",
+      "items": [
+        {
+          "test": "Repo available",
+          "description": "Repo is cloned and compose.yaml present at project root.",
+          "expected": "`compose.yaml` exists; `django/` and `web/` directories present.",
+          "state": "",
+          "details": "Verify files exist:\n  ls -la | grep -E 'compose.yaml' ;  test -f compose.yaml  && echo 'compose.yaml OK' ;  test -d django && echo 'django/ OK' ;  test -d web && echo 'web/ OK'  Optional sanity:\n  git status --porcelain\n  head -n 20 compose.yaml"
+        },
+        {
+          "test": "Seed node_modules with npm install (first run)",
+          "description": "Install web dependencies into the named volume using npm install (dev flow).",
+          "expected": "`docker compose --profile dev run --rm web npm install` completes with no fatal errors and may update package-lock.json.",
+          "state": "",
+          "details": "Run:\n  docker compose --profile dev run --rm web npm install\nCheck that node_modules is populated:\n  docker compose run --rm web ls -1 node_modules | head\nCheck for updated lockfile:\n  git status package-lock.json"
+        },
+        {
+          "test": "Seed node_modules with npm ci (reproducible build)",
+          "description": "Install web dependencies into the named volume using npm ci (CI/CD flow).",
+          "expected": "`docker compose --profile dev run --rm web npm ci` completes with no fatal errors and exactly matches package-lock.json.",
+          "state": "",
+          "details": "Run:\n  docker compose --profile dev run --rm web npm ci\nVerify node_modules populated:\n  docker compose run --rm web ls -1 node_modules | head\nCheck volume is present:\n  docker volume ls | grep beelab_web_node_modules"
+        },
+        {
+          "test": "Build images",
+          "description": "Build django, web, and pull postgres image.",
+          "expected": "`docker compose --profile dev up --build` completes; images `beelab-django`, `beelab-web`, and `postgres:16` are used/created.",
+          "state": "",
+          "details": "Build and start in background:\n  docker compose --profile dev up -d --build\nConfirm images present:\n  docker images | grep -E 'beelab-(django|web)'\n  docker images | grep 'postgres\\s*16'\nConfirm containers created:\n  docker compose --profile dev ps"
+        },
+        {
+          "test": "Containers healthy/up",
+          "description": "All services started and reachable.",
+          "expected": "`docker compose ps` shows beelab-api, beelab-web, and db running (or up).",
+          "state": "",
+          "details": "Check container state:\n  docker compose --profile dev ps\nPorts bound on host:\n  ss -lntp | grep -E ':9001|:9080' || true\nQuick endpoint checks:\n  curl -sS http://localhost:9001/health || true\n  curl -sS -I http://localhost:9080 || true\nLogs (brief):\n  docker compose logs --no-color --tail=50 django\n  docker compose logs --no-color --tail=50 web"
+        }
+      ]
+    },
+    {
+      "section": "Web Service (Next.js) Tests",
+      "items": [
+        {
+          "test": "Welcome page",
+          "description": "Open the static welcome route.",
+          "expected": "GET http://localhost:9080/welcome returns 200 and HTML with 'Welcome'.",
+          "state": "",
+          "details": "HTTP status and content:\n  curl -i http://localhost:9080/welcome | head -n 20\n  curl -s http://localhost:9080/welcome | grep -i 'welcome'\nContainer logs while hitting page (separate terminal):\n  docker compose logs -f web"
+        },
+        {
+          "test": "Hello from backend on home page",
+          "description": "Home page fetches `/api/hello` from Django.",
+          "expected": "GET http://localhost:9080 shows text like 'Hello from Django (service: django)'.",
+          "state": "",
+          "details": "Hit home page:\n  curl -sS http://localhost:9080 | grep -Ei 'hello.*django' || echo 'If client-side render, open in browser to verify.'\nAlternatively hit the same backend API the page calls:\n  curl -sS http://localhost:9001/api/hello\nVerify web can reach backend from inside web container:\n  docker compose exec web curl -sS http://django:8000/api/hello"
+        },
+        {
+          "test": "Login form present",
+          "description": "Check that username/password form is rendered.",
+          "expected": "Form fields and submit button visible; POST goes to /api/login.",
+          "state": "",
+          "details": "Check static HTML (might be minimal if client-side rendered):\n  curl -sS http://localhost:9080/login | grep -Ei '(username|password|<form)'\nIf JS-driven, open browser:\n  xdg-open http://localhost:9080/login\nConfirm form target (view source):\n  curl -sS http://localhost:9080/login | grep -E 'action=|/api/login' || echo 'Check in browser DevTools > Network'"
+        }
+      ]
+    },
+    {
+      "section": "API Service (Django) Tests",
+      "items": [
+        {
+          "test": "Health endpoint",
+          "description": "Simple health probe.",
+          "expected": "GET http://localhost:9001/health returns 200 and `{ \"status\": \"ok\" }`.",
+          "state": "",
+          "details": "Status + body:\n  curl -i http://localhost:9001/health\n  curl -s http://localhost:9001/health | jq . || curl -s http://localhost:9001/health"
+        },
+        {
+          "test": "Hello endpoint",
+          "description": "Basic API response.",
+          "expected": "GET http://localhost:9001/api/hello returns 200 and `{ \"service\": \"django\", \"message\": \"Hello from Django\" }`.",
+          "state": "",
+          "details": "Status + body:\n  curl -i http://localhost:9001/api/hello\n  curl -s http://localhost:9001/api/hello | jq . || curl -s http://localhost:9001/api/hello"
+        },
+        {
+          "test": "Create test user",
+          "description": "Create or ensure a Django user exists.",
+          "expected": "`python manage.py createsuperuser` (or existing user) available for login.",
+          "state": "",
+          "details": "Non-interactive superuser (recommended):\n  docker compose exec -e DJANGO_SUPERUSER_USERNAME=admin \\\n    -e DJANGO_SUPERUSER_EMAIL=admin@example.com \\\n    -e DJANGO_SUPERUSER_PASSWORD=admin django \\\n    python manage.py createsuperuser --noinput || true\nVerify user exists via Django shell:\n  docker compose exec django python - <<'PY'\nfrom django.contrib.auth import get_user_model\nUser=get_user_model()\nprint('admin exists:', User.objects.filter(username='admin').exists())\nPY"
+        },
+        {
+          "test": "JWT login",
+          "description": "Obtain tokens from SimpleJWT.",
+          "expected": "POST http://localhost:9001/api/auth/login with JSON `{ \"username\":\"u\",\"password\":\"p\" }` returns 200 and `{ access, refresh }`.",
+          "state": "",
+          "details": "Login with curl:\n  curl -sS -X POST http://localhost:9001/api/auth/login \\\n    -H 'Content-Type: application/json' \\\n    -d '{\"username\":\"admin\",\"password\":\"admin\"}' | tee /tmp/jwt.json\nExtract access token (jq optional):\n  ACCESS=$(jq -r .access /tmp/jwt.json 2>/dev/null || python3 - <<'PY'\nimport json,sys;print(json.load(open('/tmp/jwt.json')).get('access',''))\nPY\n)\n  echo \"ACCESS len: ${#ACCESS}\"\nExpect non-empty token."
+        },
+        {
+          "test": "Protected route with Bearer token",
+          "description": "Access /api/me using Authorization header.",
+          "expected": "GET http://localhost:9001/api/me with `Authorization: Bearer <access>` returns 200 and user payload JSON.",
+          "state": "",
+          "details": "Use token from previous step:\n  curl -sS http://localhost:9001/api/me -H \"Authorization: Bearer $ACCESS\" | jq . || curl -sS http://localhost:9001/api/me -H \"Authorization: Bearer $ACCESS\""
+        }
+      ]
+    },
+    {
+      "section": "DB (Postgres) Tests",
+      "items": [
+        {
+          "test": "Connection string",
+          "description": "Django connects via DATABASE_URL env.",
+          "expected": "`postgresql://app:app@db:5432/app` is set; container logs show successful connection.",
+          "state": "",
+          "details": "Check env inside django container:\n  docker compose exec django printenv | grep ^DATABASE_URL=\nCheck logs for connection OK/migrations:\n  docker compose logs django | grep -Ei 'Connected|migrate|Applying' || true\nVerify Django can open DB:\n  docker compose exec django python - <<'PY'\nimport psycopg2,os\nprint('DB URL:', os.environ.get('DATABASE_URL',''))\nPY || echo 'psycopg2 not installed test skipped'"
+        },
+        {
+          "test": "Migrations applied",
+          "description": "Django applies migrations on startup.",
+          "expected": "`python manage.py showmigrations` shows built-ins applied; `\\dt` in psql lists tables incl. django_migrations.",
+          "state": "",
+          "details": "Show migrations:\n  docker compose exec django python manage.py showmigrations | sed -n '1,120p'\nCheck tables in Postgres:\n  docker compose exec db psql -U app -d app -c '\\dt' | grep django_migrations"
+        },
+        {
+          "test": "Read/write sanity",
+          "description": "Create a user and verify it exists in DB.",
+          "expected": "User appears in `auth_user` (via Django admin/dbshell).",
+          "state": "",
+          "details": "Create a normal user via Django shell:\n  docker compose exec django python - <<'PY'\nfrom django.contrib.auth import get_user_model\nUser=get_user_model()\nUser.objects.update_or_create(username='smoke', defaults={'email':'smoke@example.com'})\nprint('ok')\nPY\nVerify via SQL:\n  docker compose exec db psql -U app -d app -c \"SELECT username,email FROM auth_user WHERE username='smoke';\""
+        }
+      ]
+    },
+    {
+      "section": "Persistence After Restart",
+      "items": [
+        {
+          "test": "Stop and start",
+          "description": "Bring stack down and up again.",
+          "expected": "`docker compose down` then `docker compose up -d`; containers start cleanly.",
+          "state": "",
+          "details": "Restart stack:\n  docker compose down\n  docker compose --profile dev up -d\nVerify status:\n  docker compose ps\nCheck quick health:\n  curl -sS http://localhost:9001/health && echo\n  curl -sS -I http://localhost:9080 | head -n 1"
+        },
+        {
+          "test": "DB data persists",
+          "description": "Verify previously created user still exists.",
+          "expected": "Auth user remains present; volume `beelab_db_data` persisted data.",
+          "state": "",
+          "details": "Confirm volume exists:\n  docker volume ls | grep beelab_db_data\nCheck user still present:\n  docker compose exec db psql -U app -d app -c \"SELECT username FROM auth_user WHERE username IN ('admin','smoke');\""
+        },
+        {
+          "test": "Web + API still OK",
+          "description": "Re-test key endpoints.",
+          "expected": "GET /welcome (9080), GET /api/hello (9001) both 200; login flow still works.",
+          "state": "",
+          "details": "Web endpoints:\n  curl -sS -o /dev/null -w '%{http_code}\\n' http://localhost:9080/welcome\n  curl -sS http://localhost:9080 | head -n 1\nAPI endpoints:\n  curl -sS http://localhost:9001/api/hello | jq . || curl -sS http://localhost:9001/api/hello\nJWT re-check (optional):\n  curl -sS -X POST http://localhost:9001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin\"}' | jq . || true"
+        }
+      ]
+    },
+    {
+      "section": "Optional: Health/Logs/Cleanup",
+      "items": [
+        {
+          "test": "Tail logs",
+          "description": "Follow logs to catch errors during dev.",
+          "expected": "`docker compose logs -f django` and `-f web` show no repeated stack traces.",
+          "state": "",
+          "details": "Follow logs in two terminals:\n  docker compose logs -f django\n  docker compose logs -f web\nLook for errors:\n  docker compose logs --no-color web | grep -Ei 'error|exception|EADDRINUSE' || true"
+        },
+        {
+          "test": "Volumes listed",
+          "description": "See project volumes.",
+          "expected": "`docker volume ls` includes `beelab_db_data` and `beelab_web_node_modules`.",
+          "state": "",
+          "details": "List volumes:\n  docker volume ls | grep -E 'beelab_db_data|beelab_web_node_modules'\nInspect (optional):\n  docker volume inspect beelab_db_data | head -n 20\n  docker volume inspect beelab_web_node_modules | head -n 20"
+        },
+        {
+          "test": "Clean rebuild (when needed)",
+          "description": "Rebuild without cache.",
+          "expected": "`docker compose build --no-cache` succeeds; stack still runs.",
+          "state": "",
+          "details": "Stop stack:\n  docker compose down\nRebuild:\n  docker compose --profile dev build --no-cache\nStart:\n  docker compose --profile dev up -d\nVerify:\n  docker compose ps\n  curl -sS http://localhost:9001/health && echo OK || true"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+# Node / Next
+web/node_modules/
+web/.next/
+web/.turbo/
+web/.vercel/
+
+# Python / Django
+**/__pycache__/
+**/*.pyc 
+django/staticfiles/
+django/media/
+ 
+
+# WordPress uploads (runtime) and installed plugins
+wordpress/wp-content/uploads/
+/wordpress/wp-content/plugins/*
+!/wordpress/wp-content/plugins/index.php  
+
+# Any folder named "upload" or "uploads" anywhere (defensive)
+**/upload/
+**/uploads/
+
+# Env / secrets
+.env
+.env.prod
+.env.dev
+*.env
+django/.env
+web/.env
+.env.*.local
+*.secret
+*.key
+
+# Docker
+**/.dockerignore
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Plugins/builds
+**/node_modules/  
+wordpress/plugin-src/**/dist/
+wordpress/plugin-src/**/build/
+wordpress/wp-content/themes/twentytwentythree/
+wordpress/wp-content/themes/twentytwentyfour/
+
+# DB export
+backups/**/*.sql*
+
+# Personal
+*.old
+ 
+

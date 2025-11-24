@@ -1,0 +1,32 @@
+id,scorerule,scorelabel,score,description
+1,1,?,-1,default score : nicht tested
+2,2,A,1,Rule 2 : A=1 point
+3,2,NA,0,Rule 2 : NA=0 point
+4,3,NA,0,Rule 3 : NA=0 point
+5,3,ECA,1,Rule 3 : ECA=1 point
+6,3,A,2,Rule 3 : A=2 points
+7,4,Oui,1,Rule 4 : Oui=1 point
+8,4,Non,0,Rule 4 : Non=0 point
+9,5,Non,1,Rule 5 : Non=1 point
+10,5,Oui,0,Rule 5 : Oui=0 point
+11,6,Moins de 10,0,Rule 6 : Moins de 10 =0 point
+12,6,De 10 a 20,1,Rule 6 : de 10 a 20=1 point
+13,6,Plus que 10,2,Rule 6 : plus de 20=2 points
+14,7,Zero,0,Rule 7 : toujours 0 point
+15,8,0,0,0
+16,8,1,1,1
+17,8,2,2,2
+18,8,3,3,3
+19,8,4,4,4
+20,8,5,5,5
+21,8,6,6,6
+22,8,7,7,7
+23,8,8,8,8
+24,8,9,9,9
+25,8,10,10,10
+26,8,11,11,11
+27,8,12,12,12
+28,8,13,13,13
+29,8,14,14,14
+30,8,15,15,15
+31,8,16,16,16

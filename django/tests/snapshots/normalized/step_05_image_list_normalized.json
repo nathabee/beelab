@@ -1,0 +1,40 @@
+{
+  "data": {
+    "images": [
+      {
+        "date": "2024-03-14",
+        "field_id": 1,
+        "fruit_type": "Cultivar Pitch on M9",
+        "original_filename": "orchard.jpg",
+        "processed": true,
+        "row_id": 15,
+        "status": "Done",
+        "user_fruit_plant": 105,
+        "xy_location": null
+      },
+      {
+        "date": "2024-03-14",
+        "field_id": 1,
+        "fruit_type": "Cultivar Swing on CG1",
+        "original_filename": "orchard.jpg",
+        "processed": true,
+        "row_id": 1,
+        "status": "Done",
+        "user_fruit_plant": null,
+        "xy_location": null
+      },
+      {
+        "date": "2024-04-15",
+        "field_id": 1,
+        "fruit_type": "Cultivar Swing on CG1",
+        "original_filename": "orchard.jpg",
+        "processed": true,
+        "row_id": 1,
+        "status": "Done",
+        "user_fruit_plant": 8,
+        "xy_location": null
+      }
+    ]
+  },
+  "status": "success"
+}

@@ -1,0 +1,67 @@
+{
+  "data": {
+    "fruits": [
+      {
+        "description": "Late harvest, sweet, crisp texture, medium storage (3-4 months), aromatic",
+        "fruit_avg_kg": 0.2,
+        "fruit_id": 1,
+        "name": "Cultivar Swing on CG1",
+        "short_name": "Swing_CG1",
+        "yield_avg_kg": 40,
+        "yield_end_date": "2025-10-05",
+        "yield_start_date": "2025-09-15"
+      },
+      {
+        "description": "Mid-late harvest, balanced sweetness and acidity, long storage (5-6 months), juicy",
+        "fruit_avg_kg": 0.22,
+        "fruit_id": 2,
+        "name": "Cultivar Ladina on CG1",
+        "short_name": "Ladina_CG1",
+        "yield_avg_kg": 35,
+        "yield_end_date": "2025-10-15",
+        "yield_start_date": "2025-09-25"
+      },
+      {
+        "description": "Mid-season, high sweetness, slightly tangy, firm flesh, long storage (6+ months)",
+        "fruit_avg_kg": 0.24,
+        "fruit_id": 3,
+        "name": "Cultivar Gallwa on CG1",
+        "short_name": "Gallwa_CG1",
+        "yield_avg_kg": 45,
+        "yield_end_date": "2025-10-05",
+        "yield_start_date": "2025-09-15"
+      },
+      {
+        "description": "Early harvest, very sweet, soft flesh, short storage (2-3 months), suitable for fresh eating",
+        "fruit_avg_kg": 0.18,
+        "fruit_id": 4,
+        "name": "Cultivar Pitch on M9",
+        "short_name": "Pitch_M9",
+        "yield_avg_kg": 55,
+        "yield_end_date": "2025-09-25",
+        "yield_start_date": "2025-09-01"
+      },
+      {
+        "description": "Late-season, aromatic, slight bitterness, good for cider, long storage (6+ months)",
+        "fruit_avg_kg": 0.16,
+        "fruit_id": 5,
+        "name": "Cultivar Pixie on CG1",
+        "short_name": "Pixie_CG1",
+        "yield_avg_kg": 30,
+        "yield_end_date": "2025-10-15",
+        "yield_start_date": "2025-09-25"
+      },
+      {
+        "description": "Very early harvest, crunchy, high acidity, short storage (1-2 months), refreshing taste",
+        "fruit_avg_kg": 0.17,
+        "fruit_id": 6,
+        "name": "Cultivar Early Crunch on M9 Nakab",
+        "short_name": "EarlyCrunch_M9_Nakab",
+        "yield_avg_kg": 50,
+        "yield_end_date": "2025-08-25",
+        "yield_start_date": "2025-08-05"
+      }
+    ]
+  },
+  "status": "success"
+}

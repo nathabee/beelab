@@ -1,0 +1,770 @@
+[
+    {
+        "model": "pomolobeecore.row",
+        "pk": 1,
+        "fields": {
+            "short_name": "R1",
+            "name": "Rang 1 cote maison Swing 1",
+            "nb_plant": 38,
+            "field": 1,
+            "fruit": 1
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 2,
+        "fields": {
+            "short_name": "R2",
+            "name": "Rang 2 cote maison Swing 2",
+            "nb_plant": 40,
+            "field": 1,
+            "fruit": 1
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 3,
+        "fields": {
+            "short_name": "R3",
+            "name": "Rang 3 cote maison Swing 3",
+            "nb_plant": 40,
+            "field": 1,
+            "fruit": 1
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 4,
+        "fields": {
+            "short_name": "R4",
+            "name": "Rang 4 cote maison Ladina 1",
+            "nb_plant": 40,
+            "field": 1,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 5,
+        "fields": {
+            "short_name": "R5",
+            "name": "Rang 5 cote maison Ladina 2",
+            "nb_plant": 40,
+            "field": 1,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 6,
+        "fields": {
+            "short_name": "R6",
+            "name": "Rang 6 cote maison Ladina 3",
+            "nb_plant": 40,
+            "field": 1,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 7,
+        "fields": {
+            "short_name": "R7",
+            "name": "Rang 7 cote maison Ladina 4",
+            "nb_plant": 40,
+            "field": 1,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 8,
+        "fields": {
+            "short_name": "R8",
+            "name": "Rang 8 cote maison Ladina 5",
+            "nb_plant": 41,
+            "field": 1,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 9,
+        "fields": {
+            "short_name": "R9",
+            "name": "Rang 9 cote maison Galiwa 1",
+            "nb_plant": 39,
+            "field": 1,
+            "fruit": 3
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 10,
+        "fields": {
+            "short_name": "R10",
+            "name": "Rang 10 cote maison Galiwa 2",
+            "nb_plant": 39,
+            "field": 1,
+            "fruit": 3
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 11,
+        "fields": {
+            "short_name": "R11",
+            "name": "Rang 11 cote maison Galiwa 3",
+            "nb_plant": 38,
+            "field": 1,
+            "fruit": 3
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 12,
+        "fields": {
+            "short_name": "R12",
+            "name": "Rang 12 cote maison Galiwa 4",
+            "nb_plant": 38,
+            "field": 1,
+            "fruit": 3
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 13,
+        "fields": {
+            "short_name": "R13",
+            "name": "Rang 13 cote maison Galiwa 5",
+            "nb_plant": 38,
+            "field": 1,
+            "fruit": 3
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 14,
+        "fields": {
+            "short_name": "R14",
+            "name": "Rang 14 cote maison Pitch 1",
+            "nb_plant": 38,
+            "field": 1,
+            "fruit": 4
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 15,
+        "fields": {
+            "short_name": "R15",
+            "name": "Rang 15 cote maison Pitch 2",
+            "nb_plant": 39,
+            "field": 1,
+            "fruit": 4
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 16,
+        "fields": {
+            "short_name": "R16",
+            "name": "Rang 16 cote maison Pitch 3",
+            "nb_plant": 39,
+            "field": 1,
+            "fruit": 4
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 17,
+        "fields": {
+            "short_name": "R17",
+            "name": "Rang 17 cote maison Pixie 1",
+            "nb_plant": 39,
+            "field": 1,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 18,
+        "fields": {
+            "short_name": "R18",
+            "name": "Rang 18 cote maison Pixie 2",
+            "nb_plant": 40,
+            "field": 1,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 19,
+        "fields": {
+            "short_name": "R19",
+            "name": "Rang 19 cote maison Pixie 3",
+            "nb_plant": 41,
+            "field": 1,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 20,
+        "fields": {
+            "short_name": "R20",
+            "name": "Rang 20 cote maison Pixie 4",
+            "nb_plant": 42,
+            "field": 1,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 21,
+        "fields": {
+            "short_name": "R21",
+            "name": "Rang 21 cote maison Pixie 5",
+            "nb_plant": 43,
+            "field": 1,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 22,
+        "fields": {
+            "short_name": "R22",
+            "name": "Rang 22 cote maison Pixie 6",
+            "nb_plant": 43,
+            "field": 1,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 23,
+        "fields": {
+            "short_name": "R23",
+            "name": "Rang 23 loin maison Pixie 7",
+            "nb_plant": 41,
+            "field": 1,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 24,
+        "fields": {
+            "short_name": "R24",
+            "name": "Rang 24 loin maison Early Grunch 1",
+            "nb_plant": 37,
+            "field": 1,
+            "fruit": 6
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 25,
+        "fields": {
+            "short_name": "R25",
+            "name": "Rang 25 loin maison Early Grunch 2",
+            "nb_plant": 32,
+            "field": 1,
+            "fruit": 6
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 26,
+        "fields": {
+            "short_name": "R26",
+            "name": "Rang 26 loin maison Early Grunch 3",
+            "nb_plant": 27,
+            "field": 1,
+            "fruit": 6
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 27,
+        "fields": {
+            "short_name": "R27",
+            "name": "Rang 27 loin maison Early Grunch 4",
+            "nb_plant": 17,
+            "field": 1,
+            "fruit": 6
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 28,
+        "fields": {
+            "short_name": "R28",
+            "name": "Rang 28 loin maison Early Grunch 5",
+            "nb_plant": 7,
+            "field": 1,
+            "fruit": 6
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 201,
+        "fields": {
+            "short_name": "R1",
+            "name": "Rang 1",
+            "nb_plant": 7,
+            "field": 2,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 202,
+        "fields": {
+            "short_name": "R2",
+            "name": "Rang 2",
+            "nb_plant": 7,
+            "field": 2,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 203,
+        "fields": {
+            "short_name": "R3",
+            "name": "Rang 3",
+            "nb_plant": 7,
+            "field": 2,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 301,
+        "fields": {
+            "short_name": "R1",
+            "name": "Rang 1",
+            "nb_plant": 110,
+            "field": 3,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 302,
+        "fields": {
+            "short_name": "R2",
+            "name": "Rang 2",
+            "nb_plant": 100,
+            "field": 3,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 303,
+        "fields": {
+            "short_name": "R3",
+            "name": "Rang 3",
+            "nb_plant": 90,
+            "field": 3,
+            "fruit": 5
+        }
+    },{
+        "model": "pomolobeecore.row",
+        "pk": 401,
+        "fields": {
+            "short_name": "R1",
+            "name": "Rang 1 cote maison Swing 1",
+            "nb_plant": 38,
+            "field": 4,
+            "fruit": 1
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 402,
+        "fields": {
+            "short_name": "R2",
+            "name": "Rang 2 cote maison Swing 2",
+            "nb_plant": 40,
+            "field": 4,
+            "fruit": 1
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 403,
+        "fields": {
+            "short_name": "R3",
+            "name": "Rang 3 cote maison Swing 3",
+            "nb_plant": 40,
+            "field": 4,
+            "fruit": 1
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 404,
+        "fields": {
+            "short_name": "R4",
+            "name": "Rang 4 cote maison Ladina 1",
+            "nb_plant": 40,
+            "field": 4,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 405,
+        "fields": {
+            "short_name": "R5",
+            "name": "Rang 5 cote maison Ladina 2",
+            "nb_plant": 40,
+            "field": 4,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 406,
+        "fields": {
+            "short_name": "R6",
+            "name": "Rang 6 cote maison Ladina 3",
+            "nb_plant": 40,
+            "field": 4,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 407,
+        "fields": {
+            "short_name": "R7",
+            "name": "Rang 7 cote maison Ladina 4",
+            "nb_plant": 40,
+            "field": 4,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk": 408,
+        "fields": {
+            "short_name": "R8",
+            "name": "Rang 8 cote maison Ladina 5",
+            "nb_plant": 41,
+            "field": 4,
+            "fruit": 2
+        }
+    },{
+        "model": "pomolobeecore.row",
+        "pk":  501,
+        "fields": {
+            "short_name": "R1",
+            "name": "Rang 1 cote maison Swing 1",
+            "nb_plant": 38,
+            "field": 5,
+            "fruit": 1
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  502,
+        "fields": {
+            "short_name": "R2",
+            "name": "Rang 2 cote maison Swing 2",
+            "nb_plant": 40,
+            "field": 5,
+            "fruit": 1
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  503,
+        "fields": {
+            "short_name": "R3",
+            "name": "Rang 3 cote maison Swing 3",
+            "nb_plant": 40,
+            "field": 5,
+            "fruit": 1
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  504,
+        "fields": {
+            "short_name": "R4",
+            "name": "Rang 4 cote maison Ladina 1",
+            "nb_plant": 40,
+            "field": 5,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  505,
+        "fields": {
+            "short_name": "R5",
+            "name": "Rang 5 cote maison Ladina 2",
+            "nb_plant": 40,
+            "field": 5,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  506,
+        "fields": {
+            "short_name": "R6",
+            "name": "Rang 6 cote maison Ladina 3",
+            "nb_plant": 40,
+            "field": 5,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  507,
+        "fields": {
+            "short_name": "R7",
+            "name": "Rang 7 cote maison Ladina 4",
+            "nb_plant": 40,
+            "field": 5,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  508,
+        "fields": {
+            "short_name": "R8",
+            "name": "Rang 8 cote maison Ladina 5",
+            "nb_plant": 41,
+            "field": 5,
+            "fruit": 2
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  509,
+        "fields": {
+            "short_name": "R9",
+            "name": "Rang 9 cote maison Galiwa 1",
+            "nb_plant": 39,
+            "field": 5,
+            "fruit": 3
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  510,
+        "fields": {
+            "short_name": "R10",
+            "name": "Rang 10 cote maison Galiwa 2",
+            "nb_plant": 39,
+            "field": 5,
+            "fruit": 3
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  511,
+        "fields": {
+            "short_name": "R11",
+            "name": "Rang 11 cote maison Galiwa 3",
+            "nb_plant": 38,
+            "field": 5,
+            "fruit": 3
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  512,
+        "fields": {
+            "short_name": "R12",
+            "name": "Rang 12 cote maison Galiwa 4",
+            "nb_plant": 38,
+            "field": 5,
+            "fruit": 3
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  513,
+        "fields": {
+            "short_name": "R13",
+            "name": "Rang 13 cote maison Galiwa 5",
+            "nb_plant": 38,
+            "field": 5,
+            "fruit": 3
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  514,
+        "fields": {
+            "short_name": "R14",
+            "name": "Rang 14 cote maison Pitch 1",
+            "nb_plant": 38,
+            "field": 5,
+            "fruit": 4
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  515,
+        "fields": {
+            "short_name": "R15",
+            "name": "Rang 15 cote maison Pitch 2",
+            "nb_plant": 39,
+            "field": 5,
+            "fruit": 4
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  516,
+        "fields": {
+            "short_name": "R16",
+            "name": "Rang 16 cote maison Pitch 3",
+            "nb_plant": 39,
+            "field": 5,
+            "fruit": 4
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  517,
+        "fields": {
+            "short_name": "R17",
+            "name": "Rang 17 cote maison Pixie 1",
+            "nb_plant": 39,
+            "field": 5,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  518,
+        "fields": {
+            "short_name": "R18",
+            "name": "Rang 18 cote maison Pixie 2",
+            "nb_plant": 40,
+            "field": 5,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  519,
+        "fields": {
+            "short_name": "R19",
+            "name": "Rang 19 cote maison Pixie 3",
+            "nb_plant": 41,
+            "field": 5,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  520,
+        "fields": {
+            "short_name": "R20",
+            "name": "Rang 20 cote maison Pixie 4",
+            "nb_plant": 42,
+            "field": 5,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  521,
+        "fields": {
+            "short_name": "R21",
+            "name": "Rang 21 cote maison Pixie 5",
+            "nb_plant": 43,
+            "field": 5,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  522,
+        "fields": {
+            "short_name": "R22",
+            "name": "Rang 22 cote maison Pixie 6",
+            "nb_plant": 43,
+            "field": 5,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  523,
+        "fields": {
+            "short_name": "R23",
+            "name": "Rang 23 loin maison Pixie 7",
+            "nb_plant": 41,
+            "field": 5,
+            "fruit": 5
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  524,
+        "fields": {
+            "short_name": "R24",
+            "name": "Rang 24 loin maison Early Grunch 1",
+            "nb_plant": 37,
+            "field": 5,
+            "fruit": 6
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  525,
+        "fields": {
+            "short_name": "R25",
+            "name": "Rang 25 loin maison Early Grunch 2",
+            "nb_plant": 32,
+            "field": 5,
+            "fruit": 6
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  526,
+        "fields": {
+            "short_name": "R26",
+            "name": "Rang 26 loin maison Early Grunch 3",
+            "nb_plant": 27,
+            "field": 5,
+            "fruit": 6
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  527,
+        "fields": {
+            "short_name": "R27",
+            "name": "Rang 27 loin maison Early Grunch 4",
+            "nb_plant": 17,
+            "field": 5,
+            "fruit": 6
+        }
+    },
+    {
+        "model": "pomolobeecore.row",
+        "pk":  528,
+        "fields": {
+            "short_name": "R28",
+            "name": "Rang 28 loin maison Early Grunch 5",
+            "nb_plant": 7,
+            "field": 5,
+            "fruit": 6
+        }
+    }
+]
