@@ -11,7 +11,7 @@ from .views import (
 
     # Jobs
     JobListCreate,          # GET: list, POST: create
-    JobDetailDelete,        # GET: detail, DELETE: delete
+    JobDetail,        # GET: detail, DELETE: delete
 
     # Job pages (scan pages)
     JobPageListCreate,      # GET: list pages for job
@@ -30,6 +30,11 @@ from .views import (
     build_ttf,              # POST: build font for a given language
     download_ttf,           # GET: download TTF for job+language
     download_job_zip,       # GET: zip of all builds + metadata for a job
+
+    download_default_glyphs_zip,
+    download_all_glyphs_zip,
+    upload_glyphs_zip,
+    upload_glyph_from_png,
 
     # Status per language
     job_languages_status,   # GET: overview per language (ready/missing chars)
@@ -59,7 +64,8 @@ urlpatterns = [
     # Jobs
     # ------------------------------------------------------------------
     path("jobs/", JobListCreate.as_view(), name="jobs"),
-    path("jobs/<str:sid>/", JobDetailDelete.as_view(), name="job_detail"),
+    path("jobs/<str:sid>/", JobDetail.as_view(), name="job_detail"),
+
 
     # ------------------------------------------------------------------
     # Job pages (scan pages)
@@ -126,6 +132,31 @@ urlpatterns = [
         download_job_zip,
         name="download_job_zip",
     ),
+    # ------------------------------------------------------------------
+    # Glyph ZIP upload/download
+    # ------------------------------------------------------------------ 
+    path(
+        "jobs/<str:sid>/glyphs/download/default-zip/",
+        download_default_glyphs_zip,
+        name="download_default_glyphs_zip",
+    ),
+    path(
+        "jobs/<str:sid>/glyphs/download/all-zip/",
+        download_all_glyphs_zip,
+        name="download_all_glyphs_zip",
+    ),
+    path(
+        "jobs/<str:sid>/upload/glyphs-zip/",
+        upload_glyphs_zip,
+        name="upload_glyphs_zip",
+    ),
+    path(
+        "jobs/<str:sid>/upload/glyph-png/",
+        upload_glyph_from_png,
+        name="upload_glyph_from_png",
+    ),
+
+ 
 
     # ------------------------------------------------------------------
     # Status per language

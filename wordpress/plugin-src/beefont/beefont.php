@@ -80,6 +80,12 @@ function beefont_wp_create_pages()
             'type'  => 'beefont_page',
         ],
         [
+            'title' => 'GlyphEditorPage',
+            'slug'  => 'glypheditor',
+            'block' => '<!-- wp:beefont/beefont-app /-->',
+            'type'  => 'beefont_page',
+        ],
+        [
             'title' => 'MissingCharactersPage',
             'slug'  => 'missingcharacters',
             'block' => '<!-- wp:beefont/beefont-app /-->',

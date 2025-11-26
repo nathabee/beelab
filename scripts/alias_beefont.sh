@@ -831,8 +831,11 @@ beefont_inspectfont() {
 
 
 beefont_desinstall() {
-  rm ~/.local/share/fonts/BeeHandDE.ttf 2>/dev/null || true
-  rm ~/.fonts/BeeHandDE.ttf 2>/dev/null || true
+  local FONTNAME="${1:?fontname missing}"
+  rm ~/.local/share/fonts/${FONTNAME}.ttf 2>/dev/null || true
+  rm ~/.fonts/${FONTNAME}.ttf 2>/dev/null || true
+  fc-cache -f -v
+
 }
 
 # -------------------------------------------------------------------

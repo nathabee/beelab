@@ -8,6 +8,7 @@ import { Button } from 'react-bootstrap';
 import useJobs from '@hooks/useJobs';
 import { friendlyMessage, type AppError } from '@bee/common/error';
 import { useApp } from '@context/AppContext';
+import { useUser } from '@bee/common';
 import type { FontJob } from '@mytypes/fontJob';
 
 const JobOverviewPage: React.FC = () => {
@@ -16,6 +17,8 @@ const JobOverviewPage: React.FC = () => {
   const { setActiveJob } = useApp();
 
   const [isCreating, setIsCreating] = useState(false);
+
+  const { isLoggedIn, user } = useUser();
 
   const errorText = useMemo(
     () => (error ? friendlyMessage(error as AppError) : null),
@@ -67,6 +70,16 @@ const JobOverviewPage: React.FC = () => {
     <section className="bf-page bf-page--job-overview">
       <header className="bf-page__header">
         <h1>BeeFont – Jobs</h1>
+         
+        {isLoggedIn ? (
+          <p>Hi {user.username} !
+          </p>
+        ) : (
+          <p>
+            You are not logged in. Use the <code>/login</code> route to start a standard or demo session.
+          </p>
+        )} 
+        
         <p className="bf-page__subtitle">
           Your font projects. Open a job to manage pages, glyphs, and builds.
         </p>

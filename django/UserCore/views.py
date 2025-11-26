@@ -106,22 +106,32 @@ def _sanitize_display_name(s: str) -> tuple[str, str]:
 
 
 # keep your existing constants
-ALLOWED_DEMO_ROLES = {"demo", "teacher", "farmer"}  # ❗️ NO 'admin' here
+BLACKLIST_DEMO_ROLES = {"admin"}
 
 def _normalize_roles(raw):
     """
     Accept roles from POST JSON in either 'role' (string) or 'roles' (list) form.
-    Lowercase + de-dupe, intersect with whitelist.
+    Lowercase + de-dupe.
     Always ensure 'demo' is present.
     """
     roles = set()
+
+    # accept "role": "teacher" or "roles": ["teacher","farmer"]
     if isinstance(raw, str):
         roles.add(raw)
     elif isinstance(raw, (list, tuple, set)):
-        roles.update([str(x) for x in raw])
-    roles = {r.strip().lower() for r in roles if isinstance(r, str)}
-    roles.add("demo")  # ensure baseline
-    return roles & ALLOWED_DEMO_ROLES
+        roles.update(raw)
+
+    # clean
+    roles = {str(r).strip().lower() for r in roles}
+
+    # always enforce demo baseline
+    roles.add("demo")
+
+    # blacklist forbidden roles
+    roles = {r for r in roles if r not in BLACKLIST_DEMO_ROLES}
+
+    return roles
 
 
 @api_view(["GET"])
@@ -272,20 +282,40 @@ def demo_reset(request):
 
 @transaction.atomic
 def _issue_demo_response(request) -> Response:
+    """
+    Create or reuse a demo user bound to a browser via DEMO_COOKIE.
+
+    - If DEMO_COOKIE points to an active, non-expired DemoAccount whose user is active:
+        → reuse that user, possibly add missing roles, update language.
+    - If the DemoAccount is expired OR the user is inactive:
+        → mark DemoAccount inactive and treat as no account; create a fresh demo user.
+
+    Returns a JWT access token and sets DEMO_COOKIE.
+    """
     User = get_user_model()
     sid = request.COOKIES.get(DEMO_COOKIE)
     acct = None
-    if sid:
-        acct = (DemoAccount.objects
-                .select_related("user")
-                .filter(sid=sid, active=True)
-                .first())
-        if acct and acct.expired:
-            acct.active = False
-            acct.save()
-            acct = None
 
-    # Parse body
+    if sid:
+        acct = (
+            DemoAccount.objects
+            .select_related("user")
+            .filter(sid=sid, active=True)
+            .first()
+        )
+        if acct:
+            # Expired by time or DemoAccount flag → deactivate and discard
+            if acct.expired:
+                acct.active = False
+                acct.save(update_fields=["active"])
+                acct = None
+            # Demo user has been deactivated in Django admin → also invalidate demo
+            elif not acct.user.is_active:
+                acct.active = False
+                acct.save(update_fields=["active"])
+                acct = None
+
+    # Parse body (may be empty)
     try:
         body = request.data or {}
     except Exception:
@@ -297,13 +327,14 @@ def _issue_demo_response(request) -> Response:
     language = lang if lang in ALLOWED_LANGS else 'en'
 
     groups_by_name = {g.name: g for g in Group.objects.filter(name__in=ALLOWED_DEMO_ROLES)}
+
     def ensure_group(name: str) -> Group:
         g = groups_by_name.get(name)
-        if g: return g
+        if g:
+            return g
         g, _ = Group.objects.get_or_create(name=name)
         groups_by_name[name] = g
         return g
- 
 
     if not acct:
         # --- New demo user ---
@@ -348,18 +379,16 @@ def _issue_demo_response(request) -> Response:
             user.lang = language
             user.save(update_fields=["lang"])
 
- 
-
     # ✅ Centralized wiring: only if the user is *currently* in both groups
     user_roles_now = set(user.groups.values_list("name", flat=True))
-    if  "teacher" in user_roles_now:
+    if "teacher" in user_roles_now:
         attach_demo_teacher_relations(user, language=language)
 
     roles = list(user_roles_now)
 
     access = AccessToken.for_user(user)
     access["roles"] = roles
-    access["is_demo"] = ("demo" in roles)  # you prefer roles-driven flag; OK
+    access["is_demo"] = ("demo" in roles)
     access["demo_exp"] = int(acct.expires_at.timestamp())
     access["lang"] = user.lang
 
@@ -380,7 +409,6 @@ def _issue_demo_response(request) -> Response:
         samesite="Lax",
     )
     return resp
-
 
 
 @api_view(["GET"])
@@ -444,3 +472,51 @@ def info(_req):
 
     return Response(payload)
 
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def demo_status(request):
+    """
+    Check whether the current browser (via DEMO_COOKIE) has a still-valid demo account.
+
+    A demo is considered valid iff:
+      - DemoAccount exists for the cookie `sid`,
+      - DemoAccount.active is True,
+      - DemoAccount.expires_at is in the future,
+      - AND the linked CustomUser.is_active is True.
+
+    Otherwise we return has_active_demo = False and the frontend will show the demo form.
+    """
+    sid = request.COOKIES.get(DEMO_COOKIE)
+    acct = None
+
+    if sid:
+        acct = (
+            DemoAccount.objects
+            .select_related("user")
+            .filter(sid=sid, active=True)
+            .first()
+        )
+
+        if acct:
+            # Expired by time or by DemoAccount flag → treat as none
+            if acct.expired:
+                acct = None
+            # Demo user deactivated in Django admin → also invalidate this demo
+            elif not acct.user.is_active:
+                acct.active = False
+                acct.save(update_fields=["active"])
+                acct = None
+
+    if not acct:
+        return Response({"has_active_demo": False})
+
+    u = acct.user
+    return Response({
+        "has_active_demo": True,
+        "username": u.username,
+        "first_name": u.first_name,
+        "last_name": u.last_name,
+        "demo_expires_at": acct.expires_at.isoformat(),
+    })

@@ -1,12 +1,12 @@
-// src/pages/JobDetailPage.tsx
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import useJobDetail from '@hooks/useJobDetail';
 import usePages from '@hooks/usePages';
 import useFontBuild from '@hooks/useFontBuild';
+import { useJobRename } from '@hooks/useJobRename';
 
 import LanguageStatusList from '@components/LanguageStatusList';
 import PagesTable from '@components/PagesTable';
@@ -47,8 +47,26 @@ const JobDetailPage: React.FC = () => {
     downloadTtf,
   } = useFontBuild(sid, { manual: true });
 
+  // NEW: rename hook
+  const {
+    rename,
+    isRenaming,
+    error: renameError,
+  } = useJobRename(sid);
+
+  // Local editable copies of name + base_family
+  const [editName, setEditName] = useState<string>('');
+  const [editBaseFamily, setEditBaseFamily] = useState<string>('');
+
+  // Sync local state when job changes
+  useEffect(() => {
+    if (!job) return;
+    setEditName(job.name || '');
+    setEditBaseFamily(job.base_family || '');
+  }, [job?.sid, job?.name, job?.base_family]);
+
   const isLoading = isJobLoading || isPagesLoading;
-  const combinedError = jobError ?? pagesError ?? buildError ?? null;
+  const combinedError = jobError ?? pagesError ?? buildError ?? renameError ?? null;
 
   const errorText = useMemo(
     () => (combinedError ? friendlyMessage(combinedError as AppError) : null),
@@ -89,7 +107,6 @@ const JobDetailPage: React.FC = () => {
     buildLanguage(languageCode)
       .then(build => {
         console.log('[JobDetailPage] buildLanguage OK:', build);
-        // Optional: reload() if you want statuses refreshed immediately
       })
       .catch(err => {
         console.error('[JobDetailPage] buildLanguage failed:', err);
@@ -132,6 +149,45 @@ const JobDetailPage: React.FC = () => {
       });
   };
 
+  const handleRenameJob = async () => {
+    if (!job) return;
+
+    const nameTrimmed = editName.trim();
+    const baseTrimmed = editBaseFamily.trim();
+
+    // Prevent completely empty name
+    if (!nameTrimmed) {
+      window.alert('Job name cannot be empty.');
+      return;
+    }
+
+    const hasNameChanged = nameTrimmed !== job.name;
+    const hasBaseChanged = baseTrimmed !== (job.base_family || '');
+
+    if (!hasNameChanged && !hasBaseChanged) {
+      window.alert('Nothing to rename: name and base family are unchanged.');
+      return;
+    }
+
+    const ok = window.confirm(
+      [
+        'Renaming this font job or its base family will delete all existing font builds for this job.',
+        '',
+        'All generated TTF files will be removed, and you will need to rebuild the fonts afterwards.',
+        '',
+        'Do you want to continue?',
+      ].join('\n'),
+    );
+    if (!ok) return;
+
+    try {
+      await rename(nameTrimmed, baseTrimmed);
+      await reload();
+    } catch (err) {
+      console.error('[JobDetailPage] rename failed:', err);
+    }
+  };
+
   return (
     <section className="bf-page bf-page--job-detail">
       <header className="bf-page__header">
@@ -147,10 +203,11 @@ const JobDetailPage: React.FC = () => {
         </div>
       )}
 
-      {(isLoading || isBuilding) && (
+      {(isLoading || isBuilding || isRenaming) && (
         <div className="bf-loading">
-          {isLoading ? 'Loading job…' : ''}
-          {isBuilding ? ' Building font…' : ''}
+          {isLoading ? 'Loading job… ' : ''}
+          {isBuilding ? 'Building font… ' : ''}
+          {isRenaming ? 'Renaming job…' : ''}
         </div>
       )}
 
@@ -189,6 +246,50 @@ const JobDetailPage: React.FC = () => {
                 <dd>{job.glyph_count}</dd>
               </div>
             </dl>
+          </section>
+
+          {/* NEW: rename section */}
+          <section className="bf-panel bf-panel--rename">
+            <h2>Rename font job</h2>
+            <p className="bf-panel__hint">
+              Changing the job name or base family will delete all font builds for this job. You will have to rebuild the fonts afterwards.
+            </p>
+
+            <div className="bf-form bf-form--stacked">
+              <div className="bf-form__row">
+                <label htmlFor="bf-job-name">Job name</label>
+                <input
+                  id="bf-job-name"
+                  type="text"
+                  className="bf-input"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                />
+              </div>
+
+              <div className="bf-form__row">
+                <label htmlFor="bf-job-base-family">Base family</label>
+                <input
+                  id="bf-job-base-family"
+                  type="text"
+                  className="bf-input"
+                  value={editBaseFamily}
+                  onChange={e => setEditBaseFamily(e.target.value)}
+                  placeholder="e.g. BeeHand_DE"
+                />
+              </div>
+
+              <div className="bf-form__actions">
+                <button
+                  type="button"
+                  className="bf-button"
+                  onClick={handleRenameJob}
+                  disabled={isRenaming}
+                >
+                  Rename job / base family
+                </button>
+              </div>
+            </div>
           </section>
 
           {/* Languages */}

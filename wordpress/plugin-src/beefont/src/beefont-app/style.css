@@ -178,3 +178,32 @@
   max-height: calc(100vh - 260px);  
   overflow-y: auto;
 }
+
+
+.bf-default-glyph-grid {
+  display: grid;
+  grid-gap: 0.5rem; 
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(calc(80px * var(--bf-glyph-scale, 1)), 1fr)
+  );
+}
+
+.bf-default-glyph-grid__item {
+  border: 1px solid #ccc;
+  padding: 0.25rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.bf-default-glyph-grid__thumb img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.bf-default-glyph-grid__caption {
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}

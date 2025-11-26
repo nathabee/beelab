@@ -4,10 +4,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import useGlyphs from '@hooks/useGlyphs';
+import useGlyphsZip from '@hooks/useGlyphsZip';
+
 import GlyphVariantsGrid from '@components/GlyphVariantsGrid';
+import DefaultGlyphGrid from '@components/DefaultGlyphGrid';
 import { useApp } from '@context/AppContext';
 
 import { friendlyMessage, type AppError } from '@bee/common/error';
+
+type ViewMode = 'variants' | 'defaults';
 
 const GlyphBrowserPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,8 +40,11 @@ const GlyphBrowserPage: React.FC = () => {
 
   const [filterLetter, setFilterLetter] = useState<string>(initialLetter);
 
-  // NEW: scale of glyph thumbnails (1.0 = default)
+  // Scale of glyph thumbnails (1.0 = default)
   const [glyphScale, setGlyphScale] = useState<number>(1.0);
+
+  // View mode – per-letter variants vs default overview
+  const [viewMode, setViewMode] = useState<ViewMode>('variants');
 
   const {
     glyphs,
@@ -51,9 +59,25 @@ const GlyphBrowserPage: React.FC = () => {
     initialLetter,
   });
 
+  // ZIP import/export hook
+  const {
+    isDownloadingDefault,
+    isDownloadingAll,
+    isUploading,
+    error: zipError,
+    downloadDefaultZip,
+    downloadAllZip,
+    uploadGlyphsZip,
+  } = useGlyphsZip(effectiveSid);
+
   const errorText = useMemo(
-    () => (error ? friendlyMessage(error as AppError) : null),
-    [error],
+    () => {
+      const primary = error ? friendlyMessage(error as AppError) : null;
+      const secondary = zipError ? friendlyMessage(zipError as AppError) : null;
+      if (primary && secondary) return `${primary} / ${secondary}`;
+      return primary || secondary;
+    },
+    [error, zipError],
   );
 
   useEffect(() => {
@@ -105,7 +129,6 @@ const GlyphBrowserPage: React.FC = () => {
     });
   };
 
-  // NEW: helpers for +/– and slider
   const clampScale = (value: number) => {
     const min = 0.5;
     const max = 3.0;
@@ -124,12 +147,86 @@ const GlyphBrowserPage: React.FC = () => {
     setGlyphScale(clampScale(parseFloat(e.target.value)));
   };
 
+  // Default-glyph subset for the overview
+  const defaultGlyphs = useMemo(
+    () => glyphs.filter(g => g.is_default),
+    [glyphs],
+  );
+
+  // Optional: when clicking a glyph in default overview,
+  // jump back to variants view for that letter.
+  const handleDefaultGlyphClick = (letterParam: string) => {
+    setViewMode('variants');
+    setFilterLetter(letterParam);
+    fetchGlyphs({ letter: letterParam }).catch(err => {
+      console.error('[GlyphBrowserPage] fetchGlyphs(letter) failed:', err);
+    });
+    const next = new URLSearchParams(searchParams);
+    if (letterParam) next.set('letter', letterParam);
+    else next.delete('letter');
+    setSearchParams(next);
+  };
+
+  const renderSizeControls = () => (
+    <div className="bf-glyph-browser__controls">
+      <span className="bf-glyph-browser__controls-label">Size</span>
+      <button
+        type="button"
+        className="bf-button bf-button--tiny"
+        onClick={handleZoomOut}
+      >
+        –
+      </button>
+      <input
+        type="range"
+        min={0.5}
+        max={3.0}
+        step={0.25}
+        value={glyphScale}
+        onChange={handleZoomSlider}
+        className="bf-glyph-browser__slider"
+      />
+      <button
+        type="button"
+        className="bf-button bf-button--tiny"
+        onClick={handleZoomIn}
+      >
+        +
+      </button>
+    </div>
+  );
+
+  const anyZipBusy = isDownloadingDefault || isDownloadingAll || isUploading;
+
+  const handleUploadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset input so the same file can be selected again if needed
+    e.target.value = '';
+
+    const ok = window.confirm(
+      'Upload glyph ZIP for this job? Existing glyph variants will be kept; new files will be added with new indices.',
+    );
+    if (!ok) return;
+
+    uploadGlyphsZip(file)
+      .then(() => {
+        // Refresh current view after upload
+        const currentLetter = filterLetter.trim();
+        return fetchGlyphs({ letter: currentLetter });
+      })
+      .catch(err => {
+        console.error('[GlyphBrowserPage] uploadGlyphsZip failed:', err);
+      });
+  };
+
   return (
     <section className="bf-page bf-page--glyph-browser">
       <header className="bf-page__header">
         <h1>BeeFont – Glyph browser</h1>
         <p className="bf-page__subtitle">
-          Inspect all glyphs for this job and choose which variant is the default for each letter.
+          Inspect glyph variants and choose defaults, or see all default glyphs in a compact grid.
         </p>
       </header>
 
@@ -139,104 +236,197 @@ const GlyphBrowserPage: React.FC = () => {
         </div>
       )}
 
-      <section className="bf-panel">
-        <h2>Filter</h2>
-        <form
-          onSubmit={handleFilterSubmit}
-          className="bf-form bf-form--inline"
-        >
-          <label htmlFor="glyph-filter-letter">
-            Letter
-          </label>
-          <input
-            id="glyph-filter-letter"
-            type="text"
-            maxLength={1}
-            value={filterLetter}
-            onChange={e => setFilterLetter(e.target.value)}
-            className="bf-input bf-input--small"
-            placeholder="A"
-          />
-          <button
-            type="submit"
-            className="bf-button bf-button--small"
-            disabled={isLoading}
-          >
-            Apply
-          </button>
-          <button
-            type="button"
-            className="bf-button bf-button--small"
-            onClick={handleClearFilter}
-            disabled={isLoading && !letter}
-          >
-            Clear
-          </button>
-        </form>
-        <p className="bf-panel__hint">
-          Current filter:{' '}
-          {letter ? <strong>{letter}</strong> : 'all letters'}
-        </p>
-      </section>
-
-      <section className="bf-panel">
+      {/* ZIP import/export tools */}
+      <section className="bf-panel bf-panel--compact">
         <div className="bf-panel__header">
-          <h2>Glyph variants</h2>
-
-          {/* NEW: glyph size controls */}
-          <div className="bf-glyph-browser__controls">
-            <span className="bf-glyph-browser__controls-label">Size</span>
-            <button
-              type="button"
-              className="bf-button bf-button--tiny"
-              onClick={handleZoomOut}
-            >
-              –
-            </button>
-            <input
-              type="range"
-              min={0.5}
-              max={3.0}
-              step={0.25}
-              value={glyphScale}
-              onChange={handleZoomSlider}
-              className="bf-glyph-browser__slider"
-            />
-            <button
-              type="button"
-              className="bf-button bf-button--tiny"
-              onClick={handleZoomIn}
-            >
-              +
-            </button>
-          </div>
-
-          {(isLoading || isUpdating) && (
+          <h2>Glyph ZIP tools</h2>
+          {anyZipBusy && (
             <span className="bf-panel__status">
-              {isLoading ? 'Loading… ' : ''}
-              {isUpdating ? 'Updating…' : ''}
+              {isDownloadingDefault && 'Downloading default glyphs… '}
+              {isDownloadingAll && 'Downloading all glyphs… '}
+              {isUploading && 'Uploading glyph ZIP…'}
             </span>
           )}
         </div>
 
-        {isLoading && glyphs.length === 0 && (
-          <div className="bf-loading">
-            Loading glyphs…
-          </div>
-        )}
+        <div className="bf-panel__actions">
+          <button
+            type="button"
+            className="bf-button bf-button--small"
+            onClick={downloadDefaultZip}
+            disabled={anyZipBusy}
+          >
+            Download default glyphs (ZIP)
+          </button>
+          <button
+            type="button"
+            className="bf-button bf-button--small"
+            onClick={downloadAllZip}
+            disabled={anyZipBusy}
+          >
+            Download all glyphs (ZIP)
+          </button>
 
-        {!isLoading && glyphs.length === 0 && !error && (
-          <p>No glyphs available for this job yet.</p>
-        )}
+          <label className="bf-button bf-button--small">
+            Upload glyph ZIP…
+            <input
+              type="file"
+              accept=".zip,application/zip"
+              onChange={handleUploadChange}
+              style={{ display: 'none' }}
+            />
+          </label>
+        </div>
 
-        {glyphs.length > 0 && (
-          <GlyphVariantsGrid
-            glyphs={glyphs}
-            onSetDefault={handleSetDefault}
-            scale={glyphScale}         
-          />
-        )}
+        <p className="bf-panel__hint">
+          Download the glyphs for external editing, then upload a ZIP with PNGs named
+          like <code>A.png</code> or <code>A_v2.png</code>. Each file will be imported
+          as a new variant <code>LETTER_v&lt;j&gt;.png</code> for this job.
+        </p>
       </section>
+
+      {/* View mode toggle */}
+      <section className="bf-panel bf-panel--compact">
+        <div className="bf-panel__header">
+          <h2>View</h2>
+          <div className="bf-toggle">
+            <button
+              type="button"
+              className={
+                'bf-button bf-button--small' +
+                (viewMode === 'variants' ? ' bf-button--primary' : '')
+              }
+              onClick={() => setViewMode('variants')}
+            >
+              Glyph variants
+            </button>
+            <button
+              type="button"
+              className={
+                'bf-button bf-button--small' +
+                (viewMode === 'defaults' ? ' bf-button--primary' : '')
+              }
+              onClick={() => setViewMode('defaults')}
+            >
+              Default overview
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Variants mode: filter + variants grid */}
+      {viewMode === 'variants' && (
+        <>
+          <section className="bf-panel">
+            <h2>Filter</h2>
+            <form
+              onSubmit={handleFilterSubmit}
+              className="bf-form bf-form--inline"
+            >
+              <label htmlFor="glyph-filter-letter">
+                Letter
+              </label>
+              <input
+                id="glyph-filter-letter"
+                type="text"
+                maxLength={1}
+                value={filterLetter}
+                onChange={e => setFilterLetter(e.target.value)}
+                className="bf-input bf-input--small"
+                placeholder="A"
+              />
+              <button
+                type="submit"
+                className="bf-button bf-button--small"
+                disabled={isLoading}
+              >
+                Apply
+              </button>
+              <button
+                type="button"
+                className="bf-button bf-button--small"
+                onClick={handleClearFilter}
+                disabled={isLoading && !letter}
+              >
+                Clear
+              </button>
+            </form>
+            <p className="bf-panel__hint">
+              Current filter:{' '}
+              {letter ? <strong>{letter}</strong> : 'all letters'}
+            </p>
+          </section>
+
+          <section className="bf-panel">
+            <div className="bf-panel__header">
+              <h2>Glyph variants</h2>
+
+              {renderSizeControls()}
+
+              {(isLoading || isUpdating) && (
+                <span className="bf-panel__status">
+                  {isLoading ? 'Loading… ' : ''}
+                  {isUpdating ? 'Updating…' : ''}
+                </span>
+              )}
+            </div>
+
+            {isLoading && glyphs.length === 0 && (
+              <div className="bf-loading">
+                Loading glyphs…
+              </div>
+            )}
+
+            {!isLoading && glyphs.length === 0 && !error && (
+              <p>No glyphs available for this job yet.</p>
+            )}
+
+            {glyphs.length > 0 && (
+              <GlyphVariantsGrid
+                glyphs={glyphs}
+                onSetDefault={handleSetDefault}
+                scale={glyphScale}
+              />
+            )}
+          </section>
+        </>
+      )}
+
+      {/* Default overview mode: compact grid of default glyphs only */}
+      {viewMode === 'defaults' && (
+        <section className="bf-panel">
+          <div className="bf-panel__header">
+            <h2>Default glyph overview</h2>
+
+            {renderSizeControls()}
+
+            {(isLoading || isUpdating) && (
+              <span className="bf-panel__status">
+                {isLoading ? 'Loading… ' : ''}
+                {isUpdating ? 'Updating…' : ''}
+              </span>
+            )}
+          </div>
+
+          {isLoading && defaultGlyphs.length === 0 && (
+            <div className="bf-loading">
+              Loading default glyphs…
+            </div>
+          )}
+
+          {!isLoading && defaultGlyphs.length === 0 && !error && (
+            <p>No default glyphs set yet. Use the variants view to select defaults.</p>
+          )}
+
+          {defaultGlyphs.length > 0 && (
+            <DefaultGlyphGrid
+              glyphs={defaultGlyphs}
+              scale={glyphScale}
+              onGlyphClick={handleDefaultGlyphClick}
+            />
+          )}
+        </section>
+      )}
     </section>
   );
 };

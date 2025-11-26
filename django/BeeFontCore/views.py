@@ -18,6 +18,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.files.base import ContentFile
 import io
 
+from rest_framework import generics, permissions
 from pathlib import Path
 
 import cv2
@@ -234,7 +235,8 @@ class JobListCreate(generics.ListCreateAPIView):
 
 
 
-class JobDetailDelete(generics.RetrieveDestroyAPIView):
+
+class JobDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = FontJobSerializer
     lookup_field = "sid"
@@ -248,6 +250,57 @@ class JobDetailDelete(generics.RetrieveDestroyAPIView):
         job.glyph_count = job.glyphs.count()
         serializer = self.get_serializer(job)
         return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        """
+        PATCH /jobs/<sid>/ – allow renaming job.name and base_family.
+
+        If either 'name' or 'base_family' changes, all existing FontBuilds
+        for this job are deleted and their TTF files removed from storage.
+        The user must rebuild fonts afterwards.
+        """
+        partial = kwargs.pop("partial", False)
+        instance: FontJob = self.get_object()
+
+        old_name = instance.name
+        old_base_family = instance.base_family
+
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+
+        # Peek at the new values from validated_data; fall back to old ones.
+        new_name = serializer.validated_data.get("name", old_name)
+        new_base_family = serializer.validated_data.get(
+            "base_family", old_base_family
+        )
+
+        name_changed = new_name != old_name
+        base_changed = new_base_family != old_base_family
+
+        # Perform standard update first
+        response = super().update(request, partial=partial, *args, **kwargs)
+
+        # If name or base family changed, nuke builds + TTF files
+        if name_changed or base_changed:
+            builds = FontBuild.objects.filter(job=instance)
+
+            for b in builds:
+                if b.ttf_path and default_storage.exists(b.ttf_path):
+                    try:
+                        default_storage.delete(b.ttf_path)
+                    except Exception as e:
+                        # Do not fail the whole request because of a FS error;
+                        # you can log this if you have logging configured.
+                        print(
+                            f"[BeeFont] Failed to delete TTF '{b.ttf_path}': {e}"
+                        )
+
+            # Remove DB entries
+            builds.delete()
+
+        return response
 
 
 # -------------------------------------------------------------------
@@ -709,6 +762,388 @@ def download_job_zip(request, sid: str):
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
 
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def download_default_glyphs_zip(request, sid: str):
+    """
+    Download a ZIP containing all PNG files for glyphs that are marked
+    as default (is_default=True) for this job.
+
+    One file per letter. The archive names are "<LETTER>.png".
+    """
+    import io
+    import zipfile
+
+    job = get_job_or_404_for_user(sid, request.user)
+
+    glyphs = (
+        Glyph.objects
+        .filter(job=job, is_default=True)
+        .order_by("letter", "variant_index")
+    )
+
+    if not glyphs.exists():
+        return Response(
+            {"detail": "No default glyphs available for this job."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for g in glyphs:
+            rel_path = g.image_path
+            if not rel_path:
+                continue
+
+            # The storage path is relative to MEDIA_ROOT,
+            # but default_storage knows how to resolve it.
+            if not default_storage.exists(rel_path):
+                continue
+
+            with default_storage.open(rel_path, "rb") as f:
+                data = f.read()
+
+            # Default glyph: we use pure letter as file name,
+            # relying on the invariant "max one default per letter".
+            # Letters like "Ä" will create "Ä.png" – this is OK in a UTF-8 ZIP.
+            arcname = f"{g.letter}.png"
+            zf.writestr(arcname, data)
+
+    buffer.seek(0)
+    filename = f"{job.name}_glyphs_default.zip".replace(" ", "_")
+    response = HttpResponse(buffer.getvalue(), content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def download_all_glyphs_zip(request, sid: str):
+    """
+    Download a ZIP containing PNG files for all glyph variants of this job.
+
+    Archive names are "<LETTER>_v<VARIANT>.png", e.g. "A_v0.png".
+    """
+    import io
+    import zipfile
+
+    job = get_job_or_404_for_user(sid, request.user)
+
+    glyphs = (
+        Glyph.objects
+        .filter(job=job)
+        .order_by("letter", "variant_index")
+    )
+
+    if not glyphs.exists():
+        return Response(
+            {"detail": "No glyphs available for this job."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for g in glyphs:
+            rel_path = g.image_path
+            if not rel_path:
+                continue
+
+            if not default_storage.exists(rel_path):
+                continue
+
+            with default_storage.open(rel_path, "rb") as f:
+                data = f.read()
+
+            arcname = f"{g.letter}_v{g.variant_index}.png"
+            zf.writestr(arcname, data)
+
+    buffer.seek(0)
+    filename = f"{job.name}_glyphs_all.zip".replace(" ", "_")
+    response = HttpResponse(buffer.getvalue(), content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def upload_glyphs_zip(request, sid: str):
+    """
+    Upload a ZIP containing PNG glyphs for a job.
+
+    Expected:
+      - multipart/form-data with:
+          file: the ZIP archive
+
+    ZIP contents:
+      - Filenames like "<LETTER>.png"
+      - or "<LETTER>_<i>.png"
+      - or "subdir/<LETTER>_<i>.png", etc.
+
+    For each file:
+      - Take basename, e.g. "A.png", "A_0.png", "Ä_12.png"
+      - Strip extension → stem
+      - Letter = everything before the first '_' in the stem
+          "A"      -> letter="A"
+          "A_0"    -> letter="A"
+          "Ä_12"   -> letter="Ä"
+
+      - Compute next variant_index for (job, letter):
+          last = Glyph.objects.filter(job=job, letter=letter)
+                             .order_by('-variant_index').first()
+          next_idx = last.variant_index + 1  or 0 if none
+
+      - Save as:
+          beefont/jobs/<sid>/glyphs/<LETTER>_v<next_idx>.png
+
+      - Create Glyph entry with variant_index=next_idx, is_default=(next_idx == 0)
+    """
+    import io
+    import zipfile
+    import os
+
+    job = get_job_or_404_for_user(sid, request.user)
+
+    upload = request.FILES.get("file")
+    if not upload:
+        return Response(
+            {"detail": "Expected file field 'file' with a ZIP archive."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Try to open the ZIP
+    try:
+        zip_bytes = upload.read()
+        zf = zipfile.ZipFile(io.BytesIO(zip_bytes))
+    except Exception:
+        return Response(
+            {"detail": "Invalid ZIP archive."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Ensure we have a JobPage to attach glyphs to.
+    # Reuse the first page if present; otherwise create a placeholder.
+    page = (
+        JobPage.objects
+        .filter(job=job)
+        .order_by("page_index")
+        .first()
+    )
+    if not page:
+        tpl = TemplateDefinition.objects.order_by("code").first()
+        if not tpl:
+            return Response(
+                {"detail": "No TemplateDefinition configured; cannot create placeholder page."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        page = JobPage.objects.create(
+            job=job,
+            template=tpl,
+            page_index=0,
+            letters="",
+            scan_image_path="",  # no scan, this is an import-only page
+        )
+
+    media_root = Path(settings.MEDIA_ROOT)
+    job_root_rel = job_sid_media(job)              # "beefont/jobs/<sid>"
+    glyphs_rel_dir = os.path.join(job_root_rel, "glyphs")
+    glyphs_abs_dir = media_root / glyphs_rel_dir
+    glyphs_abs_dir.mkdir(parents=True, exist_ok=True)
+
+    imported = 0
+    skipped_non_png = 0
+    skipped_empty_letter = 0
+    skipped_errors = 0
+
+    for info in zf.infolist():
+        # Skip directories
+        if info.is_dir():
+            continue
+
+        filename = info.filename
+        base = os.path.basename(filename)
+
+        if not base:
+            continue
+
+        # Only PNG
+        if not base.lower().endswith(".png"):
+            skipped_non_png += 1
+            continue
+
+        stem, _ext = os.path.splitext(base)
+
+        # Letter = part before first "_"
+        if "_" in stem:
+            letter = stem.split("_", 1)[0]
+        else:
+            letter = stem
+
+        letter = letter.strip()
+        if not letter:
+            skipped_empty_letter += 1
+            continue
+
+        # Determine next variant index for this job+letter
+        last = (
+            Glyph.objects
+            .filter(job=job, letter=letter)
+            .order_by("-variant_index")
+            .first()
+        )
+        next_idx = (last.variant_index + 1) if last else 0
+
+        # Build storage path: beefont/jobs/<sid>/glyphs/<LETTER>_v<idx>.png
+        new_filename = f"{letter}_v{next_idx}.png"
+        rel_path = os.path.join(glyphs_rel_dir, new_filename)
+        abs_path = media_root / rel_path
+        abs_path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            data = zf.read(info.filename)
+        except Exception:
+            skipped_errors += 1
+            continue
+
+        # Write to storage
+        try:
+            default_storage.save(rel_path, ContentFile(data))
+        except Exception:
+            skipped_errors += 1
+            continue
+
+        # Create Glyph row
+        try:
+            Glyph.objects.create(
+                job=job,
+                page=page,
+                cell_index=-1,  # imported, not from a grid cell
+                letter=letter,
+                variant_index=next_idx,
+                image_path=str(rel_path).replace("\\", "/"),
+                is_default=(next_idx == 0),
+            )
+            imported += 1
+        except Exception:
+            skipped_errors += 1
+            # We leave the file on disk, but no DB row.
+
+    zf.close()
+
+    if imported == 0:
+        return Response(
+            {
+                "detail": "No glyphs imported from ZIP.",
+                "imported": imported,
+                "skipped_non_png": skipped_non_png,
+                "skipped_empty_letter": skipped_empty_letter,
+                "skipped_errors": skipped_errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return Response(
+        {
+            "detail": "Glyphs imported from ZIP.",
+            "imported": imported,
+            "skipped_non_png": skipped_non_png,
+            "skipped_empty_letter": skipped_empty_letter,
+            "skipped_errors": skipped_errors,
+        },
+        status=status.HTTP_201_CREATED,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def upload_glyph_from_png(request, sid: str):
+    """
+    Upload a single PNG glyph for a job.
+
+    Used by the glyph editor (canvas) or any manual PNG upload.
+
+    Expects multipart/form-data:
+      - letter: the glyph character (e.g. "A", "Ä", "5", ".")
+      - file:   the PNG image
+    """
+    import os
+
+    job = get_job_or_404_for_user(sid, request.user)
+
+    letter = (request.data.get("letter") or "").strip()
+    upload = request.FILES.get("file")
+
+    if not letter:
+        return Response(
+            {"detail": "Field 'letter' is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if not upload:
+        return Response(
+            {"detail": "Expected file field 'file' with a PNG image."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Ensure we have a JobPage (same pattern as ZIP upload)
+    page = (
+        JobPage.objects
+        .filter(job=job)
+        .order_by("page_index")
+        .first()
+    )
+    if not page:
+        tpl = TemplateDefinition.objects.order_by("code").first()
+        if not tpl:
+            return Response(
+                {"detail": "No TemplateDefinition configured; cannot create placeholder page."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        page = JobPage.objects.create(
+            job=job,
+            template=tpl,
+            page_index=0,
+            letters="",
+            scan_image_path="",  # import-only page
+        )
+
+    media_root = Path(settings.MEDIA_ROOT)
+    job_root_rel = job_sid_media(job)              # "beefont/jobs/<sid>"
+    glyphs_rel_dir = os.path.join(job_root_rel, "glyphs")
+    (media_root / glyphs_rel_dir).mkdir(parents=True, exist_ok=True)
+
+    # Determine next variant index for this job+letter
+    last = (
+        Glyph.objects
+        .filter(job=job, letter=letter)
+        .order_by("-variant_index")
+        .first()
+    )
+    next_idx = (last.variant_index + 1) if last else 0
+
+    # Storage path: beefont/jobs/<sid>/glyphs/<LETTER>_v<idx>.png
+    new_filename = f"{letter}_v{next_idx}.png"
+    rel_path = os.path.join(glyphs_rel_dir, new_filename)
+
+    try:
+        saved_path = default_storage.save(rel_path, upload)
+    except Exception as e:
+        return Response(
+            {"detail": f"Failed to store glyph file: {e}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    glyph = Glyph.objects.create(
+        job=job,
+        page=page,
+        cell_index=-1,  # imported / drawn, not from grid
+        letter=letter,
+        variant_index=next_idx,
+        image_path=str(saved_path).replace("\\", "/"),
+        is_default=(next_idx == 0),
+    )
+
+    return Response(GlyphSerializer(glyph).data, status=status.HTTP_201_CREATED)
 
 # -------------------------------------------------------------------
 # Status per language

@@ -41,6 +41,7 @@ class TemplateDefinitionSerializer(serializers.ModelSerializer):
 
 
 
+ 
 class FontJobSerializer(serializers.ModelSerializer):
     page_count = serializers.IntegerField(read_only=True)
     glyph_count = serializers.IntegerField(read_only=True)
@@ -50,13 +51,21 @@ class FontJobSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "sid",
+            "user",
             "name",
             "base_family",
             "created_at",
             "page_count",
             "glyph_count",
         ]
-        read_only_fields = ["id", "sid", "created_at", "page_count", "glyph_count"]
+        read_only_fields = [
+            "id",
+            "sid",
+            "user",
+            "created_at",
+            "page_count",
+            "glyph_count",
+        ]
 
  
 class JobPageSerializer(serializers.ModelSerializer):

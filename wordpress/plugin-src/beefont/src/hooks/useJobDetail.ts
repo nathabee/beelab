@@ -12,7 +12,7 @@ import type { FontJob } from '@mytypes/fontJob';
 import type { JobPage } from '@mytypes/jobPage';
 import type { LanguageStatus } from '@mytypes/languageStatus';
 
-export type UseJobDetailResult = {
+export type UseJobDetailResult = { 
   job: FontJob | null;
   pages: JobPage[];
   languageStatuses: LanguageStatus[];
@@ -25,6 +25,11 @@ export type UseJobDetailResult = {
    * Reloads job, language status and pages in one shot.
    */
   reload: () => Promise<void>;
+    /**
+   * Rename the job; updates local state with the server response.
+   */
+  updateJobMeta: (args: { name?: string; base_family?: string | null }) => Promise<FontJob>;
+
 };
 
 export default function useJobDetail(sid: string): UseJobDetailResult {
@@ -106,6 +111,75 @@ export default function useJobDetail(sid: string): UseJobDetailResult {
     }
   }, [sid, token]);  // <— job removed here
 
+
+      const updateJobMeta = useCallback(
+    async (args: { name?: string; base_family?: string | null }): Promise<FontJob> => {
+      if (!token) {
+        const appErr: AppError = {
+          name: 'AuthError',
+          message: 'No auth token available.',
+          httpStatus: 401,
+          severity: 'page',
+          service: 'beefont',
+          raw: null,
+        };
+        setError(appErr);
+        errorBus.emit(appErr);
+        return Promise.reject(appErr);
+      }
+
+      const payload: any = {};
+
+      if (typeof args.name === 'string') {
+        const trimmed = args.name.trim();
+        if (!trimmed) {
+          const appErr: AppError = {
+            name: 'ValidationError',
+            message: 'Job name may not be empty.',
+            httpStatus: 400,
+            severity: 'inline',
+            service: 'beefont',
+            raw: null,
+          };
+          setError(appErr);
+          return Promise.reject(appErr);
+        }
+        payload.name = trimmed;
+      }
+
+      if (args.base_family !== undefined) {
+        // Allow empty → null
+        const bf = args.base_family?.trim() || '';
+        payload.base_family = bf || null;
+      }
+
+      const headers = authHeaders(token);
+      const encodedSid = encodeURIComponent(sid);
+
+      try {
+        setIsRefreshing(true);
+        const res = await apiApp.patch<FontJob>(
+          `/jobs/${encodedSid}/`,
+          payload,
+          { headers },
+        );
+        setJob(res.data);
+        setIsRefreshing(false);
+        return res.data;
+      } catch (e) {
+        const appErr: AppError = toAppError(e, {
+          functionName: 'useJobDetail.updateJobMeta',
+          service: 'beefont',
+        });
+        setError(appErr);
+        setIsRefreshing(false);
+        return Promise.reject(appErr);
+      }
+    },
+    [sid, token],
+  );
+
+
   // Auto-load whenever sid changes
   useEffect(() => {
     if (!sid) return;
@@ -122,5 +196,6 @@ export default function useJobDetail(sid: string): UseJobDetailResult {
     isRefreshing,
     error,
     reload,
+    updateJobMeta,
   };
 }

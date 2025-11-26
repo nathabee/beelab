@@ -45,7 +45,6 @@ const FontBuildPage: React.FC = () => {
   } = useFontBuild(effectiveSid || '');
 
   const error = jobError ?? buildError ?? null;
-
   const errorText = useMemo(
     () => (error ? friendlyMessage(error as AppError) : null),
     [error],
@@ -115,6 +114,8 @@ const FontBuildPage: React.FC = () => {
     <section className="bf-page bf-page--font-build">
       <header className="bf-page__header">
         <h1>BeeFont – Builds and downloads</h1>
+
+
         <p className="bf-page__subtitle">
           Build fonts per language and download TTF files or a ZIP bundle.
         </p>

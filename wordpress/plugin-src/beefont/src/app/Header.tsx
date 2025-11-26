@@ -32,7 +32,7 @@ const Header: React.FC = () => {
           <>
             {/* Global navigation entries */}
             <Link to="/joboverview" className="nav-link">📊 Job Overview</Link>
-            <Link to="/dashboard" className="nav-link">📊 Dashboard</Link>
+             {/*<Link to="/dashboard" className="nav-link">📊 Dashboard</Link> */}
 
             {/* Globale Aktion: immer verfügbar, solange eingeloggt */}
 
@@ -48,6 +48,9 @@ const Header: React.FC = () => {
                 <Link to="/glyphbrowser" className="nav-link">
                   🔤 Glyph browser
                 </Link>
+                <Link to="/glypheditor" className="nav-link">
+                  🔤 Glyph Editor
+                </Link>
                 <Link to="/fontBuild" className="nav-link">
                   🧱 Build font
                 </Link>
@@ -55,7 +58,7 @@ const Header: React.FC = () => {
             )}
 
             {/* Platzhalter für spätere „context-aware“ Aktionen */}
-            {canAccess ? (
+            {/* {canAccess ? (
               <>
                 <span className="nav-link disabled">📄 Nuts Management</span>
               </>
@@ -63,7 +66,7 @@ const Header: React.FC = () => {
               <>
                 <span className="nav-link disabled">📄 Nuts Management</span>
               </>
-            )}
+            )}*/}
 
             <Link to="/user_mgt" className="nav-link">User Management</Link>
             <Link to="/error_mgt" className="nav-link">Error Management</Link>
