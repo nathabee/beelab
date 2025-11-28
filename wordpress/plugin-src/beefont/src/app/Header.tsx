@@ -10,7 +10,7 @@ const SIDEBAR_WIDTH = 260; // aktuell ungenutzt, aber okay
 
 const Header: React.FC = () => {
   const { isLoggedIn, logout, user } = useUser();
-  const { reset, activeJob } = useApp(); // activeJob kannst du später nutzen
+  const { reset, activeJob, activeGlyphFormat } = useApp(); // activeJob kannst du später nutzen
   const navigate = useNavigate();
 
   const canAccess = !!user;
@@ -32,7 +32,7 @@ const Header: React.FC = () => {
           <>
             {/* Global navigation entries */}
             <Link to="/joboverview" className="nav-link">📊 Job Overview</Link>
-             {/*<Link to="/dashboard" className="nav-link">📊 Dashboard</Link> */}
+            {/*<Link to="/dashboard" className="nav-link">📊 Dashboard</Link> */}
 
             {/* Globale Aktion: immer verfügbar, solange eingeloggt */}
 
@@ -42,9 +42,11 @@ const Header: React.FC = () => {
                 <div className="text-muted small">
                   Active job: {activeJob.name}
                 </div>
-                <Link to="/printupload" className="nav-link">
-                  📄 Upload pages
-                </Link>
+                {activeGlyphFormat === 'png' && (
+                  <Link to="/printupload" className="nav-link">
+                    📄 Upload scanned pages
+                  </Link>
+                )}
                 <Link to="/glyphbrowser" className="nav-link">
                   🔤 Glyph browser
                 </Link>
@@ -57,16 +59,7 @@ const Header: React.FC = () => {
               </div>
             )}
 
-            {/* Platzhalter für spätere „context-aware“ Aktionen */}
-            {/* {canAccess ? (
-              <>
-                <span className="nav-link disabled">📄 Nuts Management</span>
-              </>
-            ) : (
-              <>
-                <span className="nav-link disabled">📄 Nuts Management</span>
-              </>
-            )}*/}
+
 
             <Link to="/user_mgt" className="nav-link">User Management</Link>
             <Link to="/error_mgt" className="nav-link">Error Management</Link>

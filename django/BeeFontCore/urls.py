@@ -11,7 +11,7 @@ from .views import (
 
     # Jobs
     JobListCreate,          # GET: list, POST: create
-    JobDetail,        # GET: detail, DELETE: delete
+    JobDetail,              # GET: detail, DELETE: delete
 
     # Job pages (scan pages)
     JobPageListCreate,      # GET: list pages for job
@@ -20,30 +20,59 @@ from .views import (
     retry_page_analysis,    # POST: rerun analysis if needed
     create_page,            # POST: upload scan file and create associated page
 
-    # Glyphs
+    # Glyphs (logical variants, formattype-agnostic)
     list_glyphs,            # GET: all glyphs for a job, optional filter via query (?letter=...)
     glyph_detail,           # GET: all variants for a letter in a job
     select_glyph_variant,   # POST: mark one variant as default
 
+    # Single-glyph upload (formattype-specific)
+    upload_glyph_from_png,
+    upload_glyph_from_svg,
+
+    # Glyph ZIP upload/download – PNG
+    download_default_glyphs_zip_png,
+    download_all_glyphs_zip_png,
+    upload_glyphs_zip_png,
+
+    # Glyph ZIP upload/download – SVG
+    download_default_glyphs_zip_svg,
+    download_all_glyphs_zip_svg,
+    upload_glyphs_zip_svg,
+
     # Font builds
-    list_builds,            # GET : list of all build for a job
-    build_ttf,              # POST: build font for a given language
+    list_builds,            # GET : list of all builds for a job
+    build_ttf,              # POST: build font for a given language + formattype
     download_ttf,           # GET: download TTF for job+language
     download_job_zip,       # GET: zip of all builds + metadata for a job
 
-    download_default_glyphs_zip,
-    download_all_glyphs_zip,
-    upload_glyphs_zip,
-    upload_glyph_from_png,
-
-    # Status per language
-    job_languages_status,   # GET: overview per language (ready/missing chars)
-    job_language_status,    # GET: status for one language
+    # Status per language (formattype-specific)
+    job_languages_status,   # GET: overview per language (ready/missing chars) for given formattype
+    job_language_status,    # GET: status for one language for given formattype 
 )
+
+  
+
 
 app_name = "beefont"
 
 urlpatterns = [
+
+    # ------------------------------------------------------------------
+    # Status per language
+    # ------------------------------------------------------------------
+    path(
+        #"jobs/<str:sid>/languages/status/<str:formattype>/",
+        "jobs/<str:sid>/missingcharstatus/<str:formattype>/",
+        job_languages_status,
+        name="job_languages_status",
+    ),
+    path(
+        #"jobs/<str:sid>/languages/<str:language>/status/<str:formattype>/",
+        "jobs/<str:sid>/missingcharstatus/<str:language>/<str:formattype>/",
+        job_language_status,
+        name="job_language_status",
+    ),
+
     # ------------------------------------------------------------------
     # Template catalogue
     # ------------------------------------------------------------------
@@ -60,12 +89,13 @@ urlpatterns = [
         name="language_alphabet",
     ),
 
+    
+
     # ------------------------------------------------------------------
     # Jobs
     # ------------------------------------------------------------------
     path("jobs/", JobListCreate.as_view(), name="jobs"),
     path("jobs/<str:sid>/", JobDetail.as_view(), name="job_detail"),
-
 
     # ------------------------------------------------------------------
     # Job pages (scan pages)
@@ -101,27 +131,90 @@ urlpatterns = [
         create_page,
         name="create_page",
     ),
- 
+
+
+
     # ------------------------------------------------------------------
-    # Glyphs (variants + selection)
+    # Glyph ZIP upload/download (formattype-specific)
     # ------------------------------------------------------------------
-    path("jobs/<str:sid>/glyphs/", list_glyphs, name="list_glyphs"),
+    # PNG-based glyph assets
     path(
-        "jobs/<str:sid>/glyphs/<str:letter>/",
+        "jobs/<str:sid>/glyphs/png/download/default-zip/",
+        download_default_glyphs_zip_png,
+        name="download_default_glyphs_zip_png",
+    ),
+    path(
+        "jobs/<str:sid>/glyphs/png/download/all-zip/",
+        download_all_glyphs_zip_png,
+        name="download_all_glyphs_zip_png",
+    ),
+    path(
+        "jobs/<str:sid>/glyphs/png/upload-zip/",
+        upload_glyphs_zip_png,
+        name="upload_glyphs_zip_png",
+    ),
+
+    # SVG-based glyph assets
+    path(
+        "jobs/<str:sid>/glyphs/svg/download/default-zip/",
+        download_default_glyphs_zip_svg,
+        name="download_default_glyphs_zip_svg",
+    ),
+    path(
+        "jobs/<str:sid>/glyphs/svg/download/all-zip/",
+        download_all_glyphs_zip_svg,
+        name="download_all_glyphs_zip_svg",
+    ),
+    path(
+        "jobs/<str:sid>/glyphs/svg/upload-zip/",
+        upload_glyphs_zip_svg,
+        name="upload_glyphs_zip_svg",
+    ),
+
+    # ------------------------------------------------------------------
+    # Single glyph upload from editor (formattype-specific)
+    # ------------------------------------------------------------------
+    # PNG editor → uploads bitmap glyph for a letter
+    path(
+        "jobs/<str:sid>/glyphs/png/upload/",
+        upload_glyph_from_png,
+        name="upload_glyph_from_png",
+    ),
+    # SVG editor → uploads vector glyph for a letter
+    path(
+        "jobs/<str:sid>/glyphs/svg/upload/",
+        upload_glyph_from_svg,
+        name="upload_glyph_from_svg",
+    ),
+    # ------------------------------------------------------------------
+    # Glyphs (logical variants + selection, per formattype)
+    # ------------------------------------------------------------------
+    path(
+        "jobs/<str:sid>/glyphs/<str:formattype>/<str:letter>/select/",
+        select_glyph_variant,
+        name="select_glyph_variant",
+    ),
+    path(
+        "jobs/<str:sid>/glyphs/<str:formattype>/<str:letter>/",
         glyph_detail,
         name="glyph_detail",
     ),
     path(
-        "jobs/<str:sid>/glyphs/<str:letter>/select/",
-        select_glyph_variant,
-        name="select_glyph_variant",
+        "jobs/<str:sid>/glyphs/<str:formattype>/",
+        list_glyphs,
+        name="list_glyphs",
     ),
 
     # ------------------------------------------------------------------
     # Font builds + downloads
     # ------------------------------------------------------------------
     path("jobs/<str:sid>/builds/", list_builds, name="list_builds"),
-    path("jobs/<str:sid>/build-ttf/", build_ttf, name="build_ttf"),
+    # POST /jobs/<sid>/build-ttf/<language>/<formattype>/ with formattype ∈ {"png", "svg"}
+    path(
+        "jobs/<str:sid>/build-ttf/<str:language>/<str:formattype>/",
+        build_ttf,
+        name="build_ttf",
+    ),
     path(
         "jobs/<str:sid>/download/ttf/<str:language>/",
         download_ttf,
@@ -131,44 +224,14 @@ urlpatterns = [
         "jobs/<str:sid>/download/zip/",
         download_job_zip,
         name="download_job_zip",
-    ),
-    # ------------------------------------------------------------------
-    # Glyph ZIP upload/download
-    # ------------------------------------------------------------------ 
-    path(
-        "jobs/<str:sid>/glyphs/download/default-zip/",
-        download_default_glyphs_zip,
-        name="download_default_glyphs_zip",
-    ),
-    path(
-        "jobs/<str:sid>/glyphs/download/all-zip/",
-        download_all_glyphs_zip,
-        name="download_all_glyphs_zip",
-    ),
-    path(
-        "jobs/<str:sid>/upload/glyphs-zip/",
-        upload_glyphs_zip,
-        name="upload_glyphs_zip",
-    ),
-    path(
-        "jobs/<str:sid>/upload/glyph-png/",
-        upload_glyph_from_png,
-        name="upload_glyph_from_png",
-    ),
+    ), 
 
  
 
-    # ------------------------------------------------------------------
-    # Status per language
-    # ------------------------------------------------------------------
-    path(
-        "jobs/<str:sid>/languages/status/",
-        job_languages_status,
-        name="job_languages_status",
-    ),
-    path(
-        "jobs/<str:sid>/languages/<str:language>/status/",
-        job_language_status,
-        name="job_language_status",
-    ),
+
 ]
+
+
+
+
+ 

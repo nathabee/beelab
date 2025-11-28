@@ -1,6 +1,5 @@
-'use client';
-
 // src/hooks/useJobDetail.ts
+'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -11,8 +10,9 @@ import { toAppError, errorBus, AppError } from '@bee/common/error';
 import type { FontJob } from '@mytypes/fontJob';
 import type { JobPage } from '@mytypes/jobPage';
 import type { LanguageStatus } from '@mytypes/languageStatus';
+import { useApp } from '@context/AppContext';
 
-export type UseJobDetailResult = { 
+export type UseJobDetailResult = {
   job: FontJob | null;
   pages: JobPage[];
   languageStatuses: LanguageStatus[];
@@ -21,19 +21,16 @@ export type UseJobDetailResult = {
   isRefreshing: boolean;
   error: AppError | null;
 
-  /**
-   * Reloads job, language status and pages in one shot.
-   */
   reload: () => Promise<void>;
-    /**
-   * Rename the job; updates local state with the server response.
-   */
-  updateJobMeta: (args: { name?: string; base_family?: string | null }) => Promise<FontJob>;
-
+  updateJobMeta: (args: {
+    name?: string;
+    base_family?: string | null;
+  }) => Promise<FontJob>;
 };
 
 export default function useJobDetail(sid: string): UseJobDetailResult {
   const { token } = useUser();
+  const { activeGlyphFormat } = useApp(); // 'png' | 'svg'
 
   const [job, setJob] = useState<FontJob | null>(null);
   const [pages, setPages] = useState<JobPage[]>([]);
@@ -43,30 +40,48 @@ export default function useJobDetail(sid: string): UseJobDetailResult {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<AppError | null>(null);
 
-  // Tracks whether we have ever successfully loaded once
   const hasLoadedRef = useRef(false);
+
+  const emitError = (base: Error, meta: { functionName: string }) => {
+    const appErr = toAppError(base, {
+      component: 'useJobDetail',
+      service: 'beefont',
+      functionName: meta.functionName,
+    });
+    setError(appErr);
+    if (appErr.httpStatus === 401 || appErr.httpStatus === 403 || appErr.severity === 'page') {
+      errorBus.emit(appErr);
+    }
+    return appErr;
+  };
 
   const reload = useCallback(async (): Promise<void> => {
     const time = new Date().toLocaleTimeString('de-DE', { hour12: false });
-    console.log('[beefont/useJobDetail] reload @', time, 'sid=', sid);
+    console.log(
+      '[beefont/useJobDetail] reload @',
+      time,
+      'sid=',
+      sid,
+      'format=',
+      activeGlyphFormat,
+    );
 
     if (!token) {
-      console.warn('[beefont/useJobDetail] reload: no token');
-      const appErr: AppError = {
-        name: 'AuthError',
-        message: 'No auth token available.',
-        httpStatus: 401,
-        severity: 'page',
-        service: 'beefont',
-        raw: null,
-      };
-      setError(appErr);
-      errorBus.emit(appErr);
-      return Promise.reject(appErr);
+      const err = emitError(
+        new Error('No auth token available (useJobDetail.reload)'),
+        { functionName: 'reload' },
+      );
+      return Promise.reject(err);
     }
 
-    // First call: show "isLoading"
-    // Later calls: show "isRefreshing"
+    if (!sid) {
+      const err = emitError(
+        new Error('No job SID provided (useJobDetail.reload)'),
+        { functionName: 'reload' },
+      );
+      return Promise.reject(err);
+    }
+
     const isFirstLoad = !hasLoadedRef.current;
     setIsLoading(isFirstLoad);
     setIsRefreshing(!isFirstLoad);
@@ -74,13 +89,16 @@ export default function useJobDetail(sid: string): UseJobDetailResult {
 
     const headers = authHeaders(token);
     const encodedSid = encodeURIComponent(sid);
+    const format = activeGlyphFormat || 'png';
+    const encodedFormat = encodeURIComponent(format);
 
     try {
       const [jobRes, langRes, pagesRes] = await Promise.all([
         apiApp.get<FontJob>(`/jobs/${encodedSid}/`, { headers }),
-        apiApp.get<LanguageStatus[]>(`/jobs/${encodedSid}/languages/status/`, {
-          headers,
-        }),
+        apiApp.get<LanguageStatus[]>(
+          `/jobs/${encodedSid}/missingcharstatus/${encodedFormat}/`,
+          { headers },
+        ),
         apiApp.get<JobPage[]>(`/jobs/${encodedSid}/pages/`, { headers }),
       ]);
 
@@ -91,41 +109,33 @@ export default function useJobDetail(sid: string): UseJobDetailResult {
       hasLoadedRef.current = true;
       setIsLoading(false);
       setIsRefreshing(false);
-    } catch (e) {
-      const appErr: AppError = toAppError(e, {
-        functionName: 'useJobDetail.reload',
+    } catch (e: any) {
+      const appErr = toAppError(e, {
+        component: 'useJobDetail',
+        functionName: 'reload',
         service: 'beefont',
       });
 
       if (appErr.httpStatus === 401 || appErr.httpStatus === 403) {
-        appErr.severity = 'page';
+        appErr.severity = appErr.severity ?? 'page';
         errorBus.emit(appErr);
       }
 
       setError(appErr);
       setIsLoading(false);
       setIsRefreshing(false);
-
-      // Keep stale state, but bubble error up
       return Promise.reject(appErr);
     }
-  }, [sid, token]);  // <— job removed here
+  }, [sid, token, activeGlyphFormat]);
 
-
-      const updateJobMeta = useCallback(
+  const updateJobMeta = useCallback(
     async (args: { name?: string; base_family?: string | null }): Promise<FontJob> => {
       if (!token) {
-        const appErr: AppError = {
-          name: 'AuthError',
-          message: 'No auth token available.',
-          httpStatus: 401,
-          severity: 'page',
-          service: 'beefont',
-          raw: null,
-        };
-        setError(appErr);
-        errorBus.emit(appErr);
-        return Promise.reject(appErr);
+        const err = emitError(
+          new Error('No auth token available (useJobDetail.updateJobMeta)'), 
+          { functionName: 'updateJobMeta' },
+        );
+        return Promise.reject(err);
       }
 
       const payload: any = {};
@@ -133,22 +143,16 @@ export default function useJobDetail(sid: string): UseJobDetailResult {
       if (typeof args.name === 'string') {
         const trimmed = args.name.trim();
         if (!trimmed) {
-          const appErr: AppError = {
-            name: 'ValidationError',
-            message: 'Job name may not be empty.',
-            httpStatus: 400,
-            severity: 'inline',
-            service: 'beefont',
-            raw: null,
-          };
-          setError(appErr);
-          return Promise.reject(appErr);
+          const err = emitError(
+            new Error('Job name may not be empty (useJobDetail.updateJobMeta)'),
+            { functionName: 'updateJobMeta' },
+          );
+          return Promise.reject(err);
         }
         payload.name = trimmed;
       }
 
       if (args.base_family !== undefined) {
-        // Allow empty → null
         const bf = args.base_family?.trim() || '';
         payload.base_family = bf || null;
       }
@@ -166,9 +170,10 @@ export default function useJobDetail(sid: string): UseJobDetailResult {
         setJob(res.data);
         setIsRefreshing(false);
         return res.data;
-      } catch (e) {
-        const appErr: AppError = toAppError(e, {
-          functionName: 'useJobDetail.updateJobMeta',
+      } catch (e: any) {
+        const appErr = toAppError(e, {
+          component: 'useJobDetail',
+          functionName: 'updateJobMeta',
           service: 'beefont',
         });
         setError(appErr);
@@ -179,14 +184,12 @@ export default function useJobDetail(sid: string): UseJobDetailResult {
     [sid, token],
   );
 
-
-  // Auto-load whenever sid changes
   useEffect(() => {
-    if (!sid) return;
+    if (!sid || !token) return;
     reload().catch(err => {
       console.error('[beefont/useJobDetail] initial load failed:', err);
     });
-  }, [sid, reload]);
+  }, [sid, token, activeGlyphFormat, reload]);
 
   return {
     job,

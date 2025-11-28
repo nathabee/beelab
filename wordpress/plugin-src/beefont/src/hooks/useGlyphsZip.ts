@@ -6,7 +6,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiApp, authHeaders } from '@utils/api';
 import { useUser } from '@bee/common';
 import { useApp } from '@context/AppContext';
-import { toAppError, errorBus, type AppError } from '@bee/common/error';
+import { toAppError, errorBus, type AppError } from '@bee/common/error'; 
+import type { GlyphFormat } from '@mytypes/glyph';
+ 
+
 
 export type UseGlyphsZipResult = {
   isDownloadingDefault: boolean;
@@ -21,6 +24,7 @@ export type UseGlyphsZipResult = {
 
 export default function useGlyphsZip(
   sidParam: string,
+  format: GlyphFormat = 'png',
 ): UseGlyphsZipResult {
   const { token } = useUser();
   const { activeJob } = useApp();
@@ -41,8 +45,9 @@ export default function useGlyphsZip(
       sidParam,
       activeJobSid: activeJob?.sid ?? null,
       effectiveSid: sid,
+      format,
     });
-  }, [sidParam, activeJob, sid]);
+  }, [sidParam, activeJob, sid, format]);
 
   const triggerBlobDownload = (blob: Blob, filename: string) => {
     const url = window.URL.createObjectURL(blob);
@@ -91,7 +96,8 @@ export default function useGlyphsZip(
     setError(null);
 
     const encodedSid = encodeURIComponent(sid);
-    const url = `/jobs/${encodedSid}/glyphs/download/default-zip/`;
+    // /jobs/<sid>/glyphs/<format>/download/default-zip/
+    const url = `/jobs/${encodedSid}/glyphs/${format}/download/default-zip/`;
     const headers = authHeaders(token as string);
 
     try {
@@ -99,7 +105,7 @@ export default function useGlyphsZip(
         headers,
         responseType: 'blob',
       });
-      const filename = `beefont_${encodedSid}_glyphs_default.zip`;
+      const filename = `beefont_${encodedSid}_glyphs_default_${format}.zip`;
       triggerBlobDownload(res.data as Blob, filename);
       setIsDownloadingDefault(false);
     } catch (e) {
@@ -116,7 +122,7 @@ export default function useGlyphsZip(
       setIsDownloadingDefault(false);
       return Promise.reject(appErr);
     }
-  }, [sid, token]);
+  }, [sid, token, format]);
 
   const downloadAllZip = useCallback(async (): Promise<void> => {
     const guard = guardAuthAndSid('downloadAllZip');
@@ -126,7 +132,8 @@ export default function useGlyphsZip(
     setError(null);
 
     const encodedSid = encodeURIComponent(sid);
-    const url = `/jobs/${encodedSid}/glyphs/download/all-zip/`;
+    // /jobs/<sid>/glyphs/<format>/download/all-zip/
+    const url = `/jobs/${encodedSid}/glyphs/${format}/download/all-zip/`;
     const headers = authHeaders(token as string);
 
     try {
@@ -134,7 +141,7 @@ export default function useGlyphsZip(
         headers,
         responseType: 'blob',
       });
-      const filename = `beefont_${encodedSid}_glyphs_all.zip`;
+      const filename = `beefont_${encodedSid}_glyphs_all_${format}.zip`;
       triggerBlobDownload(res.data as Blob, filename);
       setIsDownloadingAll(false);
     } catch (e) {
@@ -151,7 +158,7 @@ export default function useGlyphsZip(
       setIsDownloadingAll(false);
       return Promise.reject(appErr);
     }
-  }, [sid, token]);
+  }, [sid, token, format]);
 
   const uploadGlyphsZip = useCallback(
     async (file: File): Promise<void> => {
@@ -159,13 +166,13 @@ export default function useGlyphsZip(
       if (guard) return Promise.reject(guard);
 
       setIsUploading(true);
-      setError(null); 
+      setError(null);
 
       const encodedSid = encodeURIComponent(sid);
-      const url = `/jobs/${encodedSid}/upload/glyphs-zip/`;
+      // /jobs/<sid>/glyphs/<format>/upload-zip/
+      const url = `/jobs/${encodedSid}/glyphs/${format}/upload-zip/`;
       const headers = {
         ...authHeaders(token as string),
-        // Axios will set proper multipart boundary; you just hint it.
         'Content-Type': 'multipart/form-data',
       };
 
@@ -174,7 +181,10 @@ export default function useGlyphsZip(
 
       try {
         const res = await apiApp.post(url, formData, { headers });
-        console.log('[beefont/useGlyphsZip] uploadGlyphsZip OK:', res.data);
+        console.log(
+          '[beefont/useGlyphsZip] uploadGlyphsZip OK:',
+          res.data,
+        );
         setIsUploading(false);
       } catch (e) {
         const appErr: AppError = toAppError(e, {
@@ -191,7 +201,7 @@ export default function useGlyphsZip(
         return Promise.reject(appErr);
       }
     },
-    [sid, token],
+    [sid, token, format],
   );
 
   return {

@@ -1,6 +1,5 @@
-'use client';
-
 // src/hooks/useMissingCharacters.ts
+'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 
@@ -9,9 +8,11 @@ import { useUser } from '@bee/common';
 import { toAppError, errorBus, type AppError } from '@bee/common/error';
 
 import type { LanguageStatus } from '@mytypes/languageStatus';
+import type { GlyphFormat } from '@hooks/useGlyphsZip'; // 'png' | 'svg'
 
 export type UseMissingCharactersOptions = {
   manual?: boolean;
+  format?: GlyphFormat; // 'png' or 'svg'
 };
 
 export type UseMissingCharactersResult = {
@@ -27,7 +28,7 @@ export default function useMissingCharacters(
   languageCode: string,
   options: UseMissingCharactersOptions = {},
 ): UseMissingCharactersResult {
-  const { manual = false } = options;
+  const { manual = false, format = 'png' } = options;
   const { token } = useUser();
 
   const [status, setStatus] = useState<LanguageStatus | null>(null);
@@ -44,6 +45,8 @@ export default function useMissingCharacters(
       sid,
       'language=',
       languageCode,
+      'format=',
+      format,
     );
 
     if (!token) {
@@ -77,7 +80,8 @@ export default function useMissingCharacters(
     const encodedSid = encodeURIComponent(sid);
     const encodedLang = encodeURIComponent(languageCode);
 
-    const url = `/jobs/${encodedSid}/languages/${encodedLang}/status/`;
+    // new backend route: /jobs/<sid>/languages/<lang>/status/<format>/
+    const url = `/jobs/${encodedSid}/missingcharstatus/${encodedLang}/${format}/`;
 
     try {
       const res = await apiApp.get<LanguageStatus>(url, { headers });
@@ -99,8 +103,8 @@ export default function useMissingCharacters(
       setIsLoading(false);
       setIsRefreshing(false);
       return Promise.reject(appErr);
-    } 
-  }, [sid, languageCode, token]); 
+    }
+  }, [sid, languageCode, format, token, status]);
 
   useEffect(() => {
     if (manual) return;
@@ -113,7 +117,7 @@ export default function useMissingCharacters(
         err,
       );
     });
-  }, [manual, sid, languageCode, token, fetchStatus]);
+  }, [manual, sid, languageCode, format, token, fetchStatus]);
 
   return {
     status,

@@ -16,7 +16,8 @@ import type {
   SupportedLanguage,
   SupportedLanguageAlphabet,
 } from '@mytypes/language';
-import type { FontJob } from '@mytypes/job'; // ANPASSEN: Name/Ort deines Job-Typs
+import type { FontJob } from '@mytypes/job';
+import type { GlyphFormat } from '@mytypes/glyph';
 
 interface AppContextType {
   // generische App-Funktionen
@@ -48,6 +49,10 @@ interface AppContextType {
   // BeeFont: aktuell ausgewählter Job
   activeJob: FontJob | null;
   setActiveJob: (job: FontJob | null) => void;
+
+  // BeeFont: globales Standard-Glyphformat (png/svg)
+  activeGlyphFormat: GlyphFormat;
+  setActiveGlyphFormat: (format: GlyphFormat) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -63,6 +68,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [bootstrapReady, internalSetBootstrapReady] = useState<boolean>(false);
 
   const [activeJob, internalSetActiveJob] = useState<FontJob | null>(null);
+
+  // globales Default-Format für Glyphen (PNG/SVG), mit Persistenz
+  const [activeGlyphFormat, internalsetActiveGlyphFormat] =
+    useState<GlyphFormat>('png');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -125,6 +134,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         localStorage.removeItem('beefont_active_job');
       }
     }
+
+    // Default-Glyphformat aus localStorage laden
+    const rawFormat = localStorage.getItem('beefont_default_format');
+    if (rawFormat === 'png' || rawFormat === 'svg') {
+      internalsetActiveGlyphFormat(rawFormat);
+    }
   }, []);
 
   const setInfo = useCallback((next: InfoResponse | null) => {
@@ -185,6 +200,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  const setActiveGlyphFormat = useCallback((format: GlyphFormat) => {
+    internalsetActiveGlyphFormat(format);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('beefont_default_format', format);
+    }
+  }, []);
+
   const reset = useCallback(() => {
     if (typeof window === 'undefined') return;
 
@@ -201,6 +223,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     internalSetAlphabets(null);
     internalSetBootstrapReady(false);
     internalSetActiveJob(null);
+    internalsetActiveGlyphFormat('svg');
   }, []);
 
   const value = useMemo(
@@ -220,6 +243,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setBootstrapReady,
       activeJob,
       setActiveJob,
+      activeGlyphFormat,
+      setActiveGlyphFormat,
     }),
     [
       info,
@@ -237,6 +262,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setBootstrapReady,
       activeJob,
       setActiveJob,
+      activeGlyphFormat,
+      setActiveGlyphFormat,
     ],
   );
 

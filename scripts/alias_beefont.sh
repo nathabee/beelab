@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-
-# scripts/alias_beefont.sh
+set -o pipefail
 # BeeFont aliases (REST helpers for V3 multi-page / glyph API)
 # Assumes scripts/alias.sh has already been sourced (for _BEELAB_ROOT etc.)
 
@@ -10,13 +9,18 @@
 
 _beefont_base() {
   # Allow override via BEEFONT_BASE, otherwise default to dev Django API
-  # Example override: export BEEFONT_BASE="https://your-domain/api/beefont"
   echo "${BEEFONT_BASE:-http://localhost:9001/api/beefont}"
 }
 
+#Wenn du bewusst einen neuen Demo-User willst, kannst du dir separat einen Helper bauen:
 _beefont_token() {
-  # Always mint a fresh demo token; in dev it's cheap and avoids
-  # "token_not_valid / expired" issues when shells are reused.
+  # Wenn wir schon einen Token haben, denselben wiederverwenden
+  if [[ -n "$BEEFONT_TOKEN" ]]; then
+    echo "$BEEFONT_TOKEN"
+    return 0
+  fi
+
+  # Sonst neuen holen
   local resp tok
   resp=$(curl -sS --fail-with-body -X POST "http://localhost:9001/api/user/auth/demo/start/") || {
     echo "BeeFont : auth /demo/start failed" >&2
@@ -40,6 +44,11 @@ _beefont_token() {
   echo "$tok"
 }
 
+beefont_newtoken() {
+  unset BEEFONT_TOKEN
+  _beefont_token >/dev/null
+}
+
 # Small helper to curl with auth header
 _beefont_curl_auth() {
   local TOKEN
@@ -47,8 +56,27 @@ _beefont_curl_auth() {
   curl -fSs -H "Authorization: Bearer $TOKEN" "$@"
 }
 
+# Tiny 1x1 PNG for upload tests (no external tools needed)
+_beefont_write_tiny_png() {
+  local OUT="${1:?out path missing}"
+  base64 -d >"$OUT" <<'B64'
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQotDQAAAABJRU5ErkJggg==
+B64
+}
+
+# Minimal SVG for upload tests
+_beefont_write_dummy_svg() {
+  local OUT="${1:?out path missing}"
+  local LETTER="${2:-X}"
+  cat >"$OUT" <<EOF
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+  <rect x="10" y="10" width="180" height="180" fill="none" stroke="black" stroke-width="4"/>
+  <text x="100" y="120" font-size="100" text-anchor="middle" fill="black">${LETTER}</text>
+</svg>
+EOF
+}
+
 beefont_rmjobs() {
-  # delete ALL BeeFont jobs known to the API (for current user)
   beefont_jobs \
     | jq -r '.[].sid? // .results[].sid?' 2>/dev/null \
     | while read -r SID; do
@@ -63,15 +91,11 @@ beefont_rmjobs() {
 # Templates (V3)
 # -------------------------------------------------------------------
 
-# List templates
-# Usage: beefont_templates
 beefont_templates() {
   _beefont_curl_auth "$(_beefont_base)/templates/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
-# Download template image 
-# mode is optional, kept for compatibility (?mode=blank|blankpure|prefill|prefill_i|prefill_m|prefill_b)
 # Usage: beefont_template_image CODE [mode] [outfile.png] ["LETTERS"]
 beefont_template_image() {
   local CODE="${1:?template code missing}"
@@ -82,7 +106,6 @@ beefont_template_image() {
   local URL="$(_beefont_base)/templates/${CODE}/image/?mode=${MODE}"
 
   if [[ -n "$LETTERS" ]]; then
-    # URL-encode via Python
     local ENC
     ENC=$(python -c 'import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))' "$LETTERS")
     URL="${URL}&letters=${ENC}"
@@ -98,7 +121,6 @@ beefont_template_image() {
       return 1
     }
 
-  # primitive PNG-Prüfung
   if head -c 8 "$OUT" | xxd -p -c8 2>/dev/null | grep -qi '^89504e470d0a1a0a$'; then
     echo "saved → $OUT"
   else
@@ -108,21 +130,15 @@ beefont_template_image() {
   fi
 }
 
-
-
 # -------------------------------------------------------------------
 # Languages (V3)
 # -------------------------------------------------------------------
 
-# List supported languages
-# Usage: beefont_languages
 beefont_languages() {
   _beefont_curl_auth "$(_beefont_base)/languages/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
-# Get alphabet for language
-# Usage: beefont_language_alphabet CODE
 beefont_language_alphabet() {
   local CODE="${1:?language code missing}"
   _beefont_curl_auth "$(_beefont_base)/languages/${CODE}/alphabet/" \
@@ -133,23 +149,19 @@ beefont_language_alphabet() {
 # Jobs (V3)
 # -------------------------------------------------------------------
 
-# List jobs
-# Usage: beefont_jobs
 beefont_jobs() {
   _beefont_curl_auth "$(_beefont_base)/jobs/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
-# Create a job (V3: name + base_family)
 # New usage:
 #   beefont_job_create NAME [BASE_FAMILY]
-# Backwards-compatible usage (V2-style, rest wird ignoriert):
+# Backwards-compatible usage:
 #   beefont_job_create FAMILY LANGUAGE PAGE_FORMAT "CHARS"
 beefont_job_create() {
   local NAME BASE_FAMILY
 
   if [[ $# -ge 4 ]]; then
-    # V2-kompatibel: FAMILY LANGUAGE PAGE_FORMAT "CHARS"
     NAME="${1:?family missing}"
     BASE_FAMILY="${1}"
   else
@@ -187,16 +199,12 @@ beefont_job_create() {
   [[ -n "$BEEFONT_JOB_SID" ]] && echo "BEEFONT_JOB_SID=$BEEFONT_JOB_SID"
 }
 
-# Job detail
-# Usage: beefont_job SID
 beefont_job() {
   local SID="${1:?sid missing}"
   _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
-# Delete job
-# Usage: beefont_job_delete SID
 beefont_job_delete() {
   local SID="${1:?sid missing}"
   local TOKEN
@@ -212,21 +220,22 @@ beefont_job_delete() {
 # Job pages (scan pages) – V3
 # -------------------------------------------------------------------
 
-# List pages for a job
-# Usage: beefont_job_pages SID
 beefont_job_pages() {
   local SID="${1:?sid missing}"
   _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/pages/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
-# Create page + upload scan in one call (new API)
-# Usage:
-#   beefont_create_page SID TEMPLATE_CODE "LETTERS" IMG [PAGE_INDEX] [AUTO_ANALYSE]
-#
-# - PAGE_INDEX: optional; if omitted, backend assigns next free index
-# - AUTO_ANALYSE: "true"/"false" (default: true)
-# Returns raw JSON from the API (page or {page, analysis}).
+# Page detail (GET)
+# Usage: beefont_page SID PAGE_ID
+beefont_page() {
+  local SID="${1:?sid missing}"
+  local PAGE_ID="${2:?page_id missing}"
+  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/pages/${PAGE_ID}/" \
+    | (command -v jq >/dev/null 2>&1 && jq . || cat)
+}
+
+# Create page + upload scan
 beefont_create_page() {
   local SID="${1:?sid missing}"
   local TEMPLATE_CODE="${2:?template_code missing}"
@@ -261,12 +270,6 @@ beefont_create_page() {
   fi
 }
 
- 
-
-
-
-# Delete page
-# Usage: beefont_page_delete SID PAGE_ID
 beefont_page_delete() {
   local SID="${1:?sid missing}"
   local PAGE_ID="${2:?page_id missing}"
@@ -279,9 +282,6 @@ beefont_page_delete() {
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
- 
-# Analyse page
-# Usage: beefont_page_analyse SID PAGE_ID
 beefont_page_analyse() {
   local SID="${1:?sid missing}"
   local PAGE_ID="${2:?page_id missing}"
@@ -291,8 +291,6 @@ beefont_page_analyse() {
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
-# Retry analysis
-# Usage: beefont_page_retry_analysis SID PAGE_ID
 beefont_page_retry_analysis() {
   local SID="${1:?sid missing}"
   local PAGE_ID="${2:?page_id missing}"
@@ -303,11 +301,9 @@ beefont_page_retry_analysis() {
 }
 
 # -------------------------------------------------------------------
-# Glyphs (V3)
+# Glyphs (format-agnostic list / detail / select)
 # -------------------------------------------------------------------
 
-# List glyphs for a job (optional: ?letter=)
-# Usage: beefont_glyphs SID [LETTER]
 beefont_glyphs() {
   local SID="${1:?sid missing}"
   local LETTER="${2:-}"
@@ -318,8 +314,6 @@ beefont_glyphs() {
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
-# Detail for one letter (variants)
-# Usage: beefont_glyph SID LETTER
 beefont_glyph() {
   local SID="${1:?sid missing}"
   local LETTER="${2:?letter missing}"
@@ -327,10 +321,6 @@ beefont_glyph() {
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
-# Select default variant for a letter
-# Usage:
-#   beefont_glyph_select SID LETTER GLYPH_ID
-#   beefont_glyph_select SID LETTER VARIANT_INDEX --by-variant
 beefont_glyph_select() {
   local SID="${1:?sid missing}"
   local LETTER="${2:?letter missing}"
@@ -356,26 +346,177 @@ beefont_glyph_select() {
 }
 
 # -------------------------------------------------------------------
-# Font build + download (V3)
+# Single glyph upload (PNG / SVG)
 # -------------------------------------------------------------------
 
-# Trigger TTF build (requires language)
-# Usage: beefont_build SID LANGUAGE
+# Usage: beefont_upload_glyph_from_png SID LETTER file.png
+beefont_upload_glyph_from_png() {
+  local SID="${1:?sid missing}"
+  local LETTER="${2:?letter missing}"
+  local IMG="${3:?image path missing}"
+  [[ -f "$IMG" ]] || { echo "file not found: $IMG" >&2; return 1; }
+
+  local TOKEN
+  TOKEN="$(_beefont_token)" || return 1
+
+  curl -sS -X POST \
+    -H "Authorization: Bearer $TOKEN" \
+    -F "letter=${LETTER}" \
+    -F "file=@${IMG}" \
+    "$(_beefont_base)/jobs/${SID}/glyphs/png/upload/" \
+    | (command -v jq >/dev/null 2>&1 && jq . || cat)
+}
+
+# Usage: beefont_upload_glyph_from_svg SID LETTER file.svg
+beefont_upload_glyph_from_svg() {
+  local SID="${1:?sid missing}"
+  local LETTER="${2:?letter missing}"
+  local SVG="${3:?svg path missing}"
+  [[ -f "$SVG" ]] || { echo "file not found: $SVG" >&2; return 1; }
+
+  local TOKEN
+  TOKEN="$(_beefont_token)" || return 1
+
+  curl -sS -X POST \
+    -H "Authorization: Bearer $TOKEN" \
+    -F "letter=${LETTER}" \
+    -F "file=@${SVG}" \
+    "$(_beefont_base)/jobs/${SID}/glyphs/svg/upload/" \
+    | (command -v jq >/dev/null 2>&1 && jq . || cat)
+}
+
+# -------------------------------------------------------------------
+# Glyph ZIP upload/download – PNG
+# -------------------------------------------------------------------
+
+# Download ZIP of default PNG glyphs
+# Usage: beefont_download_default_glyphs_zip_png SID [outfile.zip]
+beefont_download_default_glyphs_zip_png() {
+  local SID="${1:?sid missing}"
+  local OUT="${2:-${SID}_glyphs_default_png.zip}"
+
+  local TOKEN
+  TOKEN="$(_beefont_token)" || return 1
+
+  curl -fSL \
+    -H "Authorization: Bearer $TOKEN" \
+    "$(_beefont_base)/jobs/${SID}/glyphs/png/download/default-zip/" \
+    -o "$OUT" \
+    && echo "saved → $OUT"
+}
+
+# Download ZIP of all PNG glyphs
+# Usage: beefont_download_all_glyphs_zip_png SID [outfile.zip]
+beefont_download_all_glyphs_zip_png() {
+  local SID="${1:?sid missing}"
+  local OUT="${2:-${SID}_glyphs_all_png.zip}"
+
+  local TOKEN
+  TOKEN="$(_beefont_token)" || return 1
+
+  curl -fSL \
+    -H "Authorization: Bearer $TOKEN" \
+    "$(_beefont_base)/jobs/${SID}/glyphs/png/download/all-zip/" \
+    -o "$OUT" \
+    && echo "saved → $OUT"
+}
+
+# Upload PNG glyphs ZIP
+# Usage: beefont_upload_glyphs_zip_png SID file.zip
+beefont_upload_glyphs_zip_png() {
+  local SID="${1:?sid missing}"
+  local ZIP="${2:?zip path missing}"
+  [[ -f "$ZIP" ]] || { echo "file not found: $ZIP" >&2; return 1; }
+
+  local TOKEN
+  TOKEN="$(_beefont_token)" || return 1
+
+  curl -sS -X POST \
+    -H "Authorization: Bearer $TOKEN" \
+    -F "file=@${ZIP}" \
+    "$(_beefont_base)/jobs/${SID}/glyphs/png/upload-zip/" \
+    | (command -v jq >/dev/null 2>&1 && jq . || cat)
+}
+
+# -------------------------------------------------------------------
+# Glyph ZIP upload/download – SVG
+# -------------------------------------------------------------------
+
+# Download ZIP of default SVG glyphs
+# Usage: beefont_download_default_glyphs_zip_svg SID [outfile.zip]
+beefont_download_default_glyphs_zip_svg() {
+  local SID="${1:?sid missing}"
+  local OUT="${2:-${SID}_glyphs_default_svg.zip}"
+
+  local TOKEN
+  TOKEN="$(_beefont_token)" || return 1
+
+  curl -fSL \
+    -H "Authorization: Bearer $TOKEN" \
+    "$(_beefont_base)/jobs/${SID}/glyphs/svg/download/default-zip/" \
+    -o "$OUT" \
+    && echo "saved → $OUT"
+}
+
+# Download ZIP of all SVG glyphs
+# Usage: beefont_download_all_glyphs_zip_svg SID [outfile.zip]
+beefont_download_all_glyphs_zip_svg() {
+  local SID="${1:?sid missing}"
+  local OUT="${2:-${SID}_glyphs_all_svg.zip}"
+
+  local TOKEN
+  TOKEN="$(_beefont_token)" || return 1
+
+  curl -fSL \
+    -H "Authorization: Bearer $TOKEN" \
+    "$(_beefont_base)/jobs/${SID}/glyphs/svg/download/all-zip/" \
+    -o "$OUT" \
+    && echo "saved → $OUT"
+}
+
+# Upload SVG glyphs ZIP
+# Usage: beefont_upload_glyphs_zip_svg SID file.zip
+beefont_upload_glyphs_zip_svg() {
+  local SID="${1:?sid missing}"
+  local ZIP="${2:?zip path missing}"
+  [[ -f "$ZIP" ]] || { echo "file not found: $ZIP" >&2; return 1; }
+
+  local TOKEN
+  TOKEN="$(_beefont_token)" || return 1
+
+  curl -sS -X POST \
+    -H "Authorization: Bearer $TOKEN" \
+    -F "file=@${ZIP}" \
+    "$(_beefont_base)/jobs/${SID}/glyphs/svg/upload-zip/" \
+    | (command -v jq >/dev/null 2>&1 && jq . || cat)
+}
+
+# -------------------------------------------------------------------
+# Font builds + downloads (V3)
+# -------------------------------------------------------------------
+
+# List builds for a job
+# Usage: beefont_list_builds SID
+beefont_list_builds() {
+  local SID="${1:?sid missing}"
+  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/builds/" \
+    | (command -v jq >/dev/null 2>&1 && jq . || cat)
+}
+
+# Trigger TTF build (path-based; format in path)
+# Usage: beefont_build SID LANGUAGE [FORMAT]
+# Default FORMAT is "png".
 beefont_build() {
   local SID="${1:?sid missing}"
   local LANG="${2:?language missing}"
+  local FMT="${3:-png}"
 
-  local TOKEN JSON
+  local TOKEN RESP
   TOKEN="$(_beefont_token)" || return 1
-  JSON=$(printf '{"language":"%s"}' "$LANG")
 
-  local RESP
   RESP=$(curl -fSs -X POST \
     -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$JSON" \
-    "$(_beefont_base)/jobs/${SID}/build-ttf/") || {
-      # HTTP != 2xx → hier bist du im "Fehler" Zweig, z.B. 400 bei fehlenden Glyphen
+    "$(_beefont_base)/jobs/${SID}/build-ttf/${LANG}/${FMT}/") || {
       echo "$RESP" | (command -v jq >/dev/null 2>&1 && jq . || cat)
       return 1
     }
@@ -383,9 +524,6 @@ beefont_build() {
   echo "$RESP" | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
-
-# Download TTF
-# Usage: beefont_download_ttf SID LANGUAGE [outfile.ttf]
 beefont_download_ttf() {
   local SID="${1:?sid missing}"
   local LANG="${2:?language missing}"
@@ -401,8 +539,6 @@ beefont_download_ttf() {
     && echo "saved → $OUT"
 }
 
-# Download ZIP (all builds + metadata)
-# Usage: beefont_download_zip SID [outfile.zip]
 beefont_download_zip() {
   local SID="${1:?sid missing}"
   local OUT="${2:-beefont_${SID}_bundle.zip}"
@@ -418,40 +554,69 @@ beefont_download_zip() {
 }
 
 # -------------------------------------------------------------------
-# Language status (V3)
+# Language status
 # -------------------------------------------------------------------
 
 # Overview per language
-# Usage: beefont_languages_status SID
+# Usage: beefont_languages_status SID [FORMAT] 
 beefont_languages_status() {
   local SID="${1:?sid missing}"
-  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/languages/status/" \
+  local FMT="${2:-png}"
+
+#  echo " i test : $(_beefont_base)/jobs/${SID}/languages/status/${FMT}/"
+#  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/languages/status/${FMT}/" \
+  #echo " i test : $(_beefont_base)/jobs/${SID}/missingcharstatus/${FMT}/"
+  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/missingcharstatus/${FMT}/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
+ 
+ 
+
 # Status for one language
-# Usage: beefont_language_status SID LANGUAGE
+# Usage: beefont_language_status SID LANGUAGE [FORMAT]
 beefont_language_status() {
   local SID="${1:?sid missing}"
   local LANG="${2:?language missing}"
-  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/languages/${LANG}/status/" \
+  local FMT="${3:-png}"
+
+#  echo " i test : $(_beefont_base)/jobs/${SID}/language/${LANG}/status/${FMT}/"
+#  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/language/${LANG}/status/${FMT}/" \
+  #echo " i test : $(_beefont_base)/jobs/${SID}/missingcharstatus/${LANG}/${FMT}/"
+  _beefont_curl_auth "$(_beefont_base)/jobs/${SID}/missingcharstatus/${LANG}/${FMT}/" \
     | (command -v jq >/dev/null 2>&1 && jq . || cat)
 }
 
+
 # -------------------------------------------------------------------
-# Demo helpers – Scenario A & B (V3)
+# Misc helpers (inspect, uninstall)
 # -------------------------------------------------------------------
-# Scenario A (einfach): ein Job, ein Template, eine Sprache (z.B. EN)
-# Nutzt ein Template als "Fake-Scan" → schneller End-to-End-Test.
-#
-# Usage:
-#   beefont_demo_scenarioA [NAME] [LANG] [TEMPLATE_CODE] ["ALPHABET"]
-#
-# Defaults:
-#   NAME          = BeeHand_EN
-#   LANG          = en
-#   TEMPLATE_CODE = A4_6x5
-#   ALPHABET      = (aus /languages/<LANG>/alphabet)
+
+beefont_inspectfont() {
+  local SID="${1:?sid missing}"
+  local FONTNAME="${2:?fontname missing}"
+  local LANG="${3:-}"
+
+  if [[ -n "$LANG" ]]; then
+    echo dcdjango python manage.py inspect_beefont "$LANG" "/app/media/beefont/jobs/${SID}/build/${FONTNAME}"
+    dcdjango python manage.py inspect_beefont "$LANG" "/app/media/beefont/jobs/${SID}/build/${FONTNAME}"
+  else
+    exit 1
+  fi
+}
+
+beefont_desinstall() {
+  local FONTNAME="${1:?fontname missing}"
+  rm ~/.local/share/fonts/${FONTNAME}.ttf 2>/dev/null || true
+  rm ~/.fonts/${FONTNAME}.ttf 2>/dev/null || true
+  fc-cache -f -v
+}
+
+# -------------------------------------------------------------------
+# Scenario A / B / C (unchanged semantics; PNG)
+# -------------------------------------------------------------------
+
+# Scenario A: create job, loop pages until language ready, build TTF, download
 beefont_demo_scenarioA() {
   local NAME="${1:-BeeHand_EN}"
   local LANG="${2:-en}"
@@ -499,7 +664,7 @@ beefont_demo_scenarioA() {
   if command -v jq >/dev/null 2>&1; then
     API_ALPHABET="$(echo "$ALPH_JSON" | jq -r '.alphabet // ""')"
   else
-    echo "WARNING: jq not available – cannot extract alphabet, using RAW_ALPHABET or default A–Z." >&2
+    echo "WARNING: jq not available – cannot extract alphabet, using default A–Z." >&2
     API_ALPHABET="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   fi
 
@@ -524,7 +689,7 @@ beefont_demo_scenarioA() {
     fi
   else
     ALPHABET="$API_ALPHABET"
-    echo "[2c] no ALPHABET override provided → using language alphabet:"
+    echo "[2c] using language alphabet:"
     echo "     '${ALPHABET}'"
   fi
 
@@ -562,23 +727,20 @@ beefont_demo_scenarioA() {
     fi
     echo "  batch for this page: '$BATCH'"
 
-    # 4a) Template als Fake-Scan herunterladen
     local PREF="django/media/beefont/templates/prefill_${TEMPLATE_CODE}_auto.png"
     echo "  [4a] download template image as fake scan → $PREF"
     beefont_template_image "$TEMPLATE_CODE" "prefill_i" "$PREF" "$BATCH" || return 1
 
-    # 4b) Page erstellen + Scan hochladen + Analyse in einem Schritt
     echo "  [4b] create page with scan (auto page_index + auto analyse)"
     beefont_create_page "$SID" "$TEMPLATE_CODE" "$BATCH" "$PREF" "" "true" \
       | (command -v jq >/dev/null 2>&1 && jq . || cat) || return 1
 
-    # 4g) Glyphs inspizieren (optional)
     echo "  [4g] list glyphs (optional)"
     beefont_glyphs "$SID" || true
 
     # 4h) Language-Status prüfen
     echo "  [4h] language status (${LANG})"
-    STATUS_JSON="$(beefont_language_status "$SID" "$LANG")" || return 1
+    STATUS_JSON="$(beefont_language_status "$SID" "$LANG" "png")" || return 1
     echo "$STATUS_JSON"
 
     READY="$(echo "$STATUS_JSON" | jq -r '.ready // false')"
@@ -587,17 +749,17 @@ beefont_demo_scenarioA() {
     echo "    ready=${READY}"
     echo "    missing_chars='${MISSING_CHARS}'"
 
-    # 4i) Build-TTF testen
-    echo "  [4i] test build_ttf"
+
+    echo "  [4i] test build_ttf (png)"
     if [[ "$READY" == "true" ]]; then
       echo "    all required glyphs present → build should SUCCEED"
-      if ! beefont_build "$SID" "$LANG"; then
+      if ! beefont_build "$SID" "$LANG" png; then
         echo "ERROR: build_ttf failed although READY=true" >&2
         return 1
       fi
     else
       echo "    missing glyphs → build should FAIL with 400"
-      if beefont_build "$SID" "$LANG"; then
+      if beefont_build "$SID" "$LANG" png; then
         echo "ERROR: build_ttf succeeded although glyphs are missing" >&2
         return 1
       else
@@ -612,8 +774,8 @@ beefont_demo_scenarioA() {
   fi
 
   echo
-  echo "[5] final build TTF (READY=true)"
-  beefont_build "$SID" "$LANG" || {
+  echo "[5] final build TTF (READY=true, png)"
+  beefont_build "$SID" "$LANG" png || {
     echo "ERROR: final build_ttf failed although READY=true" >&2
     return 1
   }
@@ -809,33 +971,191 @@ beefont_demo_scenarioC() {
 
 
 # -------------------------------------------------------------------
-# Misc helpers
+# Scenario D – PNG ZIP roundtrip + single PNG upload
 # -------------------------------------------------------------------
+# Goals:
+#   - ensure PNG ZIP endpoints work end-to-end:
+#       * download_default_glyphs_zip_png
+#       * download_all_glyphs_zip_png
+#       * upload_glyphs_zip_png
+#   - ensure single PNG glyph upload works:
+#       * upload_glyph_from_png
+#
+# Usage:
+#   beefont_demo_scenarioD [NAME] [LANG] [TEMPLATE_CODE]
+#
+# Defaults:
+#   NAME          = BeeHand_PNG_DEMO
+#   LANG          = en
+#   TEMPLATE_CODE = A4_6x5
+beefont_demo_scenarioD() {
+  local NAME="${1:-BeeHand_PNG_DEMO}"
+  local LANG="${2:-en}"
+  local TEMPLATE_CODE="${3:-A4_6x5}"
 
-beefont_inspectfont() {
-  local SID="${1:?sid missing}"
-  local FONTNAME="${2:?fontname missing}"
-  local LANG="${3:-}"   # optional
+  echo "# Scenario D: PNG ZIP roundtrip + single PNG upload"
+  echo "  NAME=${NAME} LANG=${LANG} TEMPLATE=${TEMPLATE_CODE}"
 
-  if [[ -n "$LANG" ]]; then
-    echo dcdjango python manage.py inspect_beefont "$LANG" "/app/media/beefont/jobs/${SID}/build/${FONTNAME}"
-    dcdjango python manage.py inspect_beefont "$LANG" "/app/media/beefont/jobs/${SID}/build/${FONTNAME}"
+  echo "[1] create job"
+  beefont_job_create "$NAME" "$NAME" || return 1
+  local SID="${BEEFONT_JOB_SID:?BEEFONT_JOB_SID not set}"
+  echo "  SID=$SID"
 
-
+  echo "[2] fetch alphabet for language '$LANG'"
+  local ALPH_JSON ALPHABET
+  ALPH_JSON="$(beefont_language_alphabet "$LANG")" || return 1
+  if command -v jq >/dev/null 2>&1; then
+    ALPHABET="$(echo "$ALPH_JSON" | jq -r '.alphabet // ""')"
   else
-    exit 1
- 
-
+    ALPHABET="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   fi
+  if [[ -z "$ALPHABET" || "$ALPHABET" == "null" ]]; then
+    ALPHABET="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  fi
+  local BATCH="${ALPHABET:0:8}"
+  echo "  using first 8 letters for demo: '$BATCH'"
+
+  echo "[3] create one analysed PNG page (prefill_i fake scan)"
+  local PREF="django/media/beefont/templates/prefill_${TEMPLATE_CODE}_scenarioD.png"
+  beefont_template_image "$TEMPLATE_CODE" "prefill_i" "$PREF" "$BATCH" || return 1
+
+  beefont_create_page "$SID" "$TEMPLATE_CODE" "$BATCH" "$PREF" "" "true" \
+    | (command -v jq >/dev/null 2>&1 && jq . || cat) || return 1
+
+  echo "[4] list glyphs (PNG)"
+  beefont_glyphs "$SID" || true
+
+  echo "[5] language status overview (png)"
+  beefont_languages_status "$SID" png || true
+
+  echo "[6] download default PNG glyphs ZIP"
+  local ZIP_DEFAULT="beefont_${SID}_default_png.zip"
+  beefont_download_default_glyphs_zip_png "$SID" "$ZIP_DEFAULT" || return 1
+
+  echo "[7] download all PNG glyphs ZIP"
+  local ZIP_ALL="beefont_${SID}_all_png.zip"
+  beefont_download_all_glyphs_zip_png "$SID" "$ZIP_ALL" || return 1
+
+  if command -v unzip >/dev/null 2>&1; then
+    echo "  inspecting ZIP contents:"
+    unzip -l "$ZIP_ALL" | head -n 20
+  fi
+
+  echo "[8] re-upload all PNG glyphs ZIP to create additional variants"
+  beefont_upload_glyphs_zip_png "$SID" "$ZIP_ALL" || return 1
+
+  echo "[9] list glyphs again (should show more variants)"
+  beefont_glyphs "$SID" || true
+
+  echo "[10] upload a single tiny PNG glyph for letter 'Z'"
+  local TMPPNG="beefont_dummy_Z.png"
+  _beefont_write_tiny_png "$TMPPNG"
+  beefont_upload_glyph_from_png "$SID" "Z" "$TMPPNG" || return 1
+
+  echo "[11] glyphs filtered for Z"
+  beefont_glyphs "$SID" "Z" || true
+
+  echo
+  echo "Scenario D finished."
+  echo "  SID          = $SID"
+  echo "  ZIP_DEFAULT  = $ZIP_DEFAULT"
+  echo "  ZIP_ALL      = $ZIP_ALL"
+  echo "  TMPPNG       = $TMPPNG"
 }
 
+# -------------------------------------------------------------------
+# Scenario E – SVG ZIP roundtrip + single SVG upload, svg status
+# -------------------------------------------------------------------
+# Goals:
+#   - hit all SVG ZIP endpoints:
+#       * upload_glyphs_zip_svg
+#       * download_default_glyphs_zip_svg
+#       * download_all_glyphs_zip_svg
+#   - hit single SVG upload:
+#       * upload_glyph_from_svg
+#   - hit svg-aware status endpoints:
+#       * job_languages_status(..., svg)
+#       * job_language_status(..., svg)
+#   - optionally exercise build_ttf(..., svg) (do not treat failure as fatal)
+#
+# Usage:
+#   beefont_demo_scenarioE [NAME] [LANG]
+#
+# Defaults:
+#   NAME = BeeHand_SVG_DEMO
+#   LANG = de
+beefont_demo_scenarioE() {
+  local NAME="${1:-BeeHand_SVG_DEMO}"
+  local LANG="${2:-de}"
 
-beefont_desinstall() {
-  local FONTNAME="${1:?fontname missing}"
-  rm ~/.local/share/fonts/${FONTNAME}.ttf 2>/dev/null || true
-  rm ~/.fonts/${FONTNAME}.ttf 2>/dev/null || true
-  fc-cache -f -v
+  echo "# Scenario E: SVG ZIP + single SVG upload + svg status"
+  echo "  NAME=${NAME} LANG=${LANG}"
 
+  echo "[1] create job"
+  beefont_job_create "$NAME" "$NAME" || return 1
+  local SID="${BEEFONT_JOB_SID:?BEEFONT_JOB_SID not set}"
+  echo "  SID=$SID"
+
+  echo "[2] prepare small set of SVG glyphs (A, B, C) in tmp dir"
+  local TMPDIR="beefont_svg_${SID}"
+  mkdir -p "$TMPDIR"
+  _beefont_write_dummy_svg "${TMPDIR}/A.svg" "A"
+  _beefont_write_dummy_svg "${TMPDIR}/B.svg" "B"
+  _beefont_write_dummy_svg "${TMPDIR}/C.svg" "C"
+
+  echo "[3] zip them and upload via SVG ZIP endpoint"
+  local ZIP_SVG_IN="${TMPDIR}/abc_svg.zip"
+  (cd "$TMPDIR" && zip -q "abc_svg.zip" A.svg B.svg C.svg)
+  beefont_upload_glyphs_zip_svg "$SID" "$ZIP_SVG_IN" || return 1
+
+  echo "[4] list glyphs (should now contain A,B,C in SVG)"
+  beefont_glyphs "$SID" || true
+
+  echo "[5] download all SVG glyphs ZIP"
+  local ZIP_SVG_ALL="beefont_${SID}_all_svg.zip"
+  beefont_download_all_glyphs_zip_svg "$SID" "$ZIP_SVG_ALL" || true
+
+  echo "[6] download default SVG glyphs ZIP"
+  local ZIP_SVG_DEF="beefont_${SID}_default_svg.zip"
+  beefont_download_default_glyphs_zip_svg "$SID" "$ZIP_SVG_DEF" || true
+
+  if command -v unzip >/dev/null 2>&1; then
+    echo "  inspecting SVG ZIP contents:"
+    unzip -l "$ZIP_SVG_ALL" | head -n 20
+  fi
+
+  echo "[7] upload a single SVG glyph for letter 'Z'"
+  local SVG_SINGLE="${TMPDIR}/Z.svg"
+  _beefont_write_dummy_svg "$SVG_SINGLE" "Z"
+  beefont_upload_glyph_from_svg "$SID" "Z" "$SVG_SINGLE" || return 1
+
+  echo "[8] list glyphs filtered for Z"
+  beefont_glyphs "$SID" "Z" || true
+
+  echo "[9] language status overview (svg)"
+  beefont_languages_status "$SID" svg || true
+
+  echo "[10] language status for ${LANG} (svg)"
+  beefont_language_status "$SID" "$LANG" svg || true
+
+  echo "[11] try build_ttf for ${LANG} with svg (failure is allowed here)"
+  if beefont_build "$SID" "$LANG" svg; then
+    echo "  build_ttf(svg) succeeded."
+    echo "[12] list builds"
+    beefont_list_builds "$SID" || true
+  else
+    echo "  build_ttf(svg) failed (expected if alphabet is incomplete or FontForge rejects dummy SVG)."
+    beefont_list_builds "$SID" || true
+  fi
+
+  echo
+  echo "Scenario E finished."
+  echo "  SID          = $SID"
+  echo "  ZIP_SVG_IN   = $ZIP_SVG_IN"
+  echo "  ZIP_SVG_ALL  = $ZIP_SVG_ALL"
+  echo "  ZIP_SVG_DEF  = $ZIP_SVG_DEF"
+  echo "  SVG_SINGLE   = $SVG_SINGLE"
+  echo "  TMPDIR       = $TMPDIR"
 }
 
 # -------------------------------------------------------------------
@@ -846,24 +1166,16 @@ beefonthelp() {
   cat <<'EOF'
 # --- BeeFont V3 testing quick guide -----------------------------------------
 
-Concepts:
-- SupportedLanguage : defines code + alphabet for a language (de, en, fr, ...)
-- TemplateDefinition: defines grid (rows x cols), dpi, etc.
-- FontJob           : one font project (name, base_family, user)
-- JobPage           : one scanned page (template + letters + scan_image_path)
-- Glyph             : drawn letter variant (per job + letter multiple variants,
-                      one default)
-- FontBuild         : one TTF per (job, language)
-
 Base URL (dev):
   http://localhost:9001/api/beefont
 
-Auth:
-  Demo token via /api/user/auth/demo/start/ (handled by _beefont_token)
+Auth: Demo token via /api/user/auth/demo/start/ (handled by _beefont_token) :
+  beefont_newtoken
+  
 
 TEMPLATES:
   beefont_templates
-  beefont_template_image CODE [mode] [outfile.png]
+  beefont_template_image CODE [mode] [outfile.png] ["LETTERS"]
 
 LANGUAGES:
   beefont_languages
@@ -878,42 +1190,55 @@ JOBS:
 
 PAGES:
   beefont_job_pages SID
+  beefont_page SID PAGE_ID
+  beefont_create_page SID TEMPLATE_CODE "LETTERS" scan.png [PAGE_INDEX] [AUTO_ANALYSE]
   beefont_page_delete SID PAGE_ID
   beefont_page_analyse SID PAGE_ID
   beefont_page_retry_analysis SID PAGE_ID
-  beefont_create_page SID TEMPLATE_CODE "LETTERS" scan.png [PAGE_INDEX] [AUTO_ANALYSE]
 
-GLYPHS:
+GLYPHS (logical):
   beefont_glyphs SID [LETTER]
   beefont_glyph SID LETTER
   beefont_glyph_select SID LETTER GLYPH_ID
   beefont_glyph_select SID LETTER VARIANT_INDEX --by-variant
 
+GLYPHS PNG:
+  beefont_upload_glyph_from_png SID LETTER file.png
+  beefont_download_default_glyphs_zip_png SID [outfile.zip]
+  beefont_download_all_glyphs_zip_png SID [outfile.zip]
+  beefont_upload_glyphs_zip_png SID file.zip
+
+GLYPHS SVG:
+  beefont_upload_glyph_from_svg SID LETTER file.svg
+  beefont_download_default_glyphs_zip_svg SID [outfile.zip]
+  beefont_download_all_glyphs_zip_svg SID [outfile.zip]
+  beefont_upload_glyphs_zip_svg SID file.zip
+
 BUILDS:
-  beefont_build SID LANGUAGE
+  beefont_list_builds SID
+  beefont_build SID LANGUAGE [FORMAT=png|svg]
   beefont_download_ttf SID LANGUAGE [outfile.ttf]
   beefont_download_zip SID [outfile.zip]
 
 LANGUAGE STATUS:
-  beefont_languages_status SID
-  beefont_language_status SID LANGUAGE
+  beefont_languages_status SID [FORMAT=png|svg]
+  beefont_language_status SID LANGUAGE [FORMAT=png|svg]
 
 DEMO FLOWS:
-  # Scenario A: simple font (one job, one template, one language)
-  beefont_demo_scenarioA [NAME] [LANG] [TEMPLATE_CODE] ["ALPHABET"]
+  Scenario A: full PNG flow until READY=true
+    beefont_demo_scenarioA [NAME] [LANG] [TEMPLATE_CODE] ["ALPHABET"]
 
-  # Scenario B: existing EN job → extend to DE (missing chars)
-  beefont_demo_scenarioB SID [DE_LANG] [TEMPLATE_CODE]
+  Scenario B: extend existing job with extra language (PNG)
+    beefont_demo_scenarioB SID [LANG] [TEMPLATE_CODE]   # as before
 
+  Scenario C: redraw specific letters on a new page and set as default
+    beefont_demo_scenarioC SID [LANG] [TEMPLATE_CODE] ["LETTERS_TO_CHANGE"]
 
-  # Scenario C:  benutze same parameter as B : scan a new page and assigne new letter per default
-  beefont_demo_scenarioC SID [LANG] [TEMPLATE_CODE] ["LISTLETTERTOCHANGE"]
+  Scenario D: PNG ZIP roundtrip + single PNG glyph upload
+    beefont_demo_scenarioD [NAME] [LANG] [TEMPLATE_CODE]
 
-Notes:
-- Scenario A/B verwenden Template-Images als Fake-Scans, um den End-to-End-Flow
-  zu testen, ohne echte Handschrift scannen zu müssen.
-- TEMPLATE_CODE und SupportedLanguage.alphabet müssen zu euren realen
-  V3-Templates passen.
+  Scenario E: SVG ZIP roundtrip + single SVG glyph upload + svg status
+    beefont_demo_scenarioE [NAME] [LANG]
 
 EOF
 }

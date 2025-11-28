@@ -7,8 +7,12 @@ import { apiApp, authHeaders } from '@utils/api';
 import { useUser } from '@bee/common';
 import { toAppError, errorBus, type AppError } from '@bee/common/error';
 
+import { useApp } from '@context/AppContext';
+
 import type { Glyph } from '@mytypes/glyph';
 import type { GlyphVariantSelection } from '@mytypes/glyph';
+
+type GlyphFormatType = 'png' | 'svg';
 
 export type UseGlyphsOptions = {
   /**
@@ -19,9 +23,18 @@ export type UseGlyphsOptions = {
 
   /**
    * Optional initial letter filter. If set,
-   * the first fetch will call `/glyphs/{letter}/` instead of `/glyphs/`.
+   * the first fetch will call `/glyphs/<formattype>/?letter=X`
+   * instead of `/glyphs/<formattype>/` (all letters).
    */
   initialLetter?: string;
+
+  /**
+   * Optional explicit formattype override ('png' | 'svg').
+   *
+   * - If provided, this value is used for all requests.
+   * - If omitted, the hook falls back to AppContext.activeGlyphFormat.
+   */
+  formattype?: GlyphFormatType;
 };
 
 export type UseGlyphsResult = {
@@ -32,9 +45,17 @@ export type UseGlyphsResult = {
 
   /**
    * Currently active letter filter (if any).
-   * For `/glyphs/` (all), this is an empty string.
+   * For `/glyphs/<formattype>/` (all), this is an empty string.
    */
   letter: string;
+
+  /**
+   * Effective formattype used by this hook ('png' | 'svg').
+   * This is either:
+   *   - options.formattype, if set
+   *   - otherwise AppContext.activeGlyphFormat (normalized)
+   */
+  formattype: GlyphFormatType;
 
   /**
    * Fetch glyphs for the whole job or for a given letter.
@@ -45,7 +66,7 @@ export type UseGlyphsResult = {
   fetchGlyphs: (opts?: { letter?: string }) => Promise<void>;
 
   /**
-   * Select a default variant for a given letter.
+   * Select a default variant for a given letter in the current formattype.
    *
    * Payload must match GlyphVariantSelectionSerializer:
    *   { glyph_id?: number; variant_index?: number }
@@ -58,8 +79,12 @@ export type UseGlyphsResult = {
   ) => Promise<void>;
 
   /**
-   * Upload a single glyph PNG coming from the canvas editor.
-   * Backed by POST /jobs/{sid}/glyphs/from-editor/.
+   * Upload a single glyph coming from the editor.
+   *
+   * - If formattype='png' → POST /jobs/{sid}/glyphs/png/upload/
+   *   (blob should be image/png)
+   * - If formattype='svg' → POST /jobs/{sid}/glyphs/svg/upload/
+   *   (blob should contain an SVG file)
    *
    * Returns the created Glyph on success.
    */
@@ -70,8 +95,27 @@ export default function useGlyphs(
   sid: string,
   options: UseGlyphsOptions = {},
 ): UseGlyphsResult {
-  const { manual = false, initialLetter = '' } = options;
+  const {
+    manual = false,
+    initialLetter = '',
+    formattype: overrideFormattype,
+  } = options;
+
   const { token } = useUser();
+  const { activeGlyphFormat } = useApp();
+
+  // Resolve effective formattype:
+  // 1) explicit override from hook options
+  // 2) otherwise AppContext.activeGlyphFormat
+  // 3) fallback 'png'
+  const formattype: GlyphFormatType =
+    overrideFormattype === 'svg' || overrideFormattype === 'png'
+      ? overrideFormattype
+      : ((
+          (activeGlyphFormat || '').toLowerCase() === 'svg'
+            ? 'svg'
+            : 'png'
+        ) as GlyphFormatType);
 
   const [glyphs, setGlyphs] = useState<Glyph[]>([]);
   const [letter, setLetter] = useState<string>(initialLetter);
@@ -89,6 +133,8 @@ export default function useGlyphs(
         time,
         'sid=',
         sid,
+        'formattype=',
+        formattype,
         'letter=',
         nextLetter || '(all)',
       );
@@ -114,19 +160,20 @@ export default function useGlyphs(
 
       const headers = authHeaders(token);
       const encodedSid = encodeURIComponent(sid);
+      const encodedFmt = encodeURIComponent(formattype);
 
       // Persist the new letter filter in state if it was provided.
       if (typeof opts?.letter === 'string') {
         setLetter(nextLetter);
       }
 
-      const baseUrl =
-        nextLetter && nextLetter.length > 0
-          ? `/jobs/${encodedSid}/glyphs/${encodeURIComponent(nextLetter)}/`
-          : `/jobs/${encodedSid}/glyphs/`;
+      let url = `/jobs/${encodedSid}/glyphs/${encodedFmt}/`;
+      if (nextLetter && nextLetter.length > 0) {
+        url += `?letter=${encodeURIComponent(nextLetter)}`;
+      }
 
       try {
-        const res = await apiApp.get<Glyph[]>(baseUrl, { headers });
+        const res = await apiApp.get<Glyph[]>(url, { headers });
         setGlyphs(res.data);
         setIsLoading(false);
       } catch (e) {
@@ -147,7 +194,7 @@ export default function useGlyphs(
         return Promise.reject(appErr);
       }
     },
-    [sid, token, letter],
+    [sid, token, letter, formattype],
   );
 
   const selectDefault = useCallback(
@@ -159,6 +206,8 @@ export default function useGlyphs(
       console.log(
         '[beefont/useGlyphs] selectDefault sid=',
         sid,
+        'formattype=',
+        formattype,
         'letter=',
         trimmedLetter,
         'selection=',
@@ -178,7 +227,7 @@ export default function useGlyphs(
         return Promise.reject(err);
       }
 
-      // Simple validation mirroring the backend:
+      // Validation mirroring backend:
       // at least one of glyph_id / variant_index must be present.
       if (
         selection.glyph_id == null &&
@@ -200,13 +249,14 @@ export default function useGlyphs(
 
       const headers = authHeaders(token);
       const encodedSid = encodeURIComponent(sid);
+      const encodedFmt = encodeURIComponent(formattype);
       const encodedLetter = encodeURIComponent(trimmedLetter);
-      const url = `/jobs/${encodedSid}/glyphs/${encodedLetter}/select/`;
+      const url = `/jobs/${encodedSid}/glyphs/${encodedFmt}/${encodedLetter}/select/`;
 
       try {
         await apiApp.post(url, selection, { headers });
 
-        // On success, refresh glyphs for this letter.
+        // On success, refresh glyphs for this letter (same formattype).
         await fetchGlyphs({ letter: trimmedLetter });
 
         setIsUpdating(false);
@@ -227,7 +277,7 @@ export default function useGlyphs(
         return Promise.reject(appErr);
       }
     },
-    [sid, token, fetchGlyphs],
+    [sid, token, formattype, fetchGlyphs],
   );
 
   const uploadGlyphFromEditor = useCallback(
@@ -236,6 +286,8 @@ export default function useGlyphs(
       console.log(
         '[beefont/useGlyphs] uploadGlyphFromEditor sid=',
         sid,
+        'formattype=',
+        formattype,
         'letter=',
         trimmed,
       );
@@ -279,11 +331,14 @@ export default function useGlyphs(
 
       const headers = authHeaders(token);
       const encodedSid = encodeURIComponent(sid);
-      const url = `/jobs/${encodedSid}/upload/glyph-png/`;
+      const encodedFmt = encodeURIComponent(formattype);
+      const url = `/jobs/${encodedSid}/glyphs/${encodedFmt}/upload/`;
+
+      const extension = formattype === 'svg' ? 'svg' : 'png';
 
       const formData = new FormData();
       formData.append('letter', trimmed);
-      formData.append('file', blob, `${trimmed}.png`);
+      formData.append('file', blob, `${trimmed}.${extension}`);
 
       try {
         const res = await apiApp.post<Glyph>(url, formData, {
@@ -318,7 +373,7 @@ export default function useGlyphs(
         return Promise.reject(appErr);
       }
     },
-    [sid, token, letter],
+    [sid, token, letter, formattype],
   );
 
   // Automatic initial load, unless caller wants full manual control.
@@ -335,6 +390,7 @@ export default function useGlyphs(
     isUpdating,
     error,
     letter,
+    formattype,
     fetchGlyphs,
     selectDefault,
     uploadGlyphFromEditor,

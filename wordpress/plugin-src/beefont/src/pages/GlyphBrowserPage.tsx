@@ -1,10 +1,11 @@
+// src/pages/GlyphBrowserPage.tsx
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import useGlyphs from '@hooks/useGlyphs';
-import useGlyphsZip from '@hooks/useGlyphsZip';
+import useGlyphsZip, { type GlyphFormat } from '@hooks/useGlyphsZip';
 
 import GlyphVariantsGrid from '@components/GlyphVariantsGrid';
 import DefaultGlyphGrid from '@components/DefaultGlyphGrid';
@@ -22,7 +23,7 @@ const GlyphBrowserPage: React.FC = () => {
   const initialLetter = searchParams.get('letter') ?? '';
 
   // 2) Active job from global context
-  const { activeJob } = useApp();
+  const { activeJob,activeGlyphFormat } = useApp();
 
   // 3) Effective sid: URL wins, otherwise fall back to activeJob
   const effectiveSid = useMemo(
@@ -46,6 +47,9 @@ const GlyphBrowserPage: React.FC = () => {
   // View mode – per-letter variants vs default overview
   const [viewMode, setViewMode] = useState<ViewMode>('variants');
 
+  // Format used for ZIP import/export (not yet for the grids)
+  // const [glyphFormat, setGlyphFormat] = useState<GlyphFormat>('png');
+
   const {
     glyphs,
     letter,
@@ -59,7 +63,7 @@ const GlyphBrowserPage: React.FC = () => {
     initialLetter,
   });
 
-  // ZIP import/export hook
+  // ZIP import/export hook – now format-aware
   const {
     isDownloadingDefault,
     isDownloadingAll,
@@ -68,7 +72,7 @@ const GlyphBrowserPage: React.FC = () => {
     downloadDefaultZip,
     downloadAllZip,
     uploadGlyphsZip,
-  } = useGlyphsZip(effectiveSid);
+  } = useGlyphsZip(effectiveSid, activeGlyphFormat ); // glyphFormat);
 
   const errorText = useMemo(
     () => {
@@ -206,7 +210,7 @@ const GlyphBrowserPage: React.FC = () => {
     e.target.value = '';
 
     const ok = window.confirm(
-      'Upload glyph ZIP for this job? Existing glyph variants will be kept; new files will be added with new indices.',
+      `Upload ${activeGlyphFormat.toUpperCase()} glyph ZIP for this job? Existing glyph variants will be kept; new files will be added with new indices.`,
     );
     if (!ok) return;
 
@@ -240,6 +244,35 @@ const GlyphBrowserPage: React.FC = () => {
       <section className="bf-panel bf-panel--compact">
         <div className="bf-panel__header">
           <h2>Glyph ZIP tools</h2>
+
+          <div className="bf-toggle bf-toggle--compact">
+            <span className="bf-glyph-browser__controls-label">
+              Format
+            </span>
+            {/* <button
+              type="button"
+              className={
+                'bf-button bf-button--tiny' +
+                (glyphFormat === 'png' ? ' bf-button--primary' : '')
+              }
+              onClick={() => setGlyphFormat('png')}
+              disabled={anyZipBusy}
+            >
+              PNG
+            </button>
+            <button
+              type="button"
+              className={
+                'bf-button bf-button--tiny' +
+                (glyphFormat === 'svg' ? ' bf-button--primary' : '')
+              }
+              onClick={() => setGlyphFormat('svg')}
+              disabled={anyZipBusy}
+            >
+              SVG
+            </button> */}
+          </div>
+
           {anyZipBusy && (
             <span className="bf-panel__status">
               {isDownloadingDefault && 'Downloading default glyphs… '}
@@ -256,7 +289,7 @@ const GlyphBrowserPage: React.FC = () => {
             onClick={downloadDefaultZip}
             disabled={anyZipBusy}
           >
-            Download default glyphs (ZIP)
+            Download default glyphs ({activeGlyphFormat.toUpperCase()}) ZIP
           </button>
           <button
             type="button"
@@ -264,11 +297,11 @@ const GlyphBrowserPage: React.FC = () => {
             onClick={downloadAllZip}
             disabled={anyZipBusy}
           >
-            Download all glyphs (ZIP)
+            Download all glyphs ({activeGlyphFormat.toUpperCase()}) ZIP
           </button>
 
           <label className="bf-button bf-button--small">
-            Upload glyph ZIP…
+            Upload glyph ZIP ({activeGlyphFormat.toUpperCase()})…
             <input
               type="file"
               accept=".zip,application/zip"
@@ -279,9 +312,19 @@ const GlyphBrowserPage: React.FC = () => {
         </div>
 
         <p className="bf-panel__hint">
-          Download the glyphs for external editing, then upload a ZIP with PNGs named
-          like <code>A.png</code> or <code>A_v2.png</code>. Each file will be imported
-          as a new variant <code>LETTER_v&lt;j&gt;.png</code> for this job.
+          {activeGlyphFormat === 'png' ? (
+            <>
+              Download the PNG glyphs for external editing, then upload a ZIP with PNGs named
+              like <code>A.png</code> or <code>A_v2.png</code>. Each file will be imported
+              as a new variant <code>LETTER_v&lt;j&gt;.png</code> for this job.
+            </>
+          ) : (
+            <>
+              Download the SVG glyphs for external editing, then upload a ZIP with SVGs named
+              like <code>A.svg</code> or <code>A_v2.svg</code>. Each file will be imported
+              as a new variant <code>LETTER_v&lt;j&gt;.svg</code> for this job.
+            </>
+          )}
         </p>
       </section>
 

@@ -11,12 +11,14 @@ import { useJobRename } from '@hooks/useJobRename';
 import LanguageStatusList from '@components/LanguageStatusList';
 import PagesTable from '@components/PagesTable';
 import FontBuildsPanel from '@components/FontBuildsPanel';
+import { useApp } from '@context/AppContext';
 
 import { friendlyMessage, type AppError } from '@bee/common/error';
 
 const JobDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { activeGlyphFormat } = useApp();
 
   const sid = searchParams.get('sid') ?? '';
 
@@ -237,10 +239,12 @@ const JobDetailPage: React.FC = () => {
                     : 'n/a'}
                 </dd>
               </div>
-              <div className="bf-definition-list__row">
-                <dt>Pages</dt>
-                <dd>{job.page_count}</dd>
-              </div>
+              {activeGlyphFormat === 'png' && (
+                <div className="bf-definition-list__row">
+                  <dt>Pages</dt>
+                  <dd>{job.page_count}</dd>
+                </div>
+              )}
               <div className="bf-definition-list__row">
                 <dt>Glyphs</dt>
                 <dd>{job.glyph_count}</dd>
@@ -312,36 +316,41 @@ const JobDetailPage: React.FC = () => {
           </section>
 
           {/* Pages */}
-          <section className="bf-panel bf-panel--pages">
-            <div className="bf-panel__header">
-              <h2>Pages</h2>
-              {(isAnalysing || isDeleting) && (
-                <span className="bf-panel__status">
-                  {isAnalysing ? 'Re-analysing… ' : ''}
-                  {isDeleting ? 'Deleting…' : ''}
-                </span>
-              )}
-            </div>
+          {activeGlyphFormat === 'png' && (
+            <section className="bf-panel bf-panel--pages">
+              <div className="bf-panel__header">
+                <h2>Pages</h2>
+                {(isAnalysing || isDeleting) && (
+                  <span className="bf-panel__status">
+                    {isAnalysing ? 'Re-analysing… ' : ''}
+                    {isDeleting ? 'Deleting…' : ''}
+                  </span>
+                )}
+              </div>
 
-            <PagesTable
-              pages={pages}
-              onOpenDebug={handleOpenDebugForPage}
-              onRetryAnalysis={handleRetryAnalysis}
-              onDelete={handleDeletePage}
-            />
-          </section>
+              <PagesTable
+                pages={pages}
+                onOpenDebug={handleOpenDebugForPage}
+                onRetryAnalysis={handleRetryAnalysis}
+                onDelete={handleDeletePage}
+              />
+            </section>
+          )}
 
           {/* Job-level actions */}
           <section className="bf-panel bf-panel--actions">
             <h2>Job actions</h2>
             <div className="bf-panel__actions">
-              <button
-                type="button"
-                className="bf-button"
-                onClick={handleOpenPrintUpload}
-              >
-                Add pages for a language
-              </button>
+              {activeGlyphFormat === 'png' ? (
+                <button
+                  type="button"
+                  className="bf-button"
+                  onClick={handleOpenPrintUpload}
+                >
+                  Add pages for a language
+                </button>
+              ) : null}
+
               <button
                 type="button"
                 className="bf-button"
@@ -351,6 +360,7 @@ const JobDetailPage: React.FC = () => {
               </button>
             </div>
           </section>
+
 
           {/* Font builds for this job */}
           <FontBuildsPanel sid={sid} />

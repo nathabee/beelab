@@ -699,6 +699,8 @@ dcdjreseed [mode] [cores]
     dcdjreseed --flush CompetenceCore
     dcdjreseed --hard
     dcdjreseed PomoloBeeCore UserCore
+    # force reseed 
+    dcdjreseed --hard user beefont pomolobee competence
 
 ###### TESTS (dev only) ####
 dtup / dtdown        # start/stop test stack

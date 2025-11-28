@@ -36,14 +36,23 @@ class JobPageInline(admin.TabularInline):
 class FontBuildInline(admin.TabularInline):
     model = FontBuild
     extra = 0
-    fields = ("language", "created_at", "success", "ttf_path")
+    # show glyph_formattype here as well
+    fields = ("language", "glyph_formattype", "created_at", "success", "ttf_path")
     readonly_fields = ("created_at", "log")
     ordering = ("-created_at",)
 
 
 @admin.register(FontJob)
 class FontJobAdmin(admin.ModelAdmin):
-    list_display = ("name", "sid", "user", "base_family", "created_at", "page_count", "glyph_count")
+    list_display = (
+        "name",
+        "sid",
+        "user",
+        "base_family",
+        "created_at",
+        "page_count",
+        "glyph_count",
+    )
     search_fields = ("name", "sid", "user__username", "user__email")
     list_filter = ("base_family", "created_at")
     readonly_fields = ("created_at",)
@@ -52,23 +61,34 @@ class FontJobAdmin(admin.ModelAdmin):
 
     def page_count(self, obj):
         return obj.pages.count()
+
     page_count.short_description = "Pages"
 
     def glyph_count(self, obj):
         return obj.glyphs.count()
+
     glyph_count.short_description = "Glyphs"
 
 
 class GlyphInline(admin.TabularInline):
     model = Glyph
     extra = 0
-    fields = ("letter", "variant_index", "cell_index", "image_path", "is_default")
-    ordering = ("letter", "variant_index")
+    # include formattype here to see PNG/SVG at a glance
+    fields = ("letter", "variant_index", "formattype", "cell_index", "image_path", "is_default")
+    ordering = ("letter", "formattype", "variant_index")
 
 
 @admin.register(JobPage)
 class JobPageAdmin(admin.ModelAdmin):
-    list_display = ("id", "job", "page_index", "template", "scan_image_path", "analysed_at", "created_at")
+    list_display = (
+        "id",
+        "job",
+        "page_index",
+        "template",
+        "scan_image_path",
+        "analysed_at",
+        "created_at",
+    )
     list_filter = ("template", "analysed_at", "created_at")
     search_fields = ("job__sid", "job__name", "scan_image_path", "letters")
     readonly_fields = ("created_at",)
@@ -78,19 +98,30 @@ class JobPageAdmin(admin.ModelAdmin):
 
 @admin.register(Glyph)
 class GlyphAdmin(admin.ModelAdmin):
-    list_display = ("job", "letter", "variant_index", "page", "cell_index", "is_default")
-    list_filter = ("job", "letter", "is_default")
+    # show formattype + default flag
+    list_display = (
+        "job",
+        "letter",
+        "variant_index",
+        "formattype",
+        "page",
+        "cell_index",
+        "is_default",
+    )
+    list_filter = ("job", "letter", "formattype", "is_default")
     search_fields = ("job__sid", "job__name", "letter", "image_path")
-    ordering = ("job", "letter", "variant_index")
+    ordering = ("job", "letter", "formattype", "variant_index")
 
 
 @admin.register(FontBuild)
 class FontBuildAdmin(admin.ModelAdmin):
-    list_display = ("job", "language", "created_at", "success", "ttf_path_short")
-    list_filter = ("language", "success", "created_at")
+    # glyph_formattype exposed here
+    list_display = ("job", "language", "glyph_formattype", "created_at", "success", "ttf_path_short")
+    list_filter = ("language", "glyph_formattype", "success", "created_at")
     search_fields = ("job__sid", "job__name", "language__code", "ttf_path", "log")
     readonly_fields = ("created_at",)
 
     def ttf_path_short(self, obj):
-        return obj.ttf_path.split("/")[-1]
+        return obj.ttf_path.split("/")[-1] if obj.ttf_path else ""
+
     ttf_path_short.short_description = "TTF file"

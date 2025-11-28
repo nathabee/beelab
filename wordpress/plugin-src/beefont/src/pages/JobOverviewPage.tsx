@@ -14,7 +14,7 @@ import type { FontJob } from '@mytypes/fontJob';
 const JobOverviewPage: React.FC = () => {
   const navigate = useNavigate();
   const { jobs, isLoading, isDeleting, error, deleteJob, createJob } = useJobs();
-  const { setActiveJob } = useApp();
+  const {    setActiveJob,    activeGlyphFormat,    setActiveGlyphFormat  } = useApp();
 
   const [isCreating, setIsCreating] = useState(false);
 
@@ -66,20 +66,30 @@ const JobOverviewPage: React.FC = () => {
     });
   };
 
+  const handleToggleDefaultFormat = () => {
+    setActiveGlyphFormat(
+      activeGlyphFormat === 'png' ? 'svg' : 'png',
+    );
+  };
+
+  const formatLabel =
+    activeGlyphFormat === 'png' ? 'PNG' : 'SVG';
+
   return (
     <section className="bf-page bf-page--job-overview">
       <header className="bf-page__header">
         <h1>BeeFont – Jobs</h1>
-         
+
         {isLoggedIn ? (
-          <p>Hi {user.username} !
+          <p>
+            Hi {user.username} !
           </p>
         ) : (
           <p>
             You are not logged in. Use the <code>/login</code> route to start a standard or demo session.
           </p>
-        )} 
-        
+        )}
+
         <p className="bf-page__subtitle">
           Your font projects. Open a job to manage pages, glyphs, and builds.
         </p>
@@ -98,7 +108,14 @@ const JobOverviewPage: React.FC = () => {
       )}
 
       {!isLoading && !error && (
-        <div className="bf-page__toolbar mb-3">
+        <div
+          className="bf-page__toolbar mb-3"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+          }}
+        >
           <Button
             variant="primary"
             className="mt-2"
@@ -107,6 +124,26 @@ const JobOverviewPage: React.FC = () => {
           >
             {isCreating ? 'Creating…' : 'New job'}
           </Button>
+
+          <div
+            style={{
+              marginLeft: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <span>
+              Default format is <strong>{formatLabel}</strong>
+            </span>
+            <button
+              type="button"
+              className="bf-button bf-button--small"
+              onClick={handleToggleDefaultFormat}
+            >
+              Switch to {activeGlyphFormat === 'png' ? 'SVG' : 'PNG'}
+            </button>
+          </div>
         </div>
       )}
 

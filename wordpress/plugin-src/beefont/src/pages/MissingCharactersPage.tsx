@@ -1,13 +1,15 @@
 // src/pages/MissingCharactersPage.tsx
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import useMissingCharacters from '@hooks/useMissingCharacters';
 import AlphabetGrid, { type AlphabetCell } from '@components/AlphabetGrid';
 
 import { friendlyMessage, type AppError } from '@bee/common/error';
+import type { GlyphFormat } from '@hooks/useGlyphsZip'; // 'png' | 'svg'
+import { useApp } from '@context/AppContext';
 
 const MissingCharactersPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -15,6 +17,22 @@ const MissingCharactersPage: React.FC = () => {
 
   const sid = searchParams.get('sid') ?? '';
   const language = searchParams.get('language') ?? '';
+  const urlFormattypeRaw = (searchParams.get('formattype') ?? '').toLowerCase();
+
+  const { activeGlyphFormat, setActiveGlyphFormat } = useApp();
+
+  // Effective format:
+  // 1) ?formattype=png|svg overrides
+  // 2) otherwise global activeGlyphFormat
+  const effectiveFormat: GlyphFormat =
+    urlFormattypeRaw === 'png' || urlFormattypeRaw === 'svg'
+      ? (urlFormattypeRaw as GlyphFormat)
+      : activeGlyphFormat;
+
+  const formatLabel = effectiveFormat.toUpperCase();
+
+  // Prevent repeated identical requests (helps with StrictMode double mounts)
+  const lastRequestKeyRef = useRef<string | null>(null);
 
   const {
     status,
@@ -23,13 +41,27 @@ const MissingCharactersPage: React.FC = () => {
     error,
     fetchStatus,
   } = useMissingCharacters(sid || '', language || '', {
-    manual: false,
+    manual: true,
+    format: effectiveFormat,
   });
 
   const errorText = useMemo(
     () => (error ? friendlyMessage(error as AppError) : null),
     [error],
   );
+
+  // Initial + on-change fetch, deduped
+  useEffect(() => {
+    if (!sid || !language) return;
+
+    const key = `${sid}:${language}:${effectiveFormat}`;
+    if (lastRequestKeyRef.current === key) return;
+    lastRequestKeyRef.current = key;
+
+    fetchStatus().catch(err => {
+      console.error('[MissingCharactersPage] auto fetchStatus failed:', err);
+    });
+  }, [sid, language, effectiveFormat, fetchStatus]);
 
   if (!sid || !language) {
     return (
@@ -54,12 +86,41 @@ const MissingCharactersPage: React.FC = () => {
     }));
   }, [status]);
 
-  const handlePlanPages = () => {
-    if (!status || !status.missing_chars) {
-      // Should not happen because button is disabled when missingCells.length === 0,
-      // but be defensive.
-      return;
-    }
+  const handleRefresh = () => {
+    const key = `${sid}:${language}:${effectiveFormat}`;
+    lastRequestKeyRef.current = key;
+
+    fetchStatus().catch(err => {
+      console.error('[MissingCharactersPage] fetchStatus failed:', err);
+    });
+  };
+
+  /**
+   * “Create next glyph”:
+   * - picks the first missing character from the status
+   * - aligns global activeGlyphFormat with the effective format of this page
+   * - navigates to GlyphEditorPage with ?letter=...
+   * GlyphEditorPage itself chooses PNG/SVG editor based on activeGlyphFormat.
+   */
+  const handleCreateNextGlyph = () => {
+    if (!status || !status.missing_chars) return;
+    const nextLetter = status.missing_chars[0];
+    if (!nextLetter) return;
+
+    // make sure the editor uses the same format as this status page
+    setActiveGlyphFormat(effectiveFormat);
+
+    navigate(
+      `/glypheditor?letter=${encodeURIComponent(nextLetter)}`,
+    );
+  };
+
+  /**
+   * Old behaviour: plan pages for PNG mode.
+   * Only meaningful for PNG, so we keep it PNG-only.
+   */
+  const handlePlanPagesPng = () => {
+    if (!status || !status.missing_chars) return;
 
     const missingLetters = status.missing_chars;
 
@@ -72,14 +133,16 @@ const MissingCharactersPage: React.FC = () => {
     );
   };
 
+  const anyBusy = isLoading || isRefreshing;
 
   return (
     <section className="bf-page bf-page--missing-characters">
       <header className="bf-page__header">
         <h1>BeeFont – Missing characters</h1>
         <p className="bf-page__subtitle">
-          Inspect which characters are still missing for this language and plan
-          new pages.
+          Inspect which characters are still missing for this language in the{' '}
+          <strong>{formatLabel}</strong> default glyph set, and either create new
+          glyphs directly in the editor or (for PNG) plan new template pages.
         </p>
       </header>
 
@@ -92,7 +155,8 @@ const MissingCharactersPage: React.FC = () => {
       <section className="bf-panel">
         <div className="bf-panel__header">
           <h2>Status</h2>
-          {(isLoading || isRefreshing) && (
+
+          {anyBusy && (
             <span className="bf-panel__status">
               {isLoading ? 'Loading… ' : ''}
               {isRefreshing ? 'Refreshing…' : ''}
@@ -105,6 +169,10 @@ const MissingCharactersPage: React.FC = () => {
             <div className="bf-definition-list__row">
               <dt>Language</dt>
               <dd>{status.language}</dd>
+            </div>
+            <div className="bf-definition-list__row">
+              <dt>Format</dt>
+              <dd>{formatLabel}</dd>
             </div>
             <div className="bf-definition-list__row">
               <dt>Ready</dt>
@@ -129,23 +197,18 @@ const MissingCharactersPage: React.FC = () => {
           <button
             type="button"
             className="bf-button bf-button--small"
-            onClick={() => {
-              fetchStatus().catch(err => {
-                console.error(
-                  '[MissingCharactersPage] fetchStatus failed:',
-                  err,
-                );
-              });
-            }}
-            disabled={isLoading || isRefreshing}
+            onClick={handleRefresh}
+            disabled={anyBusy}
           >
-            Refresh status
+            Refresh status ({formatLabel})
           </button>
         </div>
       </section>
 
       <section className="bf-panel">
-        <h2>Missing characters</h2>
+        <h2>
+          Missing characters ({formatLabel})
+        </h2>
 
         {isLoading && missingCells.length === 0 && (
           <div className="bf-loading">
@@ -154,7 +217,11 @@ const MissingCharactersPage: React.FC = () => {
         )}
 
         {!isLoading && missingCells.length === 0 && status && status.ready && (
-          <p>This language is complete. No characters are missing.</p>
+          <p>
+            This language is complete for{' '}
+            <strong>{formatLabel}</strong> defaults. No characters
+            are missing.
+          </p>
         )}
 
         {!isLoading &&
@@ -163,14 +230,15 @@ const MissingCharactersPage: React.FC = () => {
           !status.ready &&
           !status.missing_chars && (
             <p>
-              Language is not ready, but the backend did not provide a list of
-              missing characters.
+              Language is not ready for{' '}
+              <strong>{formatLabel}</strong>, but the backend did
+              not provide a list of missing characters.
             </p>
           )}
 
         {missingCells.length > 0 && (
           <AlphabetGrid
-            title="Missing characters"
+            title={`Missing characters (${formatLabel})`}
             items={missingCells}
           />
         )}
@@ -179,12 +247,22 @@ const MissingCharactersPage: React.FC = () => {
           <button
             type="button"
             className="bf-button"
-            onClick={handlePlanPages}
+            onClick={handleCreateNextGlyph}
             disabled={missingCells.length === 0}
           >
-            Create pages for missing characters
+            Create next glyph in editor ({formatLabel})
           </button>
 
+          {effectiveFormat === 'png' && (
+            <button
+              type="button"
+              className="bf-button bf-button--secondary"
+              onClick={handlePlanPagesPng}
+              disabled={missingCells.length === 0}
+            >
+              Create pages for all missing characters (PNG)
+            </button>
+          )}
         </div>
       </section>
     </section>

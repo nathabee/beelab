@@ -2,10 +2,14 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.db import models
- 
+from django.db.models import Q
+
+
+
 
 def generate_sid():
     return uuid4().hex
+
 
 class SupportedLanguage(models.Model):
     code = models.CharField(max_length=8, primary_key=True)  # 'de', 'fr', 'en', 'de-CH'...
@@ -19,7 +23,7 @@ class SupportedLanguage(models.Model):
 
     def __str__(self) -> str:
         return f"{self.code} – {self.name}"
- 
+
 
 class TemplateDefinition(models.Model):
     code = models.CharField(max_length=50, primary_key=True)  # z.B. 'A4_6x5'
@@ -62,7 +66,6 @@ class TemplateDefinition(models.Model):
         return self.rows * self.cols
 
 
-
 class FontJob(models.Model):
     id = models.AutoField(primary_key=True)
     sid = models.CharField(
@@ -70,7 +73,11 @@ class FontJob(models.Model):
         unique=True,
         default=generate_sid,
     )
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="font_jobs") 
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="font_jobs",
+    )
 
     name = models.CharField(max_length=200)
     base_family = models.CharField(max_length=200, blank=True)
@@ -83,7 +90,6 @@ class FontJob(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} [{self.sid}]"
-
 
 
 class JobPage(models.Model):
@@ -120,10 +126,19 @@ class JobPage(models.Model):
         return f"Job {self.job.sid} – Page {self.page_index} ({self.template.code})"
 
 
+class GlyphFormatType(models.TextChoices):
+    PNG = "png", "PNG bitmap"
+    SVG = "svg", "SVG vector"
+
+
 class Glyph(models.Model):
     """
     Eine konkrete Glyph-Variante für einen Buchstaben eines Jobs,
     geschnitten aus einer bestimmten JobPage und Zelle.
+ 
+    - formattype unterscheidet PNG-basierte und SVG-basierte Varianten.
+    - is_default gilt pro (job, letter, formattype); es kann also
+      z.B. einen Default-PNG und einen Default-SVG für dasselbe Zeichen geben.
     """
 
     id = models.AutoField(primary_key=True)
@@ -138,25 +153,49 @@ class Glyph(models.Model):
     # welcher Buchstabe ist hier gezeichnet?
     letter = models.CharField(max_length=8)  # 'B', 'D', 'Ä', 'É', etc.
 
-    # Variante für diesen Buchstaben, z.B. 3 = aus Seite 3 = "B_3"
+    # Variante für diesen Buchstaben innerhalb eines formattype
+    # (z.B. 3 = dritte Variante dieses Buchstabens im angegebenen formattype)
     variant_index = models.IntegerField()
 
-    image_path = models.CharField(max_length=512)  # z.B. ".../B_3.png"
+    # Speichert den Pfad zur Bild-/Vektordatei (z.B. ".../B_3.png" oder ".../B_3.svg")
+    image_path = models.CharField(max_length=512)
 
+    # Welches technische formattype hat diese Variante?
+    formattype = models.CharField(
+        max_length=8,
+        choices=GlyphFormatType.choices,
+        default=GlyphFormatType.PNG,
+    )
+
+    # Default innerhalb (job, letter, formattype)
     is_default = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Glyph"
         verbose_name_plural = "Glyphs"
-        ordering = ["job", "letter", "variant_index"]
-        unique_together = ("job", "letter", "variant_index")
+        ordering = ["job", "letter", "formattype", "variant_index"]
+        unique_together = ("job", "letter", "formattype", "variant_index")
+        constraints = [
+            # Pro (job, letter, formattype) höchstens eine Default-Glyph
+            models.UniqueConstraint(
+                fields=["job", "letter", "formattype"],
+                condition=Q(is_default=True),
+                name="unique_default_glyph_per_job_letter_formattype",
+            )
+        ]
 
     def __str__(self) -> str:
         default_mark = " *" if self.is_default else ""
-        return f"{self.job.sid} – {self.letter}_{self.variant_index}{default_mark}"
+        return f"{self.job.sid} – {self.letter}_{self.variant_index} [{self.formattype}]{default_mark}"
 
 
 class FontBuild(models.Model):
+    """
+    Ein konkreter Font-Build für einen Job und eine Sprache.
+    Ab V3 wird zusätzlich gespeichert, ob der Build aus PNG- oder SVG-Glyphs
+    erzeugt wurde (glyph_formattype).
+    """
+
     job = models.ForeignKey(FontJob, on_delete=models.CASCADE, related_name="builds")
     language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -164,12 +203,20 @@ class FontBuild(models.Model):
     log = models.TextField(blank=True)
     success = models.BooleanField(default=True)
 
+    # Welches Glyphen-FormatType lag dem Build zugrunde?
+    glyph_formattype = models.CharField(
+        max_length=8,
+        choices=GlyphFormatType.choices,
+        default=GlyphFormatType.PNG,
+    )
+
     class Meta:
         verbose_name = "Font build"
         verbose_name_plural = "Font builds"
         ordering = ["-created_at"]
-        unique_together = ("job", "language")
+        # Pro Job/Sprache/Formattype nur ein aktueller Build-Eintrag
+        unique_together = ("job", "language", "glyph_formattype")
 
     def __str__(self) -> str:
         status = "ok" if self.success else "failed"
-        return f"Build {self.job.sid} [{self.language.code}] – {status}"
+        return f"Build {self.job.sid} [{self.language.code}, {self.glyph_formattype}] – {status}"

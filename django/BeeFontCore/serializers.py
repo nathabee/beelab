@@ -9,6 +9,7 @@ from .models import (
     JobPage,
     Glyph,
     FontBuild,
+    GlyphFormatType,
 )
 
 
@@ -109,6 +110,7 @@ class GlyphSerializer(serializers.ModelSerializer):
             "page_index",
             "image_path",
             "is_default",
+            "formattype"
         ]
         read_only_fields = ["id", "page_index", "image_path"]
 

@@ -1,6 +1,11 @@
 // src/mytype/glyph.ts
 
 /**
+ * GlyphFormat – mirrors Django GlyphFormat TextChoices ("png", "svg").
+ */
+export type GlyphFormat = 'png' | 'svg';
+
+/**
  * GlyphSerializer
  *
  * fields = [
@@ -10,6 +15,7 @@
  *   "cell_index",
  *   "page_index",
  *   "image_path",
+ *   "format",
  *   "is_default",
  * ]
  *
@@ -22,6 +28,7 @@ export interface Glyph {
   cell_index: number;
   page_index: number;
   image_path: string;
+  format: GlyphFormat;
   is_default: boolean;
 }
 
@@ -34,7 +41,7 @@ export type GlyphList = Glyph[];
  *   glyph_id?: number
  *   variant_index?: number
  *
- * Validierung: mindestens eines von beidem muss gesetzt sein.
+ * Validation: at least one of them must be set.
  */
 export interface GlyphVariantSelection {
   glyph_id?: number;

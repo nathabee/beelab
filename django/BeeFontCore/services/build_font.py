@@ -193,7 +193,7 @@ print("OK glyphs:", count)
     script_path.write_text(script, encoding="utf-8")
 
 
-def build_ttf(job, language, default_glyphs, out_ttf) -> None:
+def build_ttf_png (job, language, default_glyphs, out_ttf) -> None:
     """
     V3-Build:
 
@@ -282,3 +282,97 @@ def build_ttf(job, language, default_glyphs, out_ttf) -> None:
 
     if not out_ttf.is_file() or out_ttf.stat().st_size == 0:
         raise RuntimeError(f"build_ttf: FontForge hat keine gültige TTF erzeugt: {out_ttf}")
+
+
+
+def build_ttf_svg(job, language, default_glyphs, out_ttf) -> None:
+    """
+    V3-Build (SVG):
+
+    - `job`           : FontJob
+    - `language`      : SupportedLanguage (für Alphabet / Codepoints)
+    - `default_glyphs`: QuerySet[Glyph] (idealerweise schon nach letter__in gefiltert,
+                       und format='svg')
+    - `out_ttf`       : Zielpfad (Path oder str, absolut)
+
+    Mapping-Strategie:
+    - Glyph.letter ist genau ein Unicode-Zeichen (z.B. 'A', 'Ä', 'ß', 'é').
+    - Codepoint = ord(letter).
+
+    Unterschied zur PNG-Pipeline:
+    - Wir gehen davon aus, dass `image_path` direkt auf eine SVG-Datei zeigt.
+    - Keine Konvertierung über ImageMagick/potrace; wir kopieren nur in ein
+      temporäres Verzeichnis mit standardisiertem Namen "<LETTER>.svg".
+    """
+    media_root = Path(settings.MEDIA_ROOT)
+    out_ttf = Path(out_ttf)
+    out_ttf.parent.mkdir(parents=True, exist_ok=True)
+
+    alphabet = language.alphabet or ""
+    alphabet_chars = set(alphabet)
+
+    mapping: dict[str, int] = {}
+    svg_sources: dict[str, Path] = {}
+
+    for g in default_glyphs:
+        token = g.letter
+
+        # nur Buchstaben, die im Alphabet der Sprache vorkommen
+        if token not in alphabet_chars:
+            continue
+
+        # wir erwarten 1-Zeichen-Token; Multi-Token könntest du später mappen
+        if len(token) != 1:
+            continue
+
+        src = media_root / g.image_path
+        if not src.is_file():
+            continue
+
+        # Optional: nur .svg mitnehmen
+        if src.suffix.lower() != ".svg":
+            continue
+
+        if token not in svg_sources:
+            svg_sources[token] = src
+            mapping[token] = ord(token)
+
+    if not mapping:
+        raise RuntimeError(
+            f"build_ttf_svg: keine passenden SVG-Glyphen für Sprache {language.code} "
+            f"und Job {job.sid} gefunden."
+        )
+
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        svg_dir = td / "svg"
+        svg_dir.mkdir(parents=True, exist_ok=True)
+
+        # SVG-Dateien normiert nach "<LETTER>.svg" kopieren
+        for token, src in svg_sources.items():
+            dest_svg = svg_dir / f"{token}.svg"
+            shutil.copy2(src, dest_svg)
+
+        # FontForge-Script schreiben
+        script_path = td / "build_font_svg.py"
+        family = getattr(job, "base_family", None) or job.name or "BeeHand"
+        _write_fontforge_script(script_path, svg_dir, out_ttf, family, mapping)
+
+        # FontForge aufrufen
+        ff = _find_fontforge()
+        cmd = [ff, "-lang=py", "-script", str(script_path)]
+        proc = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if proc.returncode != 0:
+            raise RuntimeError(
+                f"fontforge failed ({ff})\n"
+                f"stdout:\n{proc.stdout}\n"
+                f"stderr:\n{proc.stderr}"
+            )
+
+    if not out_ttf.is_file() or out_ttf.stat().st_size == 0:
+        raise RuntimeError(f"build_ttf_svg: FontForge hat keine gültige TTF erzeugt: {out_ttf}")

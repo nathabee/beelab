@@ -184,18 +184,19 @@ echo "   3) Activate them in wp-admin."
 # --- load fixtures (best-effort) ---
 echo "📥 Loading Django fixtures (best-effort)..."
 set +e
-compose exec "$DJANGO_SVC" python manage.py seed_pomolobee --clear
-compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_groups.json
-compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_superuser.json
-compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_farms.json
-compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_fields.json
-compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_fruits.json
-compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_rows.json
+ompose exec "$DJANGO_SVC" python manage.py seed_all --clear
+#compose exec "$DJANGO_SVC" python manage.py seed_pomolobee --clear
+#compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_groups.json
+#compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_superuser.json
+#compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_farms.json
+#compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_fields.json
+#compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_fruits.json
+#compose exec "$DJANGO_SVC" python manage.py loaddata PomoloBeeCore/fixtures/initial_rows.json
 
-compose exec "$DJANGO_SVC" python manage.py seed_competence --clear
-compose exec "$DJANGO_SVC" python manage.py populate_data_init
-compose exec "$DJANGO_SVC" python manage.py create_groups_and_permissions
-compose exec "$DJANGO_SVC" python manage.py populate_demo
+#compose exec "$DJANGO_SVC" python manage.py seed_competence --clear
+#compose exec "$DJANGO_SVC" python manage.py populate_data_init
+#compose exec "$DJANGO_SVC" python manage.py create_groups_and_permissions
+#compose exec "$DJANGO_SVC" python manage.py populate_demo
 # compose exec "$DJANGO_SVC" python manage.py populate_translation
 set -e
 

@@ -7,11 +7,17 @@ import { apiApp, authHeaders, buildAppUrl } from '@utils/api';
 import { useUser } from '@bee/common';
 import { toAppError, errorBus, type AppError } from '@bee/common/error';
 import { useApp } from '@context/AppContext';
-
 import type { FontBuild, BuildRequestPayload } from '@mytypes/fontBuild';
+import type { GlyphFormat } from '@mytypes/glyph';
+ 
 
 export type UseFontBuildOptions = {
   manual?: boolean;
+  /**
+   * Default glyph format when building fonts if the caller
+   * does not provide an explicit format override.
+   */
+  defaultFormat?: GlyphFormat;
 };
 
 export type UseFontBuildResult = {
@@ -21,13 +27,21 @@ export type UseFontBuildResult = {
   error: AppError | null;
 
   fetchBuilds: () => Promise<void>;
-  buildLanguage: (languageCode: string) => Promise<FontBuild | null>;
+
+  /**
+   * Build a font for one language.
+   * If `format` is omitted, `defaultFormat` from options is used (default 'png').
+   */
+  buildLanguage: (
+    languageCode: string,
+    format?: GlyphFormat,
+  ) => Promise<FontBuild | null>;
 
   // URL helpers (keep for special cases / non-UI usage)
   getTtfDownloadUrl: (languageCode: string) => string;
   getZipDownloadUrl: () => string;
 
-  // NEW: actual authenticated download helpers for UI
+  // Authenticated download helpers for UI
   downloadTtf: (languageCode: string) => Promise<void>;
   downloadZip: () => Promise<void>;
 };
@@ -36,7 +50,7 @@ export default function useFontBuild(
   sidParam: string,
   options: UseFontBuildOptions = {},
 ): UseFontBuildResult {
-  const { manual = false } = options;
+  const { manual = false, defaultFormat = 'png' } = options;
   const { token } = useUser();
   const { activeJob } = useApp();
 
@@ -56,8 +70,9 @@ export default function useFontBuild(
       sidParam,
       activeJobSid: activeJob?.sid ?? null,
       effectiveSid: sid,
+      defaultFormat,
     });
-  }, [sidParam, activeJob, sid]);
+  }, [sidParam, activeJob, sid, defaultFormat]);
 
   const fetchBuilds = useCallback(async (): Promise<void> => {
     const time = new Date().toLocaleTimeString('de-DE', { hour12: false });
@@ -118,13 +133,20 @@ export default function useFontBuild(
   }, [sid, token]);
 
   const buildLanguage = useCallback(
-    async (languageCode: string): Promise<FontBuild | null> => {
-      const trimmed = languageCode.trim();
+    async (
+      languageCode: string,
+      formatOverride?: GlyphFormat,
+    ): Promise<FontBuild | null> => {
+      const trimmedLang = languageCode.trim();
+      const effectiveFormat: GlyphFormat = formatOverride ?? defaultFormat ?? 'png';
+
       console.log(
         '[beefont/useFontBuild] buildLanguage sid=',
         sid,
         'language=',
-        trimmed,
+        trimmedLang,
+        'format=',
+        effectiveFormat,
       );
 
       if (!sid) {
@@ -156,9 +178,15 @@ export default function useFontBuild(
 
       const headers = authHeaders(token);
       const encodedSid = encodeURIComponent(sid);
-      const url = `/jobs/${encodedSid}/build-ttf/`;
+      const encodedLang = encodeURIComponent(trimmedLang);
+      const encodedFormat = encodeURIComponent(effectiveFormat);
 
-      const payload: BuildRequestPayload = { language: trimmed };
+      // New backend route:
+      // POST /jobs/<sid>/build-ttf/<language>/<format>/
+      const url = `/jobs/${encodedSid}/build-ttf/${encodedLang}/${encodedFormat}/`;
+
+      // Backend now gets language + format from the path; body can be empty
+      const payload: Partial<BuildRequestPayload> = {};
 
       try {
         const res = await apiApp.post<FontBuild>(url, payload, { headers });
@@ -189,10 +217,10 @@ export default function useFontBuild(
         return Promise.reject(appErr);
       }
     },
-    [sid, token],
+    [sid, token, defaultFormat],
   );
 
-  // URL helpers – keep them, but don't use them directly in <a href> to the API
+  // URL helpers – unchanged, still format-agnostic for downloads
   const getTtfDownloadUrl = useCallback(
     (languageCode: string): string => {
       if (!sid) return '';
@@ -221,7 +249,7 @@ export default function useFontBuild(
     window.URL.revokeObjectURL(url);
   };
 
-  // NEW: authenticated ZIP download
+  // Authenticated ZIP download
   const downloadZip = useCallback(async (): Promise<void> => {
     if (!sid) {
       const err = toAppError(new Error('No job SID provided'), {
@@ -273,7 +301,7 @@ export default function useFontBuild(
     }
   }, [sid, token]);
 
-  // NEW: authenticated TTF download for one language
+  // Authenticated TTF download for one language
   const downloadTtf = useCallback(
     async (languageCode: string): Promise<void> => {
       const lang = languageCode.trim();
@@ -351,7 +379,7 @@ export default function useFontBuild(
     buildLanguage,
     getTtfDownloadUrl,
     getZipDownloadUrl,
-    downloadTtf,   // NEW
-    downloadZip,   // NEW
+    downloadTtf,
+    downloadZip,
   };
 }
