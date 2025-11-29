@@ -89,6 +89,14 @@ export type UseGlyphsResult = {
    * Returns the created Glyph on success.
    */
   uploadGlyphFromEditor: (letter: string, blob: Blob) => Promise<Glyph | null>;
+  /**
+   * Delete a single glyph variant by id.
+   *
+   * `letterForRefresh` wird genutzt, um nach Löschung die Liste für diesen Buchstaben
+   * neu zu laden (oder leer = alle).
+   */
+  deleteGlyph: (glyphId: number) => Promise<void>;
+
 };
 
 export default function useGlyphs(
@@ -112,10 +120,10 @@ export default function useGlyphs(
     overrideFormattype === 'svg' || overrideFormattype === 'png'
       ? overrideFormattype
       : ((
-          (activeGlyphFormat || '').toLowerCase() === 'svg'
-            ? 'svg'
-            : 'png'
-        ) as GlyphFormatType);
+        (activeGlyphFormat || '').toLowerCase() === 'svg'
+          ? 'svg'
+          : 'png'
+      ) as GlyphFormatType);
 
   const [glyphs, setGlyphs] = useState<Glyph[]>([]);
   const [letter, setLetter] = useState<string>(initialLetter);
@@ -280,6 +288,79 @@ export default function useGlyphs(
     [sid, token, formattype, fetchGlyphs],
   );
 
+  const deleteGlyph = useCallback(
+    async (glyphId: number): Promise<void> => {
+      console.log(
+        '[beefont/useGlyphs] deleteGlyph sid=',
+        sid,
+        'formattype=',
+        formattype,
+        'glyphId=',
+        glyphId,
+        'currentLetterFilter=',
+        letter || '(all)',
+      );
+
+      if (!token) {
+        const err = toAppError(new Error('No auth token'), {
+          component: 'useGlyphs',
+          functionName: 'deleteGlyph',
+          service: 'beefont',
+        });
+        if (err.httpStatus === 401 || err.httpStatus === 403) {
+          err.severity = 'page';
+          errorBus.emit(err);
+        }
+        setError(err);
+        return Promise.reject(err);
+      }
+
+      if (!sid) {
+        const err = toAppError(new Error('No job SID provided'), {
+          component: 'useGlyphs',
+          functionName: 'deleteGlyph',
+          service: 'beefont',
+        });
+        setError(err);
+        return Promise.reject(err);
+      }
+
+      setIsUpdating(true);
+      setError(null);
+
+      const headers = authHeaders(token);
+      const encodedSid = encodeURIComponent(sid);
+      const encodedFmt = encodeURIComponent(formattype);
+      const url = `/jobs/${encodedSid}/glyphs/${encodedFmt}/${glyphId}/delete/`;
+
+      try {
+        await apiApp.delete(url, { headers });
+
+        // IMPORTANT: refresh with the CURRENT filter
+        await fetchGlyphs({ letter });
+
+        setIsUpdating(false);
+      } catch (e) {
+        const appErr: AppError = toAppError(e, {
+          component: 'useGlyphs',
+          functionName: 'deleteGlyph',
+          service: 'beefont',
+        });
+
+        if (appErr.httpStatus === 401 || appErr.httpStatus === 403) {
+          appErr.severity = 'page';
+          errorBus.emit(appErr);
+        }
+
+        setError(appErr);
+        setIsUpdating(false);
+        return Promise.reject(appErr);
+      }
+    },
+    [sid, token, formattype, letter, fetchGlyphs],
+  );
+
+
   const uploadGlyphFromEditor = useCallback(
     async (letterParam: string, blob: Blob): Promise<Glyph | null> => {
       const trimmed = letterParam.trim();
@@ -393,6 +474,7 @@ export default function useGlyphs(
     formattype,
     fetchGlyphs,
     selectDefault,
+    deleteGlyph,
     uploadGlyphFromEditor,
   };
 }

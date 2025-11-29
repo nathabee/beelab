@@ -26,6 +26,7 @@ type Stroke = {
 type SvgGlyphEditorProps = {
   sid: string;
   letter: string;
+  variantIndex?: number;
 };
 
 const CANVAS_WIDTH = 600;
@@ -117,7 +118,11 @@ function parseSvgToStrokes(svgContent: string): Stroke[] {
   return strokes;
 }
 
-const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({ sid, letter }) => {
+const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
+  sid,
+  letter,
+  variantIndex,
+}) => {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [history, setHistory] = useState<Stroke[][]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -353,9 +358,9 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({ sid, letter }) => {
       prev.map(s =>
         selectedIds.includes(s.id)
           ? {
-              ...s,
-              width: Math.max(1, Math.min(50, s.width + delta)),
-            }
+            ...s,
+            width: Math.max(1, Math.min(50, s.width + delta)),
+          }
           : s,
       ),
     );
@@ -431,14 +436,20 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({ sid, letter }) => {
 
     const glyphsForLetter = glyphs.filter(g => g.letter === trimmedLetter);
     if (!glyphsForLetter.length) {
-      // no SVG glyph yet → empty editor
       resetEditorToEmpty();
       return;
     }
 
-    // Prefer default; otherwise first
+    const requested =
+      typeof variantIndex === 'number'
+        ? glyphsForLetter.find(g => g.variant_index === variantIndex)
+        : undefined;
+
     const svgGlyph =
-      glyphsForLetter.find(g => g.is_default) ?? glyphsForLetter[0];
+      requested ??
+      glyphsForLetter.find(g => g.is_default) ??
+      glyphsForLetter[0];
+
 
     if (!svgGlyph || !svgGlyph.image_path) {
       resetEditorToEmpty();

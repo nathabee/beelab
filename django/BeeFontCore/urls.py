@@ -24,6 +24,7 @@ from .views import (
     list_glyphs,            # GET: all glyphs for a job, optional filter via query (?letter=...)
     glyph_detail,           # GET: all variants for a letter in a job
     select_glyph_variant,   # POST: mark one variant as default
+    delete_glyph_variant,   # DELETE : remove a variante
 
     # Single-glyph upload (formattype-specific)
     upload_glyph_from_png,
@@ -193,6 +194,11 @@ urlpatterns = [
         "jobs/<str:sid>/glyphs/<str:formattype>/<str:letter>/select/",
         select_glyph_variant,
         name="select_glyph_variant",
+    ),
+    path(
+        "jobs/<str:sid>/glyphs/<str:formattype>/<int:glyph_id>/delete/",
+        delete_glyph_variant,
+        name="delete_glyph_variant",
     ),
     path(
         "jobs/<str:sid>/glyphs/<str:formattype>/<str:letter>/",

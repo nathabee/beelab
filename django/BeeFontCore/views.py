@@ -860,6 +860,60 @@ def select_glyph_variant(request, sid: str, formattype: str, letter: str):
     return Response(GlyphSerializer(glyph).data, status=status.HTTP_200_OK)
 
 
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+def delete_glyph_variant(request, sid: str, formattype: str, glyph_id: int):
+    """
+    Delete a single glyph variant for a job + formattype by glyph_id.
+
+    - Entfernt den DB-Eintrag
+    - Löscht die Datei vom Storage (falls vorhanden)
+    - Falls der gelöschte Glyph default war, setzt einen neuen Default
+      (kleinster variant_index) für dieses (job, letter, formattype),
+      wenn noch Varianten übrig sind.
+    """
+    job = get_job_or_404_for_user(sid, request.user)
+
+    fmt, error_response = normalize_formattype_or_400(formattype)
+    if error_response is not None:
+        return error_response
+
+    glyph = get_object_or_404(
+        Glyph,
+        pk=glyph_id,
+        job=job,
+        formattype=fmt,
+    )
+
+    letter = glyph.letter
+    was_default = glyph.is_default
+    image_path = glyph.image_path
+
+    # Datei löschen (best effort)
+    if image_path and default_storage.exists(image_path):
+        try:
+            default_storage.delete(image_path)
+        except Exception as e:
+            # Nicht die ganze Anfrage failen, nur loggen.
+            print(f"[BeeFont][delete_glyph_variant] Failed to delete file '{image_path}': {e}")
+
+    # Glyph aus DB löschen
+    glyph.delete()
+
+    # Falls das der Default war, neuen Default wählen (falls noch etwas existiert)
+    if was_default:
+        remaining = (
+            Glyph.objects
+            .filter(job=job, letter=letter, formattype=fmt)
+            .order_by("variant_index")
+        )
+        if remaining.exists():
+            first = remaining.first()
+            first.is_default = True
+            first.save(update_fields=["is_default"])
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 # -------------------------------------------------------------------
 # Font build + download

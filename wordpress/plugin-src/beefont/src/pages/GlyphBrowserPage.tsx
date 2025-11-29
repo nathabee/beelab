@@ -2,10 +2,11 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
 
 import useGlyphs from '@hooks/useGlyphs';
-import useGlyphsZip, { type GlyphFormat } from '@hooks/useGlyphsZip';
+import useGlyphsZip from '@hooks/useGlyphsZip';
 
 import GlyphVariantsGrid from '@components/GlyphVariantsGrid';
 import DefaultGlyphGrid from '@components/DefaultGlyphGrid';
@@ -16,6 +17,7 @@ import { friendlyMessage, type AppError } from '@bee/common/error';
 type ViewMode = 'variants' | 'defaults';
 
 const GlyphBrowserPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // 1) Raw URL param
@@ -23,7 +25,9 @@ const GlyphBrowserPage: React.FC = () => {
   const initialLetter = searchParams.get('letter') ?? '';
 
   // 2) Active job from global context
-  const { activeJob,activeGlyphFormat } = useApp();
+  const { activeJob, activeGlyphFormat } = useApp();
+  const isSvgMode = activeGlyphFormat === 'svg';
+
 
   // 3) Effective sid: URL wins, otherwise fall back to activeJob
   const effectiveSid = useMemo(
@@ -58,6 +62,7 @@ const GlyphBrowserPage: React.FC = () => {
     error,
     fetchGlyphs,
     selectDefault,
+    deleteGlyph,
   } = useGlyphs(effectiveSid, {
     manual: false,
     initialLetter,
@@ -72,7 +77,7 @@ const GlyphBrowserPage: React.FC = () => {
     downloadDefaultZip,
     downloadAllZip,
     uploadGlyphsZip,
-  } = useGlyphsZip(effectiveSid, activeGlyphFormat ); // glyphFormat);
+  } = useGlyphsZip(effectiveSid, activeGlyphFormat); // glyphFormat);
 
   const errorText = useMemo(
     () => {
@@ -132,6 +137,36 @@ const GlyphBrowserPage: React.FC = () => {
       console.error('[GlyphBrowserPage] selectDefault failed:', err);
     });
   };
+
+  const handleDeleteGlyph = (glyphId: number, letterParam: string) => {
+    const trimmedLetter = (letterParam || '').trim();
+
+    const ok = window.confirm(
+      `Delete glyph variant ${glyphId} for letter "${trimmedLetter || 'all'}"? This cannot be undone.`,
+    );
+    if (!ok) return;
+
+    deleteGlyph(glyphId).catch(err => {
+      console.error('[GlyphBrowserPage] deleteGlyph failed:', err);
+    });
+  };
+
+  const handleEditGlyph = (
+    glyphId: number,
+    letterParam: string,
+    variantIndex: number,
+  ) => {
+    const trimmedLetter = (letterParam || '').trim();
+
+    const params = new URLSearchParams();
+    if (effectiveSid) params.set('sid', effectiveSid);
+    if (trimmedLetter) params.set('letter', trimmedLetter);
+    params.set('variant', String(variantIndex));
+    params.set('glyph_id', String(glyphId));
+ 
+    navigate(`/glypheditor?${params.toString()}`);
+  };
+
 
   const clampScale = (value: number) => {
     const min = 0.5;
@@ -283,6 +318,7 @@ const GlyphBrowserPage: React.FC = () => {
         </div>
 
         <div className="bf-panel__actions">
+
           <button
             type="button"
             className="bf-button bf-button--small"
@@ -291,6 +327,7 @@ const GlyphBrowserPage: React.FC = () => {
           >
             Download default glyphs ({activeGlyphFormat.toUpperCase()}) ZIP
           </button>
+
           <button
             type="button"
             className="bf-button bf-button--small"
@@ -300,16 +337,27 @@ const GlyphBrowserPage: React.FC = () => {
             Download all glyphs ({activeGlyphFormat.toUpperCase()}) ZIP
           </button>
 
-          <label className="bf-button bf-button--small">
+          {/* Hidden file input */}
+          <input
+            id="glyph-zip-upload"
+            type="file"
+            accept=".zip,application/zip"
+            onChange={handleUploadChange}
+            style={{ display: 'none' }}
+          />
+
+          {/* Real upload button */}
+          <button
+            type="button"
+            className="bf-button bf-button--small"
+            onClick={() => document.getElementById("glyph-zip-upload")?.click()}
+            disabled={anyZipBusy}
+          >
             Upload glyph ZIP ({activeGlyphFormat.toUpperCase()})…
-            <input
-              type="file"
-              accept=".zip,application/zip"
-              onChange={handleUploadChange}
-              style={{ display: 'none' }}
-            />
-          </label>
+          </button>
+
         </div>
+
 
         <p className="bf-panel__hint">
           {activeGlyphFormat === 'png' ? (
@@ -423,14 +471,18 @@ const GlyphBrowserPage: React.FC = () => {
             {!isLoading && glyphs.length === 0 && !error && (
               <p>No glyphs available for this job yet.</p>
             )}
-
             {glyphs.length > 0 && (
               <GlyphVariantsGrid
                 glyphs={glyphs}
                 onSetDefault={handleSetDefault}
+                onDelete={handleDeleteGlyph}
+                onEdit={isSvgMode ? handleEditGlyph : undefined}
                 scale={glyphScale}
               />
+
             )}
+
+
           </section>
         </>
       )}

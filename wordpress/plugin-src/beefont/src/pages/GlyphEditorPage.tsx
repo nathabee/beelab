@@ -9,9 +9,15 @@ import { useApp } from '@context/AppContext';
 import PngGlyphEditor from '@components/PngGlyphEditor';
 import SvgGlyphEditor from '@components/SvgGlyphEditor';
 
-const GlyphEditorPage: React.FC = () => {
+const GlyphEditorPage: React.FC = () => { 
   const [searchParams] = useSearchParams();
   const initialLetter = searchParams.get('letter') ?? '';
+  const variantParam = searchParams.get('variant');
+  const initialVariantIndex = (() => {
+    if (!variantParam) return undefined;
+    const n = parseInt(variantParam, 10);
+    return Number.isNaN(n) ? undefined : n;
+  })();
 
   const { activeJob, activeGlyphFormat } = useApp();
 
@@ -84,8 +90,13 @@ const GlyphEditorPage: React.FC = () => {
       {activeGlyphFormat === 'png' ? (
         <PngGlyphEditor sid={effectiveSid} letter={letter} />
       ) : (
-        <SvgGlyphEditor sid={effectiveSid} letter={letter} />
+        <SvgGlyphEditor
+          sid={effectiveSid}
+          letter={letter}
+          variantIndex={initialVariantIndex}
+        />
       )}
+
     </section>
   );
 };
