@@ -135,17 +135,19 @@ class Glyph(models.Model):
     """
     Eine konkrete Glyph-Variante für einen Buchstaben eines Jobs,
     geschnitten aus einer bestimmten JobPage und Zelle.
- 
-    - formattype unterscheidet PNG-basierte und SVG-basierte Varianten.
-    - is_default gilt pro (job, letter, formattype); es kann also
-      z.B. einen Default-PNG und einen Default-SVG für dasselbe Zeichen geben.
     """
 
     id = models.AutoField(primary_key=True)
     job = models.ForeignKey(FontJob, on_delete=models.CASCADE, related_name="glyphs")
 
     # aus welcher JobPage?
-    page = models.ForeignKey(JobPage, on_delete=models.CASCADE, related_name="glyphs")
+    page = models.ForeignKey(
+        JobPage,
+        on_delete=models.CASCADE,
+        related_name="glyphs",
+        null=True,
+        blank=True,
+    )
 
     # welche Zelle in der Raster-Seite (0..N-1)
     cell_index = models.IntegerField()
@@ -153,21 +155,15 @@ class Glyph(models.Model):
     # welcher Buchstabe ist hier gezeichnet?
     letter = models.CharField(max_length=8)  # 'B', 'D', 'Ä', 'É', etc.
 
-    # Variante für diesen Buchstaben innerhalb eines formattype
-    # (z.B. 3 = dritte Variante dieses Buchstabens im angegebenen formattype)
     variant_index = models.IntegerField()
-
-    # Speichert den Pfad zur Bild-/Vektordatei (z.B. ".../B_3.png" oder ".../B_3.svg")
     image_path = models.CharField(max_length=512)
 
-    # Welches technische formattype hat diese Variante?
     formattype = models.CharField(
         max_length=8,
         choices=GlyphFormatType.choices,
         default=GlyphFormatType.PNG,
     )
 
-    # Default innerhalb (job, letter, formattype)
     is_default = models.BooleanField(default=False)
 
     class Meta:
@@ -176,17 +172,12 @@ class Glyph(models.Model):
         ordering = ["job", "letter", "formattype", "variant_index"]
         unique_together = ("job", "letter", "formattype", "variant_index")
         constraints = [
-            # Pro (job, letter, formattype) höchstens eine Default-Glyph
             models.UniqueConstraint(
                 fields=["job", "letter", "formattype"],
                 condition=Q(is_default=True),
                 name="unique_default_glyph_per_job_letter_formattype",
             )
         ]
-
-    def __str__(self) -> str:
-        default_mark = " *" if self.is_default else ""
-        return f"{self.job.sid} – {self.letter}_{self.variant_index} [{self.formattype}]{default_mark}"
 
 
 class FontBuild(models.Model):

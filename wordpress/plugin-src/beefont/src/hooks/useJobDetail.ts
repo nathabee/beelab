@@ -10,7 +10,8 @@ import { toAppError, errorBus, AppError } from '@bee/common/error';
 import type { FontJob } from '@mytypes/fontJob';
 import type { JobPage } from '@mytypes/jobPage';
 import type { LanguageStatus } from '@mytypes/languageStatus';
-import { useApp } from '@context/AppContext';
+import { useApp } from '@context/AppContext'; 
+import { DEFAULT_GLYPH_FORMAT } from '@mytypes/glyph';
 
 export type UseJobDetailResult = {
   job: FontJob | null;
@@ -89,7 +90,7 @@ export default function useJobDetail(sid: string): UseJobDetailResult {
 
     const headers = authHeaders(token);
     const encodedSid = encodeURIComponent(sid);
-    const format = activeGlyphFormat || 'png';
+    const format = activeGlyphFormat || DEFAULT_GLYPH_FORMAT ;
     const encodedFormat = encodeURIComponent(format);
 
     try {

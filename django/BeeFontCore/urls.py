@@ -27,18 +27,10 @@ from .views import (
     delete_glyph_variant,   # DELETE : remove a variante
 
     # Single-glyph upload (formattype-specific)
-    upload_glyph_from_png,
-    upload_glyph_from_svg,
-
-    # Glyph ZIP upload/download – PNG
-    download_default_glyphs_zip_png,
-    download_all_glyphs_zip_png,
-    upload_glyphs_zip_png,
-
-    # Glyph ZIP upload/download – SVG
-    download_default_glyphs_zip_svg,
-    download_all_glyphs_zip_svg,
-    upload_glyphs_zip_svg,
+    upload_glyph_from,
+    download_default_glyphs_zip,
+    download_all_glyphs_zip,
+    upload_glyphs_zip,
 
     # Font builds
     list_builds,            # GET : list of all builds for a job
@@ -140,53 +132,33 @@ urlpatterns = [
     # ------------------------------------------------------------------
     # PNG-based glyph assets
     path(
-        "jobs/<str:sid>/glyphs/png/download/default-zip/",
-        download_default_glyphs_zip_png,
-        name="download_default_glyphs_zip_png",
+        "jobs/<str:sid>/glyphs/<str:formattype>/download/default-zip/",
+        download_default_glyphs_zip,
+        name="download_default_glyphs_zip",
     ),
     path(
-        "jobs/<str:sid>/glyphs/png/download/all-zip/",
-        download_all_glyphs_zip_png,
-        name="download_all_glyphs_zip_png",
+        "jobs/<str:sid>/glyphs/<str:formattype>/download/all-zip/",
+        download_all_glyphs_zip,
+        name="download_all_glyphs_zip",
     ),
     path(
-        "jobs/<str:sid>/glyphs/png/upload-zip/",
-        upload_glyphs_zip_png,
-        name="upload_glyphs_zip_png",
+        "jobs/<str:sid>/glyphs/<str:formattype>/upload-zip/",
+        upload_glyphs_zip,
+        name="upload_glyphs_zip",
     ),
 
-    # SVG-based glyph assets
-    path(
-        "jobs/<str:sid>/glyphs/svg/download/default-zip/",
-        download_default_glyphs_zip_svg,
-        name="download_default_glyphs_zip_svg",
-    ),
-    path(
-        "jobs/<str:sid>/glyphs/svg/download/all-zip/",
-        download_all_glyphs_zip_svg,
-        name="download_all_glyphs_zip_svg",
-    ),
-    path(
-        "jobs/<str:sid>/glyphs/svg/upload-zip/",
-        upload_glyphs_zip_svg,
-        name="upload_glyphs_zip_svg",
-    ),
+ 
 
     # ------------------------------------------------------------------
     # Single glyph upload from editor (formattype-specific)
     # ------------------------------------------------------------------
     # PNG editor → uploads bitmap glyph for a letter
     path(
-        "jobs/<str:sid>/glyphs/png/upload/",
-        upload_glyph_from_png,
-        name="upload_glyph_from_png",
+        "jobs/<str:sid>/glyphs/<str:formattype>/upload/",
+        upload_glyph_from,
+        name="upload_glyph_from",
     ),
-    # SVG editor → uploads vector glyph for a letter
-    path(
-        "jobs/<str:sid>/glyphs/svg/upload/",
-        upload_glyph_from_svg,
-        name="upload_glyph_from_svg",
-    ),
+ 
     # ------------------------------------------------------------------
     # Glyphs (logical variants + selection, per formattype)
     # ------------------------------------------------------------------

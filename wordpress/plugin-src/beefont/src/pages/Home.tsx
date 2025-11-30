@@ -36,9 +36,20 @@ const Home: React.FC = () => {
       <section className="mb-4">
         <h2 className="h4">What is BeeFont?</h2>
         <p>
-          BeeFont lets you turn hand-drawn letters into real font files (TTF). You print a template,
-          draw your alphabet by hand, scan the pages, and BeeFont analyses each cell to extract the
-          glyphs. You can then review, adjust, and finally build a downloadable font.
+          BeeFont lets you turn hand-drawn letters into real font files (TTF). For each job you
+          choose an active glyph format and work mainly in the glyph editor:
+          <strong> PNG</strong> (bitmap) or <strong>SVG</strong> (vector).
+        </p>
+        <p>
+          The typical way of working is to create glyphs directly in the editor, for both PNG
+          and SVG jobs. SVG glyphs give the cleanest outlines and the best font quality, so this is
+          the recommended mode. Existing SVG glyphs can be loaded into the editor and modified;
+          existing PNG glyphs from scans are not editable in-place, for PNG you simply draw new
+          variants on a blank canvas.
+        </p>
+        <p>
+          In addition, BeeFont can analyse scanned template pages and automatically extract PNG
+          glyphs from the grid. These scanned glyphs can be used as-is.
         </p>
         <p>
           The plugin is the frontend of a BeeLab workflow: it talks to a Django backend that handles
@@ -51,38 +62,44 @@ const Home: React.FC = () => {
         <h2 className="h4">Workflow at a glance</h2>
         <ol className="mb-3">
           <li className="mb-2">
-            <strong>Create a BeeFont job</strong>  
-            Define a language (for example DE, EN, FR) and a template set. This job groups all your
-            pages, glyphs and builds.
+            <strong>Create a BeeFont job</strong>{' '}
+            Define a language (for example DE, EN, FR) and a template set. Each job groups its
+            pages, glyphs and font builds. On the job overview you choose the active glyph format
+            (<strong>PNG</strong> or <strong>SVG</strong>) for the editor and builds and can switch
+            this later if needed.
           </li>
           <li className="mb-2">
-            <strong>Print template pages</strong>  
-            BeeFont provides ready-made layouts (A4 grids) with one slot per character to fill in.
+            <strong>Draw glyphs in the editor</strong>{' '}
+            Open the glyph editor and draw each character directly on screen. In PNG mode you paint
+            on a bitmap canvas with guidelines; in SVG mode you work with strokes and control
+            points. SVG mode is recommended because the outlines are clean and scale perfectly in
+            the final font. For SVG, existing glyphs can be loaded and refined; for PNG, the editor
+            always starts with a fresh canvas.
           </li>
           <li className="mb-2">
-            <strong>Draw your letters by hand</strong>  
-            Use a dark pen and keep letters roughly centred in each cell to help the segmentation.
+            <strong>(Optional) Print and scan templates for PNG glyphs</strong>{' '}
+            If you prefer to write on paper, you can print A4 grid templates, fill them by hand and
+            upload the scans on the <em>Print / Upload</em> page. BeeFont analyses the grids and
+            creates PNG glyph variants automatically. These PNG variants can then be reviewed in the
+            glyph browser or replaced by manually drawn SVG glyphs for important letters.
           </li>
           <li className="mb-2">
-            <strong>Scan and upload</strong>  
-            Scan the filled templates and upload them on the <em>Print / Upload</em> page. BeeFont
-            runs automatic analysis to detect and crop the glyphs from the grid.
+            <strong>Review and manage glyphs</strong>{' '}
+            On the glyph browser you see all variants per character. You can set the default variant
+            for each letter, delete unwanted variants, and (in SVG mode) jump straight into the glyph
+            editor for a specific letter to modify its vector shape.
           </li>
           <li className="mb-2">
-            <strong>Review glyphs</strong>  
-            On the glyph browser you can inspect what the system extracted per character, pick the
-            best variant, or re-scan specific letters if needed.
-          </li>
-          <li className="mb-2">
-            <strong>Check missing characters</strong>  
+            <strong>Check missing characters</strong>{' '}
             The language status view shows which required characters are covered and which are still
-            missing for a complete font.
+            missing for a complete font for each language and glyph format.
           </li>
           <li className="mb-2">
-            <strong>Build and download the font</strong>  
-            Once all required glyphs are present, you can trigger a font build. The backend
-            generates a TTF (and optionally a bundle) that you can download and install on your
-            system.
+            <strong>Build and download the font</strong>{' '}
+            Once all required glyphs are present for a language, you trigger a font build. For
+            PNG-based jobs the backend converts your PNG glyphs to SVG outlines before building the
+            TTF; for SVG-based jobs it uses your vector glyphs directly. You then download the TTF
+            and install it on your system.
           </li>
         </ol>
       </section>
@@ -100,28 +117,32 @@ const Home: React.FC = () => {
                 <Link to="/dashboard">
                   BeeFont dashboard
                 </Link>{' '}
-                to see all your jobs and their status.
+                to see all your jobs, choose the active glyph format (PNG / SVG), and check their
+                status.
               </li>
               <li>
                 Start a new job and then visit{' '}
                 <Link to="/printupload">
                   Print / Upload
                 </Link>{' '}
-                to upload scanned template pages.
+                if you want to work with printed templates and scanned pages in addition to the
+                editor.
               </li>
               <li>
                 Use the{' '}
                 <Link to="/glyphbrowser">
                   glyph browser
                 </Link>{' '}
-                to inspect and fine-tune extracted glyphs.
+                to inspect and fine-tune extracted glyphs, set default variants, delete unwanted
+                variants, and, in SVG jobs, jump into the glyph editor for particular letters.
               </li>
               <li>
                 Open{' '}
                 <Link to="/missingcharacters">
                   missing characters
                 </Link>{' '}
-                to see which glyphs are still required for a complete font.
+                to see which glyphs are still required for a complete font in a given language and
+                format.
               </li>
               <li>
                 Finally, go to{' '}
@@ -157,12 +178,18 @@ const Home: React.FC = () => {
         <h2 className="h5">Notes and limitations</h2>
         <ul>
           <li>
-            Glyph extraction works best with high-contrast scans (black ink on white paper, no
-            shadows, no skew).
+            Scanned PNG glyphs work best with high-contrast images (black ink on white paper, no
+            shadows, no skew). Higher resolution gives cleaner segmentation.
+          </li>
+          <li>
+            SVG editing is ideal for clean, scalable outlines and precise corrections (existing SVG
+            glyphs can be loaded and modified). PNG editing in the canvas is for drawing new glyphs
+            from scratch; scanned PNG glyphs are not editable in-place.
           </li>
           <li>
             For some languages, BeeFont requires digits and punctuation in addition to letters
-            before allowing a font build.
+            before allowing a font build. The missing-character view will tell you exactly what is
+            still needed.
           </li>
           <li>
             Demo accounts are meant for exploration. Long-term work should be done with a regular

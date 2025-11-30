@@ -25,10 +25,10 @@
   },
   {
     "model": "beefontcore.supportedlanguage",
-    "pk": "n1",
+    "pk": "t1",
     "fields": {
-      "name": "Numero Uno",
-      "alphabet": "0123456789"
+      "name": "Test Uno",
+      "alphabet": "ABCDEFGHIJKLabcdefghijkl"
     }
   }
 ]

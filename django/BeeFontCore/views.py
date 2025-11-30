@@ -1090,33 +1090,37 @@ def download_job_zip(request, sid: str):
     return response
 
 ##########################################
-# PNG
 
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
-def download_default_glyphs_zip_png(request, sid: str):
+def download_default_glyphs_zip(request, sid: str, formattype: str):
     """
-    Download a ZIP containing all PNG files for glyphs that are marked
-    as default (is_default=True) and formattype=png for this job.
+    Download a ZIP containing all files for glyphs that are marked
+    as default (is_default=True) for this job + formattype ('png' or 'svg').
     """
     import io
     import zipfile
 
     job = get_job_or_404_for_user(sid, request.user)
 
+    fmt, error_response = normalize_formattype_or_400(formattype)
+    if error_response is not None:
+        return error_response
+
     glyphs = (
         Glyph.objects
-        .filter(job=job, is_default=True, formattype=GlyphFormatType.PNG)
+        .filter(job=job, is_default=True, formattype=fmt)
         .order_by("letter", "variant_index")
     )
 
     if not glyphs.exists():
         return Response(
-            {"detail": "No default PNG glyphs available for this job."},
+            {"detail": f"No default {fmt.upper()} glyphs available for this job."},
             status=status.HTTP_404_NOT_FOUND,
         )
 
     buffer = io.BytesIO()
+    ext = fmt  # 'png' or 'svg'
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         for g in glyphs:
             rel_path = g.image_path
@@ -1129,11 +1133,12 @@ def download_default_glyphs_zip_png(request, sid: str):
             with default_storage.open(rel_path, "rb") as f:
                 data = f.read()
 
-            arcname = f"{g.letter}.png"
+            # Default-Archive: nur <LETTER>.<ext>
+            arcname = f"{g.letter}.{ext}"
             zf.writestr(arcname, data)
 
     buffer.seek(0)
-    filename = f"{job.name}_glyphs_default_png.zip".replace(" ", "_")
+    filename = f"{job.name}_glyphs_default_{fmt}.zip".replace(" ", "_")
     response = HttpResponse(buffer.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
@@ -1141,30 +1146,36 @@ def download_default_glyphs_zip_png(request, sid: str):
 
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
-def download_all_glyphs_zip_png(request, sid: str):
+def download_all_glyphs_zip(request, sid: str, formattype: str):
     """
-    Download a ZIP containing PNG files for all glyph variants of this job
-    with formattype=png.
-    Archive names are "<LETTER>_v<VARIANT>.png".
+    Download a ZIP containing files for all glyph variants of this job
+    with the given formattype ('png' or 'svg').
+
+    Archive names are "<LETTER>_v<VARIANT>.<ext>".
     """
     import io
     import zipfile
 
     job = get_job_or_404_for_user(sid, request.user)
 
+    fmt, error_response = normalize_formattype_or_400(formattype)
+    if error_response is not None:
+        return error_response
+
     glyphs = (
         Glyph.objects
-        .filter(job=job, formattype=GlyphFormatType.PNG)
+        .filter(job=job, formattype=fmt)
         .order_by("letter", "variant_index")
     )
 
     if not glyphs.exists():
         return Response(
-            {"detail": "No PNG glyphs available for this job."},
+            {"detail": f"No {fmt.upper()} glyphs available for this job."},
             status=status.HTTP_404_NOT_FOUND,
         )
 
     buffer = io.BytesIO()
+    ext = fmt
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         for g in glyphs:
             rel_path = g.image_path
@@ -1177,11 +1188,11 @@ def download_all_glyphs_zip_png(request, sid: str):
             with default_storage.open(rel_path, "rb") as f:
                 data = f.read()
 
-            arcname = f"{g.letter}_v{g.variant_index}.png"
+            arcname = f"{g.letter}_v{g.variant_index}.{ext}"
             zf.writestr(arcname, data)
 
     buffer.seek(0)
-    filename = f"{job.name}_glyphs_all_png.zip".replace(" ", "_")
+    filename = f"{job.name}_glyphs_all_{fmt}.zip".replace(" ", "_")
     response = HttpResponse(buffer.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
@@ -1189,15 +1200,23 @@ def download_all_glyphs_zip_png(request, sid: str):
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
-def upload_glyphs_zip_png(request, sid: str):
+def upload_glyphs_zip(request, sid: str, formattype: str):
     """
-    Upload a ZIP containing PNG glyphs for a job (formattype=png).
+    Upload a ZIP containing glyph files for a job.
+
+    - formattype: 'png' or 'svg'
+    - All glyphs imported from ZIP are *not* tied to a JobPage:
+      page = None, cell_index = -1.
     """
     import io
     import zipfile
     import os
 
     job = get_job_or_404_for_user(sid, request.user)
+
+    fmt, error_response = normalize_formattype_or_400(formattype)
+    if error_response is not None:
+        return error_response
 
     upload = request.FILES.get("file")
     if not upload:
@@ -1206,7 +1225,6 @@ def upload_glyphs_zip_png(request, sid: str):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Try to open the ZIP
     try:
         zip_bytes = upload.read()
         zf = zipfile.ZipFile(io.BytesIO(zip_bytes))
@@ -1216,28 +1234,6 @@ def upload_glyphs_zip_png(request, sid: str):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Ensure we have a JobPage to attach glyphs to.
-    page = (
-        JobPage.objects
-        .filter(job=job)
-        .order_by("page_index")
-        .first()
-    )
-    if not page:
-        tpl = TemplateDefinition.objects.order_by("code").first()
-        if not tpl:
-            return Response(
-                {"detail": "No TemplateDefinition configured; cannot create placeholder page."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-        page = JobPage.objects.create(
-            job=job,
-            template=tpl,
-            page_index=0,
-            letters="",
-            scan_image_path="",
-        )
-
     media_root = Path(settings.MEDIA_ROOT)
     job_root_rel = job_sid_media(job)              # "beefont/jobs/<sid>"
     glyphs_rel_dir = os.path.join(job_root_rel, "glyphs")
@@ -1245,9 +1241,11 @@ def upload_glyphs_zip_png(request, sid: str):
     glyphs_abs_dir.mkdir(parents=True, exist_ok=True)
 
     imported = 0
-    skipped_non_png = 0
+    skipped_non_matching_ext = 0
     skipped_empty_letter = 0
     skipped_errors = 0
+
+    expected_ext = f".{fmt}"
 
     for info in zf.infolist():
         if info.is_dir():
@@ -1258,14 +1256,12 @@ def upload_glyphs_zip_png(request, sid: str):
         if not base:
             continue
 
-        # Only PNG
-        if not base.lower().endswith(".png"):
-            skipped_non_png += 1
+        if not base.lower().endswith(expected_ext):
+            skipped_non_matching_ext += 1
             continue
 
         stem, _ext = os.path.splitext(base)
 
-        # Letter = part before first "_"
         if "_" in stem:
             letter = stem.split("_", 1)[0]
         else:
@@ -1278,13 +1274,13 @@ def upload_glyphs_zip_png(request, sid: str):
 
         last = (
             Glyph.objects
-            .filter(job=job, letter=letter, formattype=GlyphFormatType.PNG)
+            .filter(job=job, letter=letter, formattype=fmt)
             .order_by("-variant_index")
             .first()
         )
         next_idx = (last.variant_index + 1) if last else 0
 
-        new_filename = f"{letter}_v{next_idx}.png"
+        new_filename = f"{letter}_v{next_idx}.{fmt}"
         rel_path = os.path.join(glyphs_rel_dir, new_filename)
         abs_path = media_root / rel_path
         abs_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1304,13 +1300,13 @@ def upload_glyphs_zip_png(request, sid: str):
         try:
             Glyph.objects.create(
                 job=job,
-                page=page,
-                cell_index=-1,
+                page=None,        # no JobPage
+                cell_index=-1,    # not bound to a scan cell
                 letter=letter,
                 variant_index=next_idx,
                 image_path=str(rel_path).replace("\\", "/"),
                 is_default=(next_idx == 0),
-                formattype=GlyphFormatType.PNG,
+                formattype=fmt,
             )
             imported += 1
         except Exception:
@@ -1321,9 +1317,9 @@ def upload_glyphs_zip_png(request, sid: str):
     if imported == 0:
         return Response(
             {
-                "detail": "No PNG glyphs imported from ZIP.",
+                "detail": f"No {fmt.upper()} glyphs imported from ZIP.",
                 "imported": imported,
-                "skipped_non_png": skipped_non_png,
+                "skipped_non_matching_ext": skipped_non_matching_ext,
                 "skipped_empty_letter": skipped_empty_letter,
                 "skipped_errors": skipped_errors,
             },
@@ -1332,9 +1328,9 @@ def upload_glyphs_zip_png(request, sid: str):
 
     return Response(
         {
-            "detail": "PNG glyphs imported from ZIP.",
+            "detail": f"{fmt.upper()} glyphs imported from ZIP.",
             "imported": imported,
-            "skipped_non_png": skipped_non_png,
+            "skipped_non_matching_ext": skipped_non_matching_ext,
             "skipped_empty_letter": skipped_empty_letter,
             "skipped_errors": skipped_errors,
         },
@@ -1345,13 +1341,25 @@ def upload_glyphs_zip_png(request, sid: str):
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
-def upload_glyph_from_png(request, sid: str):
+def upload_glyph_from(request, sid: str, formattype: str):
     """
-    Upload a single PNG glyph for a job (formattype=png).
+    Upload a single glyph file for a job.
+
+    - formattype: 'png' or 'svg'
+    - Editor/import glyphs are *not* tied to a JobPage:
+      page = None, cell_index = -1.
+
+    Expects multipart/form-data:
+      - letter: glyph character
+      - file:   image/vektor file
     """
     import os
 
     job = get_job_or_404_for_user(sid, request.user)
+
+    fmt, error_response = normalize_formattype_or_400(formattype)
+    if error_response is not None:
+        return error_response
 
     letter = (request.data.get("letter") or "").strip()
     upload = request.FILES.get("file")
@@ -1364,29 +1372,8 @@ def upload_glyph_from_png(request, sid: str):
 
     if not upload:
         return Response(
-            {"detail": "Expected file field 'file' with a PNG image."},
+            {"detail": f"Expected file field 'file' with a {fmt.upper()} file."},
             status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    page = (
-        JobPage.objects
-        .filter(job=job)
-        .order_by("page_index")
-        .first()
-    )
-    if not page:
-        tpl = TemplateDefinition.objects.order_by("code").first()
-        if not tpl:
-            return Response(
-                {"detail": "No TemplateDefinition configured; cannot create placeholder page."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-        page = JobPage.objects.create(
-            job=job,
-            template=tpl,
-            page_index=0,
-            letters="",
-            scan_image_path="",
         )
 
     media_root = Path(settings.MEDIA_ROOT)
@@ -1396,13 +1383,13 @@ def upload_glyph_from_png(request, sid: str):
 
     last = (
         Glyph.objects
-        .filter(job=job, letter=letter, formattype=GlyphFormatType.PNG)
+        .filter(job=job, letter=letter, formattype=fmt)
         .order_by("-variant_index")
         .first()
     )
     next_idx = (last.variant_index + 1) if last else 0
 
-    new_filename = f"{letter}_v{next_idx}.png"
+    new_filename = f"{letter}_v{next_idx}.{fmt}"
     rel_path = os.path.join(glyphs_rel_dir, new_filename)
 
     try:
@@ -1415,351 +1402,13 @@ def upload_glyph_from_png(request, sid: str):
 
     glyph = Glyph.objects.create(
         job=job,
-        page=page,
-        cell_index=-1,
+        page=None,          # no JobPage
+        cell_index=-1,      # not bound to a scan cell
         letter=letter,
         variant_index=next_idx,
         image_path=str(saved_path).replace("\\", "/"),
         is_default=(next_idx == 0),
-        formattype=GlyphFormatType.PNG,
+        formattype=fmt,
     )
 
     return Response(GlyphSerializer(glyph).data, status=status.HTTP_201_CREATED)
-
-##########################################
-# SVG
-
-@api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
-def download_default_glyphs_zip_svg(request, sid: str):
-    """
-    Download a ZIP containing all SVG files for glyphs that are marked
-    as default (is_default=True) and formattype=svg for this job.
-    """
-    import io
-    import zipfile
-
-    job = get_job_or_404_for_user(sid, request.user)
-
-    glyphs = (
-        Glyph.objects
-        .filter(job=job, is_default=True, formattype=GlyphFormatType.SVG)
-        .order_by("letter", "variant_index")
-    )
-
-    if not glyphs.exists():
-        return Response(
-            {"detail": "No default SVG glyphs available for this job."},
-            status=status.HTTP_404_NOT_FOUND,
-        )
-
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        for g in glyphs:
-            rel_path = g.image_path
-            if not rel_path:
-                continue
-
-            if not default_storage.exists(rel_path):
-                continue
-
-            with default_storage.open(rel_path, "rb") as f:
-                data = f.read()
-
-            arcname = f"{g.letter}.svg"
-            zf.writestr(arcname, data)
-
-    buffer.seek(0)
-    filename = f"{job.name}_glyphs_default_svg.zip".replace(" ", "_")
-    response = HttpResponse(buffer.getvalue(), content_type="application/zip")
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    return response
-
-@api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
-def download_all_glyphs_zip_svg(request, sid: str):
-    """
-    Download a ZIP containing SVG files for all glyph variants of this job
-    with formattype=svg.
-    """
-    import io
-    import zipfile
-
-    job = get_job_or_404_for_user(sid, request.user)
-
-    glyphs = (
-        Glyph.objects
-        .filter(job=job, formattype=GlyphFormatType.SVG)
-        .order_by("letter", "variant_index")
-    )
-
-    if not glyphs.exists():
-        return Response(
-            {"detail": "No SVG glyphs available for this job."},
-            status=status.HTTP_404_NOT_FOUND,
-        )
-
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        for g in glyphs:
-            rel_path = g.image_path
-            if not rel_path:
-                continue
-
-            if not default_storage.exists(rel_path):
-                continue
-
-            with default_storage.open(rel_path, "rb") as f:
-                data = f.read()
-
-            arcname = f"{g.letter}_v{g.variant_index}.svg"
-            zf.writestr(arcname, data)
-
-    buffer.seek(0)
-    filename = f"{job.name}_glyphs_all_svg.zip".replace(" ", "_")
-    response = HttpResponse(buffer.getvalue(), content_type="application/zip")
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    return response
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser])
-def upload_glyphs_zip_svg(request, sid: str):
-    """
-    Upload a ZIP containing SVG glyphs for a job (formattype=svg).
-    Same semantics as PNG ZIP, but only .svg files and formattype=SVG.
-    """
-    import io
-    import zipfile
-    import os
-
-    job = get_job_or_404_for_user(sid, request.user)
-
-    upload = request.FILES.get("file")
-    if not upload:
-        return Response(
-            {"detail": "Expected file field 'file' with a ZIP archive."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    try:
-        zip_bytes = upload.read()
-        zf = zipfile.ZipFile(io.BytesIO(zip_bytes))
-    except Exception:
-        return Response(
-            {"detail": "Invalid ZIP archive."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    page = (
-        JobPage.objects
-        .filter(job=job)
-        .order_by("page_index")
-        .first()
-    )
-    if not page:
-        tpl = TemplateDefinition.objects.order_by("code").first()
-        if not tpl:
-            return Response(
-                {"detail": "No TemplateDefinition configured; cannot create placeholder page."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-        page = JobPage.objects.create(
-            job=job,
-            template=tpl,
-            page_index=0,
-            letters="",
-            scan_image_path="",
-        )
-
-    media_root = Path(settings.MEDIA_ROOT)
-    job_root_rel = job_sid_media(job)
-    glyphs_rel_dir = os.path.join(job_root_rel, "glyphs")
-    glyphs_abs_dir = media_root / glyphs_rel_dir
-    glyphs_abs_dir.mkdir(parents=True, exist_ok=True)
-
-    imported = 0
-    skipped_non_svg = 0
-    skipped_empty_letter = 0
-    skipped_errors = 0
-
-    for info in zf.infolist():
-        if info.is_dir():
-            continue
-
-        filename = info.filename
-        base = os.path.basename(filename)
-        if not base:
-            continue
-
-        if not base.lower().endswith(".svg"):
-            skipped_non_svg += 1
-            continue
-
-        stem, _ext = os.path.splitext(base)
-
-        if "_" in stem:
-            letter = stem.split("_", 1)[0]
-        else:
-            letter = stem
-
-        letter = letter.strip()
-        if not letter:
-            skipped_empty_letter += 1
-            continue
-
-        last = (
-            Glyph.objects
-            .filter(job=job, letter=letter, formattype=GlyphFormatType.SVG)
-            .order_by("-variant_index")
-            .first()
-        )
-        next_idx = (last.variant_index + 1) if last else 0
-
-        new_filename = f"{letter}_v{next_idx}.svg"
-        rel_path = os.path.join(glyphs_rel_dir, new_filename)
-        abs_path = media_root / rel_path
-        abs_path.parent.mkdir(parents=True, exist_ok=True)
-
-        try:
-            data = zf.read(info.filename)
-        except Exception:
-            skipped_errors += 1
-            continue
-
-        try:
-            default_storage.save(rel_path, ContentFile(data))
-        except Exception:
-            skipped_errors += 1
-            continue
-
-        try:
-            Glyph.objects.create(
-                job=job,
-                page=page,
-                cell_index=-1,
-                letter=letter,
-                variant_index=next_idx,
-                image_path=str(rel_path).replace("\\", "/"),
-                is_default=(next_idx == 0),
-                formattype=GlyphFormatType.SVG,
-            )
-            imported += 1
-        except Exception:
-            skipped_errors += 1
-
-    zf.close()
-
-    if imported == 0:
-        return Response(
-            {
-                "detail": "No SVG glyphs imported from ZIP.",
-                "imported": imported,
-                "skipped_non_svg": skipped_non_svg,
-                "skipped_empty_letter": skipped_empty_letter,
-                "skipped_errors": skipped_errors,
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    return Response(
-        {
-            "detail": "SVG glyphs imported from ZIP.",
-            "imported": imported,
-            "skipped_non_svg": skipped_non_svg,
-            "skipped_empty_letter": skipped_empty_letter,
-            "skipped_errors": skipped_errors,
-        },
-        status=status.HTTP_201_CREATED,
-    )
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser])
-def upload_glyph_from_svg(request, sid: str):
-    """
-    Upload a single SVG glyph for a job (formattype=svg).
-
-    Expects multipart/form-data:
-      - letter: glyph character
-      - file:   SVG file
-    """
-    import os
-
-    job = get_job_or_404_for_user(sid, request.user)
-
-    letter = (request.data.get("letter") or "").strip()
-    upload = request.FILES.get("file")
-
-    if not letter:
-        return Response(
-            {"detail": "Field 'letter' is required."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    if not upload:
-        return Response(
-            {"detail": "Expected file field 'file' with an SVG file."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    page = (
-        JobPage.objects
-        .filter(job=job)
-        .order_by("page_index")
-        .first()
-    )
-    if not page:
-        tpl = TemplateDefinition.objects.order_by("code").first()
-        if not tpl:
-            return Response(
-                {"detail": "No TemplateDefinition configured; cannot create placeholder page."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-        page = JobPage.objects.create(
-            job=job,
-            template=tpl,
-            page_index=0,
-            letters="",
-            scan_image_path="",
-        )
-
-    media_root = Path(settings.MEDIA_ROOT)
-    job_root_rel = job_sid_media(job)
-    glyphs_rel_dir = os.path.join(job_root_rel, "glyphs")
-    (media_root / glyphs_rel_dir).mkdir(parents=True, exist_ok=True)
-
-    last = (
-        Glyph.objects
-        .filter(job=job, letter=letter, formattype=GlyphFormatType.SVG)
-        .order_by("-variant_index")
-        .first()
-    )
-    next_idx = (last.variant_index + 1) if last else 0
-
-    new_filename = f"{letter}_v{next_idx}.svg"
-    rel_path = os.path.join(glyphs_rel_dir, new_filename)
-
-    try:
-        saved_path = default_storage.save(rel_path, upload)
-    except Exception as e:
-        return Response(
-            {"detail": f"Failed to store SVG glyph file: {e}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-    glyph = Glyph.objects.create(
-        job=job,
-        page=page,
-        cell_index=-1,
-        letter=letter,
-        variant_index=next_idx,
-        image_path=str(saved_path).replace("\\", "/"),
-        is_default=(next_idx == 0),
-        formattype=GlyphFormatType.SVG,
-    )
-
-    return Response(GlyphSerializer(glyph).data, status=status.HTTP_201_CREATED)
- 

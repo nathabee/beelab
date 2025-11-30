@@ -1,0 +1,26 @@
+.beeblock-timeline {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.beeblock-timeline__item {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid #444;
+    background-color: #f8f8f8;
+}
+
+.beeblock-timeline__summary {
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+
+.beeblock-timeline__body {
+    margin-top: 0.5rem;
+    line-height: 1.5;
+}
+
+.beeblock-timeline-editor__title {
+    margin-bottom: 0.75rem;
+}

@@ -8,8 +8,9 @@ import { useUser } from '@bee/common';
 import { toAppError, errorBus, type AppError } from '@bee/common/error';
 import { useApp } from '@context/AppContext';
 import type { FontBuild, BuildRequestPayload } from '@mytypes/fontBuild';
+
 import type { GlyphFormat } from '@mytypes/glyph';
- 
+import { DEFAULT_GLYPH_FORMAT } from '@mytypes/glyph';
 
 export type UseFontBuildOptions = {
   manual?: boolean;
@@ -17,7 +18,7 @@ export type UseFontBuildOptions = {
    * Default glyph format when building fonts if the caller
    * does not provide an explicit format override.
    */
-  defaultFormat?: GlyphFormat;
+  defaultFormat?: GlyphFormat;    
 };
 
 export type UseFontBuildResult = {
@@ -50,7 +51,7 @@ export default function useFontBuild(
   sidParam: string,
   options: UseFontBuildOptions = {},
 ): UseFontBuildResult {
-  const { manual = false, defaultFormat = 'png' } = options;
+  const { manual = false, defaultFormat = DEFAULT_GLYPH_FORMAT } = options;
   const { token } = useUser();
   const { activeJob } = useApp();
 
@@ -137,8 +138,9 @@ export default function useFontBuild(
       languageCode: string,
       formatOverride?: GlyphFormat,
     ): Promise<FontBuild | null> => {
-      const trimmedLang = languageCode.trim();
-      const effectiveFormat: GlyphFormat = formatOverride ?? defaultFormat ?? 'png';
+      const trimmedLang = languageCode.trim(); 
+      const effectiveFormat: GlyphFormat =  formatOverride ?? defaultFormat ?? DEFAULT_GLYPH_FORMAT;
+
 
       console.log(
         '[beefont/useFontBuild] buildLanguage sid=',

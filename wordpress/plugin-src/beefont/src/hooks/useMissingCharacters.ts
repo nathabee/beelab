@@ -8,7 +8,8 @@ import { useUser } from '@bee/common';
 import { toAppError, errorBus, type AppError } from '@bee/common/error';
 
 import type { LanguageStatus } from '@mytypes/languageStatus';
-import type { GlyphFormat } from '@hooks/useGlyphsZip'; // 'png' | 'svg'
+import type { GlyphFormat } from '@mytypes/glyph';
+import { DEFAULT_GLYPH_FORMAT } from '@mytypes/glyph';
 
 export type UseMissingCharactersOptions = {
   manual?: boolean;
@@ -28,8 +29,13 @@ export default function useMissingCharacters(
   languageCode: string,
   options: UseMissingCharactersOptions = {},
 ): UseMissingCharactersResult {
-  const { manual = false, format = 'png' } = options;
+  const { manual = false, format: overrideFormat } = options;
   const { token } = useUser();
+
+  // Resolve effective format:
+  // 1) explicit override from options
+  // 2) global DEFAULT_GLYPH_FORMAT ('svg')
+  const format: GlyphFormat = overrideFormat ?? DEFAULT_GLYPH_FORMAT;
 
   const [status, setStatus] = useState<LanguageStatus | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -71,7 +77,6 @@ export default function useMissingCharacters(
       return Promise.resolve(null);
     }
 
-    // First call → isLoading; later calls → isRefreshing if we already have data
     setIsLoading(prev => prev || status === null);
     setIsRefreshing(prev => prev || status !== null);
     setError(null);
@@ -80,7 +85,7 @@ export default function useMissingCharacters(
     const encodedSid = encodeURIComponent(sid);
     const encodedLang = encodeURIComponent(languageCode);
 
-    // new backend route: /jobs/<sid>/languages/<lang>/status/<format>/
+    // backend route: /jobs/<sid>/missingcharstatus/<language>/<format>/
     const url = `/jobs/${encodedSid}/missingcharstatus/${encodedLang}/${format}/`;
 
     try {

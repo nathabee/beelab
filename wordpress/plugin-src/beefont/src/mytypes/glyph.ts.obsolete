@@ -1,0 +1,452 @@
+// src/mytype/glyph.ts
+
+/**
+ * GlyphFormat – mirrors Django GlyphFormat TextChoices ("png", "svg").
+ */
+export type GlyphFormat = 'png' | 'svg';
+
+/**
+ * Global default glyph format.
+ * Use this everywhere instead of hard-coding 'svg'.
+ */
+export const DEFAULT_GLYPH_FORMAT: GlyphFormat = 'svg';
+
+/**
+ * Normalise arbitrary input into a valid GlyphFormat.
+ * Falls back to DEFAULT_GLYPH_FORMAT if invalid/empty.
+ */
+export function normalizeGlyphFormat(
+  raw: string | null | undefined,
+  fallback: GlyphFormat = DEFAULT_GLYPH_FORMAT,
+): GlyphFormat {
+  const v = (raw || '').toLowerCase();
+  if (v === 'png') return 'png';
+  if (v === 'svg') return 'svg';
+  return fallback;
+}
+
+/**
+ * GlyphSerializer
+ *
+ * fields = [
+ *   "id",
+ *   "letter",
+ *   "variant_index",
+ *   "cell_index",
+ *   "page_index",
+ *   "image_path",
+ *   "format",
+ *   "is_default",
+ * ]
+ *
+ * read_only_fields = ["id", "page_index", "image_path"]
+ */
+export interface Glyph {
+  id: number;
+  letter: string;
+  variant_index: number;
+  cell_index: number;
+  page_index: number;
+  image_path: string;
+  format: GlyphFormat;
+  is_default: boolean;
+}
+
+export type GlyphList = Glyph[];
+
+/**
+ * GlyphVariantSelectionSerializer
+ *
+ * fields:
+ *   glyph_id?: number
+ *   variant_index?: number
+ *
+ * Validation: at least one of them must be set.
+ */
+export interface GlyphVariantSelection {
+  glyph_id?: number;
+  variant_index?: number;
+}
+
+
+
+// ---------------------------------------------------------------------------
+// SVG letter skeletons (for SvgGlyphEditor)
+// ---------------------------------------------------------------------------
+
+export type GlyphSkeletonAnchor = 'ascender' | 'xheight' | 'baseline' | 'descender';
+
+export type GlyphSkeletonPoint = {
+  /**
+   * Relative X position in [0, 1].
+   * 0   = left margin line,
+   * 1   = right margin line.
+   */
+  x: number;
+  /**
+   * Vertical anchor line where this point sits.
+   */
+  y: GlyphSkeletonAnchor;
+};
+
+export type GlyphSkeletonStrokeDef = {
+  from: GlyphSkeletonPoint;
+  to: GlyphSkeletonPoint;
+};
+
+export type GlyphSkeletonDef = {
+  letter: string;
+  /**
+   * Strokes (lines) that form the constructed base letter.
+   */
+  strokes: GlyphSkeletonStrokeDef[];
+};
+
+/**
+ * Default skeleton definitions for uppercase letters.
+ * You can tweak width, shapes, etc. here.
+ */
+export const GLYPH_SKELETONS: Record<string, GlyphSkeletonDef> = {
+  A: {
+    letter: 'A',
+    strokes: [
+      // left diagonal
+      { from: { x: 0.1, y: 'baseline' }, to: { x: 0.5, y: 'ascender' } },
+      // right diagonal
+      { from: { x: 0.9, y: 'baseline' }, to: { x: 0.5, y: 'ascender' } },
+      // crossbar
+      { from: { x: 0.25, y: 'xheight' }, to: { x: 0.75, y: 'xheight' } },
+    ],
+  },
+  B: {
+    letter: 'B',
+    strokes: [
+      // main vertical
+      { from: { x: 0.15, y: 'ascender' }, to: { x: 0.15, y: 'baseline' } },
+      // top bar
+      { from: { x: 0.15, y: 'ascender' }, to: { x: 0.7, y: 'ascender' } },
+      // middle bar
+      { from: { x: 0.15, y: 'xheight' }, to: { x: 0.65, y: 'xheight' } },
+      // bottom bar
+      { from: { x: 0.15, y: 'baseline' }, to: { x: 0.7, y: 'baseline' } },
+      // right vertical top “belly”
+      { from: { x: 0.7, y: 'ascender' }, to: { x: 0.7, y: 'xheight' } },
+      // right vertical bottom “belly”
+      { from: { x: 0.7, y: 'xheight' }, to: { x: 0.7, y: 'baseline' } },
+    ],
+  },
+
+  C: {
+    letter: 'C',
+    strokes: [
+      // top
+      { from: { x: 0.8, y: 'ascender' }, to: { x: 0.2, y: 'ascender' } },
+      // left vertical
+      { from: { x: 0.2, y: 'ascender' }, to: { x: 0.2, y: 'baseline' } },
+      // bottom
+      { from: { x: 0.2, y: 'baseline' }, to: { x: 0.8, y: 'baseline' } },
+    ],
+  },
+
+  D: {
+    letter: 'D',
+    strokes: [
+      // left vertical
+      { from: { x: 0.15, y: 'ascender' }, to: { x: 0.15, y: 'baseline' } },
+      // top
+      { from: { x: 0.15, y: 'ascender' }, to: { x: 0.8, y: 'ascender' } },
+      // bottom
+      { from: { x: 0.15, y: 'baseline' }, to: { x: 0.8, y: 'baseline' } },
+      // right vertical
+      { from: { x: 0.8, y: 'ascender' }, to: { x: 0.8, y: 'baseline' } },
+    ],
+  },
+
+  E: {
+    letter: 'E',
+    strokes: [
+      // main vertical
+      { from: { x: 0.1, y: 'ascender' }, to: { x: 0.1, y: 'baseline' } },
+      // top bar
+      { from: { x: 0.1, y: 'ascender' }, to: { x: 0.9, y: 'ascender' } },
+      // middle bar
+      { from: { x: 0.1, y: 'xheight' }, to: { x: 0.7, y: 'xheight' } },
+      // bottom bar
+      { from: { x: 0.1, y: 'baseline' }, to: { x: 0.9, y: 'baseline' } },
+    ],
+  },
+  F: {
+    letter: 'F',
+    strokes: [
+      // main vertical
+      { from: { x: 0.15, y: 'ascender' }, to: { x: 0.15, y: 'baseline' } },
+      // top bar
+      { from: { x: 0.15, y: 'ascender' }, to: { x: 0.85, y: 'ascender' } },
+      // middle bar
+      { from: { x: 0.15, y: 'xheight' }, to: { x: 0.65, y: 'xheight' } },
+    ],
+  },
+
+  G: {
+    letter: 'G',
+    strokes: [
+      // C-shape
+      { from: { x: 0.8, y: 'ascender' }, to: { x: 0.2, y: 'ascender' } },
+      { from: { x: 0.2, y: 'ascender' }, to: { x: 0.2, y: 'baseline' } },
+      { from: { x: 0.2, y: 'baseline' }, to: { x: 0.8, y: 'baseline' } },
+      // inner horizontal “G-bar”
+      { from: { x: 0.5, y: 'xheight' }, to: { x: 0.8, y: 'xheight' } },
+    ],
+  },
+  H: {
+    letter: 'H',
+    strokes: [
+      { from: { x: 0.15, y: 'ascender' }, to: { x: 0.15, y: 'baseline' } },
+      { from: { x: 0.85, y: 'ascender' }, to: { x: 0.85, y: 'baseline' } },
+      { from: { x: 0.15, y: 'xheight' }, to: { x: 0.85, y: 'xheight' } },
+    ],
+  },
+
+  I: {
+    letter: 'I',
+    strokes: [
+      // top bar (narrower than full width)
+      { from: { x: 0.3, y: 'ascender' }, to: { x: 0.7, y: 'ascender' } },
+      // vertical stem
+      { from: { x: 0.5, y: 'ascender' }, to: { x: 0.5, y: 'baseline' } },
+      // bottom bar
+      { from: { x: 0.3, y: 'baseline' }, to: { x: 0.7, y: 'baseline' } },
+    ],
+  },
+  J: {
+    letter: 'J',
+    strokes: [
+      // top horizontal bar (only on the right side)
+      { from: { x: 0.2, y: 'ascender' }, to: { x: 0.8, y: 'ascender' } },
+
+      // right vertical stem
+      { from: { x: 0.8, y: 'ascender' }, to: { x: 0.8, y: 'baseline' } },
+
+      // bottom curve (like a reversed C)
+      { from: { x: 0.8, y: 'baseline' }, to: { x: 0.4, y: 'baseline' } },
+      { from: { x: 0.4, y: 'baseline' }, to: { x: 0.4, y: 'xheight' } },
+    ],
+  },
+
+  K: {
+    letter: 'K',
+    strokes: [
+      // main vertical
+      { from: { x: 0.15, y: 'ascender' }, to: { x: 0.15, y: 'baseline' } },
+      // upper diagonal
+      { from: { x: 0.15, y: 'xheight' }, to: { x: 0.85, y: 'ascender' } },
+      // lower diagonal
+      { from: { x: 0.15, y: 'xheight' }, to: { x: 0.85, y: 'baseline' } },
+    ],
+  },
+  L: {
+    letter: 'L',
+    strokes: [
+      { from: { x: 0.15, y: 'ascender' }, to: { x: 0.15, y: 'baseline' } },
+      { from: { x: 0.15, y: 'baseline' }, to: { x: 0.9, y: 'baseline' } },
+    ],
+  },
+
+  T: {
+    letter: 'T',
+    strokes: [
+      { from: { x: 0.1, y: 'ascender' }, to: { x: 0.9, y: 'ascender' } },
+      { from: { x: 0.5, y: 'ascender' }, to: { x: 0.5, y: 'baseline' } },
+    ],
+  },
+
+  // Add more as you go...
+  // Simple example for X:
+  X: {
+    letter: 'X',
+    strokes: [
+      { from: { x: 0.1, y: 'ascender' }, to: { x: 0.9, y: 'baseline' } },
+      { from: { x: 0.9, y: 'ascender' }, to: { x: 0.1, y: 'baseline' } },
+    ],
+  },
+
+
+  // ---------- Lowercase a–l ----------
+
+  a: {
+    letter: 'a',
+    strokes: [
+      // simple “box” a (no ascender)
+      // left vertical
+      { from: { x: 0.25, y: 'xheight' }, to: { x: 0.25, y: 'baseline' } },
+      // top
+      { from: { x: 0.25, y: 'xheight' }, to: { x: 0.75, y: 'xheight' } },
+      // right vertical
+      { from: { x: 0.75, y: 'xheight' }, to: { x: 0.75, y: 'baseline' } },
+      // bottom
+      { from: { x: 0.25, y: 'baseline' }, to: { x: 0.75, y: 'baseline' } },
+    ],
+  },
+
+  b: {
+    letter: 'b',
+    strokes: [
+      // main stem
+      { from: { x: 0.3, y: 'ascender' }, to: { x: 0.3, y: 'baseline' } },
+      // bowl
+      { from: { x: 0.3, y: 'xheight' }, to: { x: 0.7, y: 'xheight' } },
+      { from: { x: 0.7, y: 'xheight' }, to: { x: 0.7, y: 'baseline' } },
+      { from: { x: 0.7, y: 'baseline' }, to: { x: 0.3, y: 'baseline' } },
+    ],
+  },
+
+  c: {
+    letter: 'c',
+    strokes: [
+      { from: { x: 0.7, y: 'xheight' }, to: { x: 0.3, y: 'xheight' } },
+      { from: { x: 0.3, y: 'xheight' }, to: { x: 0.3, y: 'baseline' } },
+      { from: { x: 0.3, y: 'baseline' }, to: { x: 0.7, y: 'baseline' } },
+    ],
+  },
+
+  d: {
+    letter: 'd',
+    strokes: [
+      // main stem (on the right)
+      { from: { x: 0.7, y: 'ascender' }, to: { x: 0.7, y: 'baseline' } },
+      // bowl to the left
+      { from: { x: 0.7, y: 'xheight' }, to: { x: 0.3, y: 'xheight' } },
+      { from: { x: 0.3, y: 'xheight' }, to: { x: 0.3, y: 'baseline' } },
+      { from: { x: 0.3, y: 'baseline' }, to: { x: 0.7, y: 'baseline' } },
+    ],
+  },
+
+  e: {
+    letter: 'e',
+    strokes: [
+      // top bar
+      { from: { x: 0.7, y: 'xheight' }, to: { x: 0.3, y: 'xheight' } },
+      // left vertical
+      { from: { x: 0.3, y: 'xheight' }, to: { x: 0.3, y: 'baseline' } },
+      // bottom bar
+      { from: { x: 0.3, y: 'baseline' }, to: { x: 0.7, y: 'baseline' } },
+    ],
+  },
+
+  f: {
+    letter: 'f',
+    strokes: [
+      // tall vertical with slight descender
+      { from: { x: 0.4, y: 'ascender' }, to: { x: 0.4, y: 'descender' } },
+      // crossbar near x-height
+      { from: { x: 0.2, y: 'xheight' }, to: { x: 0.7, y: 'xheight' } },
+    ],
+  },
+
+  g: {
+    letter: 'g',
+    strokes: [
+      // upper “o”-like loop
+      { from: { x: 0.3, y: 'xheight' }, to: { x: 0.7, y: 'xheight' } },
+      { from: { x: 0.7, y: 'xheight' }, to: { x: 0.7, y: 'baseline' } },
+      { from: { x: 0.7, y: 'baseline' }, to: { x: 0.3, y: 'baseline' } },
+      { from: { x: 0.3, y: 'baseline' }, to: { x: 0.3, y: 'xheight' } },
+      // descender tail
+      { from: { x: 0.55, y: 'baseline' }, to: { x: 0.55, y: 'descender' } },
+    ],
+  },
+
+  h: {
+    letter: 'h',
+    strokes: [
+      // main stem
+      { from: { x: 0.3, y: 'ascender' }, to: { x: 0.3, y: 'baseline' } },
+      // right leg / arch
+      { from: { x: 0.3, y: 'xheight' }, to: { x: 0.7, y: 'xheight' } },
+      { from: { x: 0.7, y: 'xheight' }, to: { x: 0.7, y: 'baseline' } },
+    ],
+  },
+
+  i: {
+    letter: 'i',
+    strokes: [
+      // small stem
+      { from: { x: 0.5, y: 'xheight' }, to: { x: 0.5, y: 'baseline' } },
+      // crude “dot” as a very short segment
+      { from: { x: 0.5, y: 'ascender' }, to: { x: 0.5, y: 'xheight' } },
+    ],
+  },
+
+  j: {
+    letter: 'j',
+    strokes: [
+      // stem into descender
+      { from: { x: 0.55, y: 'xheight' }, to: { x: 0.55, y: 'descender' } },
+      // top “dot”
+      { from: { x: 0.55, y: 'ascender' }, to: { x: 0.55, y: 'xheight' } },
+    ],
+  },
+
+  k: {
+    letter: 'k',
+    strokes: [
+      // main stem
+      { from: { x: 0.3, y: 'ascender' }, to: { x: 0.3, y: 'baseline' } },
+      // diagonals from x-height
+      { from: { x: 0.3, y: 'xheight' }, to: { x: 0.75, y: 'xheight' } },
+      { from: { x: 0.3, y: 'xheight' }, to: { x: 0.75, y: 'baseline' } },
+    ],
+  },
+
+  l: {
+    letter: 'l',
+    strokes: [
+      { from: { x: 0.4, y: 'ascender' }, to: { x: 0.4, y: 'baseline' } },
+    ],
+  },
+};
+
+
+// src/mytypes/glyph.ts
+
+export type GlyphMetricProfile = {
+  letter: string;
+  // Fraction of canvas width used for the black shape
+  // (e.g. 0.5 = narrow like "I", 0.8 = wide like "M").
+  widthFactor: number;
+  // Left side bearing as fraction of canvas width (0..1).
+  leftBearingFactor: number;
+  // Optional override of baseline etc. later if needed.
+};
+
+export const GLYPH_METRICS: Record<string, GlyphMetricProfile> = {
+  A: { letter: 'A', widthFactor: 0.75, leftBearingFactor: 0.125 },
+  B: { letter: 'B', widthFactor: 0.72, leftBearingFactor: 0.14 },
+  C: { letter: 'C', widthFactor: 0.70, leftBearingFactor: 0.15 },
+  D: { letter: 'D', widthFactor: 0.72, leftBearingFactor: 0.14 },
+  E: { letter: 'E', widthFactor: 0.68, leftBearingFactor: 0.16 },
+  F: { letter: 'F', widthFactor: 0.66, leftBearingFactor: 0.17 },
+  G: { letter: 'G', widthFactor: 0.74, leftBearingFactor: 0.13 },
+  H: { letter: 'H', widthFactor: 0.78, leftBearingFactor: 0.11 },
+  I: { letter: 'I', widthFactor: 0.40, leftBearingFactor: 0.30 },
+  J: { letter: 'J', widthFactor: 0.55, leftBearingFactor: 0.23 },
+  K: { letter: 'K', widthFactor: 0.74, leftBearingFactor: 0.13 },
+
+  a: { letter: 'a', widthFactor: 0.70, leftBearingFactor: 0.15 },
+  b: { letter: 'b', widthFactor: 0.65, leftBearingFactor: 0.18 },
+  c: { letter: 'c', widthFactor: 0.62, leftBearingFactor: 0.19 },
+  d: { letter: 'd', widthFactor: 0.65, leftBearingFactor: 0.18 },
+  e: { letter: 'e', widthFactor: 0.63, leftBearingFactor: 0.185 },
+  f: { letter: 'f', widthFactor: 0.50, leftBearingFactor: 0.25 },
+  g: { letter: 'g', widthFactor: 0.68, leftBearingFactor: 0.16 },
+  h: { letter: 'h', widthFactor: 0.68, leftBearingFactor: 0.16 },
+  i: { letter: 'i', widthFactor: 0.35, leftBearingFactor: 0.325 },
+  j: { letter: 'j', widthFactor: 0.45, leftBearingFactor: 0.275 },
+  k: { letter: 'k', widthFactor: 0.62, leftBearingFactor: 0.19 },
+  l: { letter: 'l', widthFactor: 0.35, leftBearingFactor: 0.325 },
+};
+export const DEFAULT_GLYPH_METRIC: GlyphMetricProfile = {
+  letter: '?',
+  widthFactor: 0.7,
+  leftBearingFactor: 0.15,
+};

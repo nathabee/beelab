@@ -98,7 +98,7 @@ class JobPageSerializer(serializers.ModelSerializer):
 
 
 class GlyphSerializer(serializers.ModelSerializer):
-    page_index = serializers.IntegerField(source="page.page_index", read_only=True)
+    page_index = serializers.SerializerMethodField()
 
     class Meta:
         model = Glyph
@@ -110,9 +110,16 @@ class GlyphSerializer(serializers.ModelSerializer):
             "page_index",
             "image_path",
             "is_default",
-            "formattype"
+            "formattype",
         ]
         read_only_fields = ["id", "page_index", "image_path"]
+
+    def get_page_index(self, obj) -> int | None:
+        # If glyph is not attached to a page (e.g. editor/ZIP import),
+        # return None instead of exploding.
+        if obj.page_id is None:
+            return None
+        return obj.page.page_index
 
 
 class GlyphVariantSelectionSerializer(serializers.Serializer):

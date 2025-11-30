@@ -17,7 +17,10 @@ import type {
   SupportedLanguageAlphabet,
 } from '@mytypes/language';
 import type { FontJob } from '@mytypes/job';
+
 import type { GlyphFormat } from '@mytypes/glyph';
+import { DEFAULT_GLYPH_FORMAT } from '@mytypes/glyph';
+
 
 interface AppContextType {
   // generische App-Funktionen
@@ -71,7 +74,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // globales Default-Format für Glyphen (PNG/SVG), mit Persistenz
   const [activeGlyphFormat, internalsetActiveGlyphFormat] =
-    useState<GlyphFormat>('png');
+    useState<GlyphFormat>(DEFAULT_GLYPH_FORMAT);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -135,11 +138,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // Default-Glyphformat aus localStorage laden
+    // Default-Glyphformat aus localStorage laden oder auf globalen Default zurückfallen
     const rawFormat = localStorage.getItem('beefont_default_format');
     if (rawFormat === 'png' || rawFormat === 'svg') {
-      internalsetActiveGlyphFormat(rawFormat);
+      internalsetActiveGlyphFormat(rawFormat as GlyphFormat);
+    } else {
+      internalsetActiveGlyphFormat(DEFAULT_GLYPH_FORMAT);
     }
+
   }, []);
 
   const setInfo = useCallback((next: InfoResponse | null) => {
@@ -223,7 +229,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     internalSetAlphabets(null);
     internalSetBootstrapReady(false);
     internalSetActiveJob(null);
-    internalsetActiveGlyphFormat('svg');
+    internalsetActiveGlyphFormat(DEFAULT_GLYPH_FORMAT);
+
   }, []);
 
   const value = useMemo(

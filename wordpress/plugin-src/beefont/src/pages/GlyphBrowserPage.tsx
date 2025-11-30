@@ -14,6 +14,8 @@ import { useApp } from '@context/AppContext';
 
 import { friendlyMessage, type AppError } from '@bee/common/error';
 
+
+
 type ViewMode = 'variants' | 'defaults';
 
 const GlyphBrowserPage: React.FC = () => {
@@ -51,8 +53,6 @@ const GlyphBrowserPage: React.FC = () => {
   // View mode – per-letter variants vs default overview
   const [viewMode, setViewMode] = useState<ViewMode>('variants');
 
-  // Format used for ZIP import/export (not yet for the grids)
-  // const [glyphFormat, setGlyphFormat] = useState<GlyphFormat>('png');
 
   const {
     glyphs,
@@ -66,7 +66,9 @@ const GlyphBrowserPage: React.FC = () => {
   } = useGlyphs(effectiveSid, {
     manual: false,
     initialLetter,
+    formattype: activeGlyphFormat,
   });
+
 
   // ZIP import/export hook – now format-aware
   const {
@@ -163,7 +165,7 @@ const GlyphBrowserPage: React.FC = () => {
     if (trimmedLetter) params.set('letter', trimmedLetter);
     params.set('variant', String(variantIndex));
     params.set('glyph_id', String(glyphId));
- 
+
     navigate(`/glypheditor?${params.toString()}`);
   };
 
@@ -284,28 +286,7 @@ const GlyphBrowserPage: React.FC = () => {
             <span className="bf-glyph-browser__controls-label">
               Format
             </span>
-            {/* <button
-              type="button"
-              className={
-                'bf-button bf-button--tiny' +
-                (glyphFormat === 'png' ? ' bf-button--primary' : '')
-              }
-              onClick={() => setGlyphFormat('png')}
-              disabled={anyZipBusy}
-            >
-              PNG
-            </button>
-            <button
-              type="button"
-              className={
-                'bf-button bf-button--tiny' +
-                (glyphFormat === 'svg' ? ' bf-button--primary' : '')
-              }
-              onClick={() => setGlyphFormat('svg')}
-              disabled={anyZipBusy}
-            >
-              SVG
-            </button> */}
+
           </div>
 
           {anyZipBusy && (
