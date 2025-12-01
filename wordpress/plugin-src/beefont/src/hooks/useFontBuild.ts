@@ -8,9 +8,8 @@ import { useUser } from '@bee/common';
 import { toAppError, errorBus, type AppError } from '@bee/common/error';
 import { useApp } from '@context/AppContext';
 import type { FontBuild, BuildRequestPayload } from '@mytypes/fontBuild';
-
-import type { GlyphFormat } from '@mytypes/glyph';
-import { DEFAULT_GLYPH_FORMAT } from '@mytypes/glyph';
+ 
+import { DEFAULT_GLYPH_FORMAT,GlyphFormat } from '@mytypes/glyph';
 
 export type UseFontBuildOptions = {
   manual?: boolean;

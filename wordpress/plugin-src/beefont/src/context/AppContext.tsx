@@ -18,7 +18,7 @@ import type {
 } from '@mytypes/language';
 import type { FontJob } from '@mytypes/job';
 
-import type { GlyphFormat } from '@mytypes/glyph';
+import type { GlyphFormat } from '@mytypes/glyphEditor';
 import { DEFAULT_GLYPH_FORMAT } from '@mytypes/glyph';
 
 

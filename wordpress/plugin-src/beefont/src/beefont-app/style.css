@@ -225,6 +225,19 @@
   min-height: 200px;
 }
 
+.bf-glyph-editor__svg-layout-code h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.bf-glyph-editor__svg-layout-code .bf-helptext {
+  font-size: 0.8rem;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+
+
 .bf-glyph-editor__code {
   font-family: monospace;
   font-size: 0.8rem;
@@ -235,6 +248,88 @@
   overflow: auto;
   background: #f9f9f9;
 }
+
+
+.bf-glyph-editor__canvas-wrapper--svg {
+  padding: 0.75rem;
+  border-radius: 4px;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 2px var(--custom-dark-shadow);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto; /* allow scroll when canvas overflows on small screens */
+}
+
+/* Toolbar container below the canvas */
+.bf-glyph-editor__toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+/* One horizontal row; wraps nicely on narrow screens */
+.bf-glyph-editor__toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+/* Visual group around related buttons/controls */
+.bf-glyph-editor__toolbar-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: #ffffff;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
+}
+
+/* Small label at the start of each group */
+.bf-glyph-editor__toolbar-group-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #555;
+  margin-right: 0.5rem;
+}
+
+/* Generic action bar used by grid controls + upload button */
+.bf-glyph-editor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.bf-glyph-editor__label {
+  font-size: 0.85rem;
+  margin-right: 0.25rem;
+}
+
+.bf-glyph-editor__label--inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Generic panel styling for BeeFont sections (Job detail, editor, etc.) */
+.bf-panel {
+  background: var(--custom-light);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px var(--custom-dark-shadow);
+  margin-bottom: 1.5rem;
+}
+
 
 @media (max-width: 900px) {
   .bf-glyph-editor__svg-layout {

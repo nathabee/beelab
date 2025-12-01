@@ -4,6 +4,7 @@
 
 import React, { CSSProperties, useMemo } from 'react';
 import type { Glyph } from '@mytypes/glyph';
+
 import { buildMediaUrl } from '@utils/api';
 
 export type DefaultGlyphGridProps = {

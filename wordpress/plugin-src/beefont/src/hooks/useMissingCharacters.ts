@@ -7,9 +7,8 @@ import { apiApp, authHeaders } from '@utils/api';
 import { useUser } from '@bee/common';
 import { toAppError, errorBus, type AppError } from '@bee/common/error';
 
-import type { LanguageStatus } from '@mytypes/languageStatus';
-import type { GlyphFormat } from '@mytypes/glyph';
-import { DEFAULT_GLYPH_FORMAT } from '@mytypes/glyph';
+import type { LanguageStatus } from '@mytypes/languageStatus'; 
+import { DEFAULT_GLYPH_FORMAT,GlyphFormat } from '@mytypes/glyph';
 
 export type UseMissingCharactersOptions = {
   manual?: boolean;

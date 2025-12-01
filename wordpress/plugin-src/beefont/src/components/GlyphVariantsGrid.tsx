@@ -3,6 +3,7 @@
 
 import React, { useMemo, CSSProperties } from 'react';
 import type { Glyph } from '@mytypes/glyph';
+
 import { buildMediaUrl } from '@utils/api';
 
 export type GlyphVariantsGridProps = {

@@ -1,6 +1,6 @@
 // src/mytype/fontBuild.ts
 
-import type { GlyphFormat } from './glyph';
+import type { GlyphFormat } from './glyphSkeletons';
 
 /**
  * FontBuildSerializer

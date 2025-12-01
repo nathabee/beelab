@@ -7,7 +7,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useApp } from '@context/AppContext';
 
 import PngGlyphEditor from '@components/PngGlyphEditor';
-import SvgGlyphEditor from '@components/SvgGlyphEditor';
+import SvgGlyphEditor from '@components/SvgGlyphEditor/SvgGlyphEditor';
 
 const GlyphEditorPage: React.FC = () => { 
   const [searchParams] = useSearchParams();

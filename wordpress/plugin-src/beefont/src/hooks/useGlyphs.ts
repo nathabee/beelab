@@ -9,8 +9,7 @@ import { toAppError, errorBus, type AppError } from '@bee/common/error';
 
 import { useApp } from '@context/AppContext';
 
-import type { Glyph, GlyphVariantSelection, GlyphFormat } from '@mytypes/glyph';
-import { DEFAULT_GLYPH_FORMAT } from '@mytypes/glyph';
+import type { Glyph,DEFAULT_GLYPH_FORMAT, GlyphVariantSelection, GlyphFormat } from '@mytypes/glyph'; 
 
 
 export type UseGlyphsOptions = {
