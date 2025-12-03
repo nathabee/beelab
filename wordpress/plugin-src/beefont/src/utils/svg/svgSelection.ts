@@ -1,10 +1,13 @@
-// src/utils/svgSelection.ts
+// src/utils/svg/svgSelection.ts
 
 import type { StrokeGroup } from '@mytypes/glyphEditor';
 
 /**
- * Expand a list of selected stroke IDs by group membership:
- * if any stroke of a group is selected, the whole group becomes selected.
+ * Expand a selection of stroke IDs by group membership.
+ *
+ * If any stroke of a group is selected, the whole group becomes selected.
+ *
+ * This is exactly what you previously had inline as expandWithGroups().
  */
 export function expandSelectionWithGroups(
   ids: string[],
@@ -19,8 +22,8 @@ export function expandSelectionWithGroups(
     changed = false;
 
     for (const g of groups) {
-      const hasAny = g.strokeIds.some(id => idSet.has(id));
-      if (!hasAny) continue;
+      const inGroup = g.strokeIds.some(id => idSet.has(id));
+      if (!inGroup) continue;
 
       for (const id of g.strokeIds) {
         if (!idSet.has(id)) {

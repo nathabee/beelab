@@ -33,6 +33,7 @@ export type UseGlyphsResult = {
     selection: GlyphVariantSelection,
   ) => Promise<void>;
   uploadGlyphFromEditor: (letter: string, blob: Blob) => Promise<Glyph | null>;
+  replaceGlyphFromEditor: (glyphId: number, blob: Blob) => Promise<Glyph | null>;
   deleteGlyph: (glyphId: number) => Promise<void>;
 };
 
@@ -356,6 +357,62 @@ export default function useGlyphs(
     [sid, token, letter, formattype],
   );
 
+    const replaceGlyphFromEditor = useCallback(
+    async (glyphId: number, blob: Blob): Promise<Glyph | null> => {
+      console.log(
+        '[beefont/useGlyphs] replaceGlyphFromEditor sid=',
+        sid,
+        'formattype=',
+        formattype,
+        'glyphId=',
+        glyphId,
+      );
+
+      const guard = guardAuthAndSid('replaceGlyphFromEditor');
+      if (guard) return Promise.reject(guard);
+
+      setIsUpdating(true);
+      setError(null);
+
+      const headers = authHeaders(token as string);
+      const encodedSid = encodeURIComponent(sid);
+      const encodedFmt = encodeURIComponent(formattype);
+      const url = `/jobs/${encodedSid}/glyphs/${encodedFmt}/${glyphId}/replace/`;
+
+      const extension = formattype === 'svg' ? 'svg' : 'png';
+
+      const formData = new FormData();
+      formData.append('file', blob, `glyph_${glyphId}.${extension}`);
+
+      try {
+        const res = await apiApp.post<Glyph>(url, formData, { headers });
+        const updated = res.data;
+
+        // Liste aktualisieren (optional zusätzlich fetchGlyphs, wenn du sicher gehen willst)
+        setGlyphs(prev =>
+          prev.map(g => (g.id === updated.id ? updated : g)),
+        );
+
+        setIsUpdating(false);
+        return updated;
+      } catch (e) {
+        const appErr: AppError = toAppError(e, {
+          component: 'useGlyphs',
+          functionName: 'replaceGlyphFromEditor',
+          service: 'beefont',
+        });
+        if (appErr.httpStatus === 401 || appErr.httpStatus === 403) {
+          appErr.severity = 'page';
+          errorBus.emit(appErr);
+        }
+        setError(appErr);
+        setIsUpdating(false);
+        return Promise.reject(appErr);
+      }
+    },
+    [sid, token, formattype],
+  );
+
   useEffect(() => {
     if (manual) return;
     fetchGlyphs().catch(err => {
@@ -374,5 +431,6 @@ export default function useGlyphs(
     selectDefault,
     deleteGlyph,
     uploadGlyphFromEditor,
+    replaceGlyphFromEditor,
   };
 }

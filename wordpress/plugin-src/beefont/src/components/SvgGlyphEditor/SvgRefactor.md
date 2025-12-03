@@ -284,50 +284,26 @@ Renders:
 
 ---
 
-## 3. Minimal changes for GlyphVariantsGrid and DefaultGlyphGrid
+## mytypes
+src/mytypes/glyph.ts → backend model (API glyph)
 
-These two components do not care how the SVG editor works internally. They just display glyph variants from the backend.
+src/mytypes/glyphSkeletons.ts → the big per-letter data (GLYPH_SKELETONS + GLYPH_METRICS)
 
-You only need to ensure they are importing the correct **backend `Glyph` interface**.
+src/mytypes/glyphEditor.ts → everything the SVG editor needs on the frontend:
 
-Right now you have:
+editor formats
 
-```ts
-import type { Glyph } from '@mytypes/glyphSkeletons';
-```
+skeleton types
 
-After our split, `@mytypes/glyphSkeletons` holds skeletons and metrics, not backend glyphs. You have two options:
+geometry primitives (Point, Stroke, StrokeGroup)
 
-1. If you already have a backend `Glyph` interface somewhere (very likely), point the import to that real file, for example:
+line factors + defaults
 
-   ```ts
-   import type { Glyph } from '@mytypes/glyph';  // if this file defines the API Glyph
-   ```
+canvas size
 
-   or
+DrawMode
 
-   ```ts
-   import type { Glyph } from '@mytypes/glyphApi';  // whatever name you actually use
-   ```
-
-2. If the only place where the `Glyph` interface currently lives is in `glyphSkeletons.ts`, move that interface to a dedicated mytypes file (e.g. `src/mytypes/glyphApi.ts`) and then update both components to import from there.
-
-The components themselves do not need structural changes. Their logic is fine:
-
-* `GlyphVariantsGrid`:
-
-  * Still takes a flat list of `Glyph` objects.
-  * Groups them by `letter`.
-  * Uses `glyph.image_path` via `buildMediaUrl`.
-  * Keeps Edit/Delete/Default callbacks exactly as they are.
-
-* `DefaultGlyphGrid`:
-
-  * Filters `is_default`.
-  * Sorts by `letter` + `variant_index`.
-  * Displays one thumbnail per default glyph.
-
-So the **only adaptation** is: import `Glyph` from the correct mytypes file that describes the backend glyph model, not from the new skeleton/metric file.
+defaults like DEFAULT_GLYPH_FORMAT, DEFAULT_GLYPH_METRIC 
 
 ---
 

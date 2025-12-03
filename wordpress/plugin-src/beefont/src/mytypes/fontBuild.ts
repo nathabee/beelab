@@ -25,7 +25,7 @@ export interface FontBuild {
   language: string;
 
   // Optional, if your serializer exposes it
-  language_name?: string;
+  language_code?: string; 
 
   glyph_format: GlyphFormat;
 

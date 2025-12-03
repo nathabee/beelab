@@ -31,6 +31,7 @@ export type SvgGlyphCanvasProps = {
   glyphXMax: number;
   glyphWidth: number;
 
+  // vertical guideline positions, already computed in canvas space
   majusculeY: number;
   ascenderY: number;
   xHeightY: number;
@@ -106,7 +107,12 @@ const SvgGlyphCanvas: React.FC<SvgGlyphCanvasProps> = ({
       onMouseUp={onCanvasMouseUp}
       onMouseLeave={onCanvasMouseUp}
       style={{
-        cursor: drawMode === 'select' ? 'crosshair' : 'crosshair',
+        cursor:
+          drawMode === 'select'
+            ? 'crosshair'
+            : hasSelection
+              ? 'move'
+              : 'crosshair',
       }}
     >
       {/* Background */}
@@ -118,9 +124,9 @@ const SvgGlyphCanvas: React.FC<SvgGlyphCanvasProps> = ({
         fill="#ffffff"
       />
 
-      {/* Guidelines (editor only) */}
+      {/* Guidelines */}
       <g stroke="#ff5555" strokeWidth={1} strokeDasharray="6 4">
-        {/* majuscule */}
+        {/* cap / majuscule */}
         <line
           x1={glyphXMin}
           y1={majusculeY}
@@ -187,11 +193,7 @@ const SvgGlyphCanvas: React.FC<SvgGlyphCanvasProps> = ({
       )}
 
       {/* Real strokes */}
-      <g
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
+      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {strokes.map(stroke => {
           const { id, p0, p1, ctrl, width: w } = stroke;
           const isSelected = selectedIds.includes(id);
@@ -199,72 +201,26 @@ const SvgGlyphCanvas: React.FC<SvgGlyphCanvasProps> = ({
           const mainStrokeColor = isSelected ? '#0070f3' : 'black';
           const mainStrokeOpacity = isSelected ? 1 : 0.8;
 
-          const hasCtrl = !!ctrl;
-
           const handleStrokeClickWrapper = (
-            e: React.MouseEvent<SVGPathElement | SVGLineElement, MouseEvent>,
+            e: React.MouseEvent<
+              SVGPathElement | SVGLineElement,
+              MouseEvent
+            >,
           ) => onStrokeClick(e, id);
 
           const handleStrokeMouseDownWrapper = (
-            e: React.MouseEvent<SVGPathElement | SVGLineElement, MouseEvent>,
+            e: React.MouseEvent<
+              SVGPathElement | SVGLineElement,
+              MouseEvent
+            >,
           ) => onStrokeMouseDown(e, id);
 
-          return (
-            <g key={id}>
-              {hasCtrl && ctrl ? (
-                <>
-                  {/* Main curved stroke */}
-                  <path
-                    d={`M ${p0.x} ${p0.y} Q ${ctrl.x} ${ctrl.y} ${p1.x} ${p1.y}`}
-                    stroke={mainStrokeColor}
-                    strokeWidth={w}
-                    opacity={mainStrokeOpacity}
-                    style={{ cursor: 'pointer' }}
-                    onClick={handleStrokeClickWrapper}
-                    onMouseDown={handleStrokeMouseDownWrapper}
-                  />
-
-                  {/* Helper lines + handle only when selected */}
-                  {isSelected && (
-                    <>
-                      <g
-                        stroke="#0070f3"
-                        strokeWidth={1}
-                        strokeDasharray="4 4"
-                      >
-                        <line
-                          x1={p0.x}
-                          y1={p0.y}
-                          x2={ctrl.x}
-                          y2={ctrl.y}
-                        />
-                        <line
-                          x1={ctrl.x}
-                          y1={ctrl.y}
-                          x2={p1.x}
-                          y2={p1.y}
-                        />
-                      </g>
-                      <circle
-                        cx={ctrl.x}
-                        cy={ctrl.y}
-                        r={6}
-                        fill="#0070f3"
-                        stroke="#ffffff"
-                        strokeWidth={2}
-                        style={{ cursor: 'grab' }}
-                        onMouseDown={e => onStartDragControl(e, id)}
-                      />
-                    </>
-                  )}
-                </>
-              ) : (
-                // Straight line (no ctrl yet)
-                <line
-                  x1={p0.x}
-                  y1={p0.y}
-                  x2={p1.x}
-                  y2={p1.y}
+          if (ctrl) {
+            return (
+              <g key={id}>
+                {/* Main curved stroke */}
+                <path
+                  d={`M ${p0.x} ${p0.y} Q ${ctrl.x} ${ctrl.y} ${p1.x} ${p1.y}`}
                   stroke={mainStrokeColor}
                   strokeWidth={w}
                   opacity={mainStrokeOpacity}
@@ -272,7 +228,59 @@ const SvgGlyphCanvas: React.FC<SvgGlyphCanvasProps> = ({
                   onClick={handleStrokeClickWrapper}
                   onMouseDown={handleStrokeMouseDownWrapper}
                 />
-              )}
+
+                {/* Helper lines + handle only when selected */}
+                {isSelected && (
+                  <>
+                    <g
+                      stroke="#0070f3"
+                      strokeWidth={1}
+                      strokeDasharray="4 4"
+                    >
+                      <line
+                        x1={p0.x}
+                        y1={p0.y}
+                        x2={ctrl.x}
+                        y2={ctrl.y}
+                      />
+                      <line
+                        x1={ctrl.x}
+                        y1={ctrl.y}
+                        x2={p1.x}
+                        y2={p1.y}
+                      />
+                    </g>
+                    <circle
+                      cx={ctrl.x}
+                      cy={ctrl.y}
+                      r={6}
+                      fill="#0070f3"
+                      stroke="#ffffff"
+                      strokeWidth={2}
+                      style={{ cursor: 'grab' }}
+                      onMouseDown={e => onStartDragControl(e, id)}
+                    />
+                  </>
+                )}
+              </g>
+            );
+          }
+
+          // Straight line (no ctrl yet)
+          return (
+            <g key={id}>
+              <line
+                x1={p0.x}
+                y1={p0.y}
+                x2={p1.x}
+                y2={p1.y}
+                stroke={mainStrokeColor}
+                strokeWidth={w}
+                opacity={mainStrokeOpacity}
+                style={{ cursor: 'pointer' }}
+                onClick={handleStrokeClickWrapper}
+                onMouseDown={handleStrokeMouseDownWrapper}
+              />
             </g>
           );
         })}

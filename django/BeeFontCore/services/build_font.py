@@ -138,7 +138,8 @@ def _write_fontforge_script(
     - generiert TTF
     """
     script = f'''\
-import fontforge, os, sys
+import fontforge, psMat, os, sys
+
 
 font = fontforge.font()
 font.encoding = "UnicodeFull"
@@ -165,14 +166,19 @@ for token, cp in mapping.items():
     g.removeOverlap()
     g.simplify()
 
-    # grobe Breite; Satzzeichen schmaler
-    if token in ["comma","period","colon","semicolon","apostrophe","quotedbl",
-                 "minus","plus","slash","backslash","underscore","equal","asterisk","at"]:
-        g.width = 600
-    elif token in ["space"]:
-        g.width = 500
-    else:
-        g.width = 1000
+    # derive advance width from geometry in the SVG
+    xmin, ymin, xmax, ymax = g.boundingBox()  # geometry after applying viewBox transform
+    pad = 50  # side bearing padding in font units
+
+    # shift outlines so they start at x = pad
+    g.transform(psMat.translate(pad - xmin, 0))
+
+    # recompute bbox after translation
+    xmin2, ymin2, xmax2, ymax2 = g.boundingBox()
+
+    # advance width = rightmost point + right pad
+    g.width = int(xmax2 + pad)
+
     count += 1
 
 # sicherstellen, dass es ein Leerzeichen gibt

@@ -1,6 +1,5 @@
-'use client';
-
 // src/components/SvgGlyphEditor/SvgGlyphEditor.tsx
+'use client';
 
 import React, {
   useEffect,
@@ -11,25 +10,36 @@ import React, {
 
 import useGlyphs from '@hooks/useGlyphs';
 
+import type { Glyph } from '@mytypes/glyph';
 import {
+  DEFAULT_SVG_CANVAS_WIDTH,
+  DEFAULT_SVG_CANVAS_HEIGHT,
+  DEFAULT_FONT_LINE_FACTORS,
   type Point,
   type Stroke,
   type StrokeGroup,
-  type LineFactors,
-  type LineFactorKey,
   type DrawMode,
-  DEFAULT_LINE_FACTORS,
-  SVG_CANVAS_WIDTH,
-  SVG_CANVAS_HEIGHT,
+  type FontLineFactors,
+  type GlyphMetricProfile,
 } from '@mytypes/glyphEditor';
 
-import { serializeGlyphToSvg, parseSvgToStrokes } from '@utils/svg/svgSerialization';
-import { strokeCenter, pointInRect } from '@utils/svg/svgGeometry';
+import {
+  serializeGlyphToSvg,
+  type SvgViewBoxOverride,
+  parseSvgToStrokes,
+} from '@utils/svg/svgSerialization';
+import {
+  strokeCenter,
+  pointInRect,
+} from '@utils/svg/svgGeometry';
 import {
   getGlyphMetric,
+  computeGlyphBoxLayout,
   createCircleStrokes,
   createLetterSkeletonStrokes,
+  getDefaultHorizontalBoxForLetter,
 } from '@utils/svg/svgSkeleton';
+
 import { expandSelectionWithGroups } from '@utils/svg/svgSelection';
 
 import SvgGlyphCanvas from './SvgGlyphCanvas';
@@ -37,26 +47,46 @@ import SvgGlyphToolbar from './SvgGlyphToolbar';
 import SvgGlyphGridControls from './SvgGlyphGridControls';
 import SvgGlyphUploadPanel from './SvgGlyphUploadPanel';
 import SvgGlyphCodePanel from './SvgGlyphCodePanel';
+import SvgGlyphMetricsControls from './SvgGlyphMetricsControls';
 
-type SvgGlyphEditorProps = {
+export type SvgGlyphEditorProps = {
   sid: string;
   letter: string;
   variantIndex?: number;
+  glyphId?: number;
 };
-import { scaleStrokes } from '@utils/svg/svgTransform';
 
+const CANVAS_WIDTH = DEFAULT_SVG_CANVAS_WIDTH;
+const CANVAS_HEIGHT = DEFAULT_SVG_CANVAS_HEIGHT;
+
+type HorizontalMetrics = {
+  left: number;
+  right: number;
+};
 
 const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
   sid,
   letter,
   variantIndex,
+  glyphId,
 }) => {
+  // ---------------------------------------------------------------------------
+  // Core stroke state + history
+  // ---------------------------------------------------------------------------
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [history, setHistory] = useState<Stroke[][]>([]);
   const [redoStack, setRedoStack] = useState<Stroke[][]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [groups, setGroups] = useState<StrokeGroup[]>([]);
 
+  // Global grid (live) + draft values for the font lines
+  const [fontLineFactors, setFontLineFactors] = useState<FontLineFactors>(
+    DEFAULT_FONT_LINE_FACTORS,
+  );
+  const [draftFontLineFactors, setDraftFontLineFactors] =
+    useState<FontLineFactors>(DEFAULT_FONT_LINE_FACTORS);
+
+  // Drawing / interaction state
   const [pendingStart, setPendingStart] = useState<Point | null>(null);
   const [previewPoint, setPreviewPoint] = useState<Point | null>(null);
   const [draggingCtrlForId, setDraggingCtrlForId] = useState<string | null>(
@@ -70,11 +100,18 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
   const dragStartRef = useRef<Point | null>(null);
   const dragInitialStrokesRef = useRef<Stroke[]>([]);
 
-  const [lineFactors, setLineFactors] = useState<LineFactors>(
-    DEFAULT_LINE_FACTORS,
+  // Horizontal metrics: per-letter override + draft UI values
+  const trimmedLetter = letter.trim() || 'A';
+
+  const [metrics, setMetrics] = useState<HorizontalMetrics>(() =>
+    getDefaultHorizontalBoxForLetter(trimmedLetter, CANVAS_WIDTH),
   );
-  const [draftLineFactors, setDraftLineFactors] =
-    useState<LineFactors>(DEFAULT_LINE_FACTORS);
+  const [draftMetrics, setDraftMetrics] = useState<HorizontalMetrics>(() =>
+    getDefaultHorizontalBoxForLetter(trimmedLetter, CANVAS_WIDTH),
+  );
+
+  const [metricOverride, setMetricOverride] =
+    useState<GlyphMetricProfile | null>(null);
 
   // Marquee selection
   const [selectionRectStart, setSelectionRectStart] =
@@ -83,16 +120,15 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
     useState<Point | null>(null);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const scaleSelection = (sx: number, sy: number) => {
-    if (!selectedIds.length) return;
-    updateStrokes(prev => scaleStrokes(prev, selectedIds, sx, sy));
-  };
 
-  // Hook for SVG glyphs
+  // ---------------------------------------------------------------------------
+  // Backend hook: SVG glyphs for this job + letter
+  // ---------------------------------------------------------------------------
   const {
     glyphs,
     fetchGlyphs,
     uploadGlyphFromEditor,
+    replaceGlyphFromEditor,
     isUpdating: isUploadingGlyph,
   } = useGlyphs(sid, {
     manual: true,
@@ -100,12 +136,9 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
     formattype: 'svg',
   });
 
-  const svgCode = useMemo(
-    () => serializeGlyphToSvg(strokes, letter),
-    [strokes, letter],
-  );
-
-  // ---------- helpers ----------
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
 
   const clearTransientState = () => {
     setPendingStart(null);
@@ -127,7 +160,6 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
     clearTransientState();
   };
 
-  // push current strokes into history, clear redo, then compute new strokes
   const updateStrokes = (updater: (prev: Stroke[]) => Stroke[]) => {
     setStrokes(prev => {
       setHistory(h => [...h, prev]);
@@ -136,19 +168,141 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
     });
   };
 
-  const adjustWidth = (delta: number) => {
-    if (!selectedIds.length) return;
-    updateStrokes(prev =>
-      prev.map(s =>
-        selectedIds.includes(s.id)
-          ? {
-            ...s,
-            width: Math.max(1, Math.min(50, s.width + delta)),
-          }
-          : s,
-      ),
-    );
+  // Grid draft handlers
+  const handleDraftLinesChange = (key: keyof FontLineFactors, value: number) => {
+    setDraftFontLineFactors(prev => ({ ...prev, [key]: value }));
   };
+
+  const applyGrid = () => {
+    setFontLineFactors(draftFontLineFactors);
+  };
+
+  const resetGrid = () => {
+    setFontLineFactors(DEFAULT_FONT_LINE_FACTORS);
+    setDraftFontLineFactors(DEFAULT_FONT_LINE_FACTORS);
+  };
+
+  // ---------------------------------------------------------------------------
+  // Metrics: (re)init when letter changes
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    const defaults = getDefaultHorizontalBoxForLetter(
+      trimmedLetter,
+      CANVAS_WIDTH,
+    );
+    setMetrics(defaults);
+    setDraftMetrics(defaults);
+
+    const advance = (defaults.right - defaults.left) / CANVAS_WIDTH;
+    const lsb = defaults.left / CANVAS_WIDTH;
+
+    setMetricOverride({
+      letter: trimmedLetter,
+      advanceWidthFactor: advance,
+      leftSideBearingFactor: lsb,
+    });
+  }, [trimmedLetter]);
+
+  const applyMetrics = () => {
+    // Clamp draft metrics and push into live + override
+    const left = Math.max(0, Math.min(CANVAS_WIDTH, draftMetrics.left));
+    const right = Math.max(left + 1, Math.min(CANVAS_WIDTH, draftMetrics.right));
+
+    const next: HorizontalMetrics = { left, right };
+    setMetrics(next);
+    setDraftMetrics(next);
+
+    const advance = (right - left) / CANVAS_WIDTH;
+    const lsb = left / CANVAS_WIDTH;
+
+    setMetricOverride({
+      letter: trimmedLetter,
+      advanceWidthFactor: advance,
+      leftSideBearingFactor: lsb,
+    });
+  };
+
+  // ---------------------------------------------------------------------------
+  // Geometry derived from letter + grid factors
+  // ---------------------------------------------------------------------------
+  const baseMetric = useMemo(
+    () => getGlyphMetric(trimmedLetter),
+    [trimmedLetter],
+  );
+
+  const effectiveMetric = useMemo(
+    () => metricOverride ?? baseMetric,
+    [metricOverride, baseMetric],
+  );
+
+  const layout = useMemo(
+    () =>
+      computeGlyphBoxLayout(
+        CANVAS_WIDTH,
+        CANVAS_HEIGHT,
+        effectiveMetric,
+        fontLineFactors,
+      ),
+    [effectiveMetric, fontLineFactors],
+  );
+
+  const {
+    glyphXMin,
+    glyphXMax,
+    glyphWidth,
+    baselineY,
+    xHeightY,
+    ascenderY,
+    capHeightY,
+    descenderY,
+  } = layout;
+
+  const majusculeY = capHeightY;
+  const previewFontSize = (baselineY - capHeightY) * 1.1;
+
+  const svgViewBoxOverride: SvgViewBoxOverride = {
+    left: metrics.left,
+    right: metrics.right,
+  };
+
+  const svgCode = useMemo(
+    () =>
+      serializeGlyphToSvg(
+        strokes,
+        trimmedLetter,
+        svgViewBoxOverride,
+      ),
+    [strokes, trimmedLetter, svgViewBoxOverride.left, svgViewBoxOverride.right],
+  );
+
+  const hasSelection = selectedIds.length > 0;
+  const canGroupSelection = selectedIds.length >= 2;
+  const canUngroupSelection = groups.some(g =>
+    g.strokeIds.some(id => selectedIds.includes(id)),
+  );
+  const canUndo = history.length > 0;
+  const canRedo = redoStack.length > 0;
+  const hasStrokes = strokes.length > 0;
+  const anyMarquee = !!(selectionRectStart && selectionRectEnd);
+
+  // ---------------------------------------------------------------------------
+  // Insert default letter skeleton for current letter
+  // ---------------------------------------------------------------------------
+  const handleInsertDefaultLetter = () => {
+    const baseWidth = 8;
+    const skeleton = createLetterSkeletonStrokes(
+      trimmedLetter,
+      layout,
+      baseWidth,
+    );
+    if (!skeleton.length) return;
+
+    updateStrokes(prev => [...prev, ...skeleton]);
+  };
+
+  // ---------------------------------------------------------------------------
+  // Toolbar helpers: clear, undo/redo, delete, width
+  // ---------------------------------------------------------------------------
 
   const handleClearAll = () => {
     if (!strokes.length) return;
@@ -214,164 +368,27 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
     clearTransientState();
   };
 
-  const handleGroupSelection = () => {
-    const ids = Array.from(new Set(selectedIds));
-    if (ids.length < 2) return;
-
-    setGroups(prev => {
-      const idsSet = new Set(ids);
-      const cleaned = prev
-        .map(g => ({
-          ...g,
-          strokeIds: g.strokeIds.filter(id => !idsSet.has(id)),
-        }))
-        .filter(g => g.strokeIds.length > 0);
-
-      const newGroup: StrokeGroup = {
-        id: `group-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 7)}`,
-        strokeIds: ids,
-      };
-
-      const nextGroups = [...cleaned, newGroup];
-
-      // expand selection with the new grouping
-      setSelectedIds(prevSel =>
-        expandSelectionWithGroups(prevSel, nextGroups),
-      );
-
-      return nextGroups;
-    });
-  };
-
-  const handleUngroupSelection = () => {
-    if (!selectedIds.length || !groups.length) return;
-    const selectedSet = new Set(selectedIds);
-
-    setGroups(prev =>
-      prev.filter(g => !g.strokeIds.some(id => selectedSet.has(id))),
+  const adjustWidth = (delta: number) => {
+    if (!selectedIds.length) return;
+    updateStrokes(prev =>
+      prev.map(s =>
+        selectedIds.includes(s.id)
+          ? {
+              ...s,
+              width: Math.max(1, Math.min(50, s.width + delta)),
+            }
+          : s,
+      ),
     );
   };
 
-  const handleUploadToBackend = async () => {
-    const trimmedLetter = letter.trim();
-    if (!trimmedLetter) return;
-    if (!strokes.length) return;
-    if (!sid) return;
+  // ---------------------------------------------------------------------------
+  // Mouse handlers for canvas
+  // ---------------------------------------------------------------------------
 
-    try {
-      const svgBlob = new Blob([svgCode], {
-        type: 'image/svg+xml;charset=utf-8',
-      });
-      await uploadGlyphFromEditor(trimmedLetter, svgBlob);
-    } catch (err) {
-      console.error(
-        '[SvgGlyphEditor] uploadGlyphFromEditor failed:',
-        err,
-      );
-    }
-  };
-
-  const handleDraftLineChange = (key: LineFactorKey, value: number) => {
-    const clamped = Math.max(0, Math.min(1, value));
-
-    setDraftLineFactors(prev => ({
-      ...prev,
-      [key]: clamped,
-    }));
-  };
-
-  const applyLineFactors = () => {
-    setLineFactors(draftLineFactors);
-  };
-
-  const resetLineFactors = () => {
-    setLineFactors(DEFAULT_LINE_FACTORS);
-    setDraftLineFactors(DEFAULT_LINE_FACTORS);
-  };
-
-  const handleInsertDefaultLetter = () => {
-    const trimmedLetterLocal = letter.trim() || 'A';
-
-    const geom = {
-      glyphXMin,
-      glyphXMax,
-      majusculeY,
-      ascenderY,
-      xHeightY,
-      baselineY,
-      descenderY,
-    };
-
-    const skeleton = createLetterSkeletonStrokes(
-      trimmedLetterLocal,
-      geom,
-      8,
-    );
-    if (!skeleton.length) return;
-
-    const groupId = `letter-${trimmedLetterLocal}-${Date.now()}`;
-
-    updateStrokes(prev => {
-      const withIds = skeleton.map(s => ({
-        ...s,
-        id: `stroke-letter-${groupId}-${Math.random()
-          .toString(36)
-          .slice(2, 7)}`,
-      }));
-
-      // Group anlegen
-      setGroups(prevGroups => [
-        ...prevGroups,
-        {
-          id: groupId,
-          strokeIds: withIds.map(s => s.id),
-        },
-      ]);
-
-      // direkt selektieren
-      setSelectedIds(withIds.map(s => s.id));
-
-      return [...prev, ...withIds];
-    });
-
-    clearTransientState();
-  };
-
-
-  // ---------- geometry based on current letter + lineFactors ----------
-
-  const trimmedLetter = letter.trim() || 'A';
-  const metric = getGlyphMetric(trimmedLetter);
-
-  const glyphWidth = metric.widthFactor * SVG_CANVAS_WIDTH;
-  const leftBearing = metric.leftBearingFactor * SVG_CANVAS_WIDTH;
-  const glyphXMin = leftBearing;
-  const glyphXMax = leftBearing + glyphWidth;
-
-  const marginTop = SVG_CANVAS_HEIGHT * 0.10;
-  const marginBottom = SVG_CANVAS_HEIGHT * 0.10;
-  const baselineY = SVG_CANVAS_HEIGHT - marginBottom;
-  const mainBand = baselineY - marginTop;
-
-  const xHeightY = baselineY - mainBand * lineFactors.xHeight;
-  const ascenderY = baselineY - mainBand * lineFactors.ascender;
-  const majusculeY = baselineY - mainBand * lineFactors.majuscule;
-  const descenderY = baselineY + mainBand * lineFactors.descender;
-
-  // Arial preview: scale so that a capital roughly fills from majuscule→baseline
-  const previewFontSize = (baselineY - majusculeY) * 1.1;
-
-  const hasSelection = selectedIds.length > 0;
-  const hasGroupForSelection = groups.some(g =>
-    g.strokeIds.some(id => selectedIds.includes(id)),
-  );
-  const anyMarquee = selectionRectStart && selectionRectEnd;
-
-  // ---------- canvas mouse handlers ----------
-
-  const handleCanvasMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+  const handleCanvasMouseDown = (
+    e: React.MouseEvent<SVGSVGElement>,
+  ) => {
     if (drawMode !== 'select') return;
     const svg = svgRef.current;
     if (!svg) return;
@@ -387,10 +404,8 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
   };
 
   const handleCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    // In select mode, clicks are handled via drag/mouseup for rectangle; ignore simple click
     if (drawMode === 'select') return;
-    if (draggingCtrlForId || isDraggingSelection) return; // ignore clicks while dragging
-
+    if (draggingCtrlForId || isDraggingSelection) return;
     const svg = svgRef.current;
     if (!svg) return;
 
@@ -399,38 +414,8 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
     const y = e.clientY - rect.top;
     const point: Point = { x, y };
 
-    const geom = {
-      glyphXMin,
-      glyphXMax,
-      majusculeY,
-      ascenderY,
-      xHeightY,
-      baselineY,
-      descenderY,
-    };
-
-    // Letter mode: insert skeleton in canonical position, ignore click position
-    /*
-    if (drawMode === 'letter') {
-      const skeleton = createLetterSkeletonStrokes(
-        trimmedLetter,
-        geom,
-        8,
-      );
-
-      if (skeleton.length) {
-        updateStrokes(prev => [...prev, ...skeleton]);
-      }
-
-      setPendingStart(null);
-      setPreviewPoint(null);
-      return;
-    }
-    */
-
-    // Stroke / circle mode: two-click behaviour
+    // Two-click behaviour for stroke/circle
     if (!pendingStart) {
-      // First click: set start point, keep selection as-is
       setPendingStart(point);
       setPreviewPoint(null);
     } else {
@@ -446,7 +431,7 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
             p0: start,
             p1: point,
             width: 8,
-          },
+          } as Stroke,
         ]);
       } else if (drawMode === 'circle') {
         const circleStrokes = createCircleStrokes(start, point, 8);
@@ -460,7 +445,9 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
     }
   };
 
-  const handleCanvasMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  const handleCanvasMouseMove = (
+    e: React.MouseEvent<SVGSVGElement>,
+  ) => {
     const svg = svgRef.current;
     if (!svg) return;
 
@@ -498,10 +485,10 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
             p0: { x: s.p0.x + dx, y: s.p0.y + dy },
             p1: { x: s.p1.x + dx, y: s.p1.y + dy },
           };
-          if (s.ctrl) {
-            shifted.ctrl = { x: s.ctrl.x + dx, y: s.ctrl.y + dy };
-          }
-          return shifted;
+            if (s.ctrl) {
+              shifted.ctrl = { x: s.ctrl.x + dx, y: s.ctrl.y + dy };
+            }
+            return shifted;
         }),
       );
       return;
@@ -539,7 +526,11 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
             else nextSet.add(id);
           }
 
-          return expandSelectionWithGroups(Array.from(nextSet), groups);
+          const expanded = expandSelectionWithGroups(
+            Array.from(nextSet),
+            groups,
+          );
+          return expanded;
         });
       }
 
@@ -550,7 +541,7 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
     if (isDraggingSelection) {
       // Finalize move as a single history step
       setHistory(h => [...h, dragInitialStrokesRef.current]);
-      setRedoStack([]); // moving selection starts a new branch
+      setRedoStack([]);
       setIsDraggingSelection(false);
       dragStartRef.current = null;
       dragInitialStrokesRef.current = [];
@@ -580,14 +571,12 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
       let next: string[];
       if (multi) {
         if (prev.includes(strokeId)) {
-          // toggle off + whole group off
           const toRemove = expandSelectionWithGroups(
             [strokeId],
             groups,
           );
           next = prev.filter(id => !toRemove.includes(id));
         } else {
-          // add + whole group on
           next = expandSelectionWithGroups(
             [...prev, strokeId],
             groups,
@@ -595,14 +584,12 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
         }
       } else {
         if (prev.length === 1 && prev[0] === strokeId) {
-          // Click on already-selected stroke without modifiers → deselect (group as well)
           const toRemove = expandSelectionWithGroups(
             [strokeId],
             groups,
           );
           next = prev.filter(id => !toRemove.includes(id));
         } else {
-          // Select this stroke (and its group) exclusively
           next = expandSelectionWithGroups([strokeId], groups);
         }
       }
@@ -634,17 +621,15 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
       prev.map(s => {
         if (s.id !== strokeId) return s;
         if (s.ctrl) return s;
-        return {
-          ...s,
-          ctrl: {
-            x: (s.p0.x + s.p1.x) / 2,
-            y: (s.p0.y + s.p1.y) / 2,
-          },
+        // new control point at midpoint
+        const mid: Point = {
+          x: (s.p0.x + s.p1.x) / 2,
+          y: (s.p0.y + s.p1.y) / 2,
         };
+        return { ...s, ctrl: mid };
       }),
     );
   };
-
 
   const startDragControl = (
     e: React.MouseEvent<SVGCircleElement, MouseEvent>,
@@ -652,68 +637,146 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
   ) => {
     e.stopPropagation();
     e.preventDefault();
-    setSelectedIds(prev =>
-      expandSelectionWithGroups([strokeId], groups),
-    );
+    setSelectedIds(expandSelectionWithGroups([strokeId], groups));
     setDraggingCtrlForId(strokeId);
   };
 
-  // ---------- backend integration ----------
+  // ---------------------------------------------------------------------------
+  // Group / ungroup
+  // ---------------------------------------------------------------------------
 
-  // 1) Whenever sid/letter changes, fetch SVG glyph meta for that letter
+  const handleGroupSelection = () => {
+    const ids = Array.from(new Set(selectedIds));
+    if (ids.length < 2) return;
+
+    setGroups(prev => {
+      // Remove these strokes from any existing groups
+      const idsSet = new Set(ids);
+      const cleaned = prev
+        .map(g => ({
+          ...g,
+          strokeIds: g.strokeIds.filter(id => !idsSet.has(id)),
+        }))
+        .filter(g => g.strokeIds.length > 0);
+
+      const newGroup: StrokeGroup = {
+        id: `group-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2, 7)}`,
+        strokeIds: ids,
+      };
+
+      return [...cleaned, newGroup];
+    });
+
+    // Re-expand selection with current groups
+    setSelectedIds(expandSelectionWithGroups(selectedIds, groups));
+  };
+
+  const handleUngroupSelection = () => {
+    if (!selectedIds.length || !groups.length) return;
+    const selectedSet = new Set(selectedIds);
+
+    setGroups(prev =>
+      prev.filter(g => !g.strokeIds.some(id => selectedSet.has(id))),
+    );
+  };
+
+  // ---------------------------------------------------------------------------
+  // Upload to backend (uses current viewBoxOverride)
+  // ---------------------------------------------------------------------------
+  const handleUploadToBackend = async () => {
+    const trimmed = letter.trim();
+    if (!trimmed) return;
+    if (!strokes.length) return;
+    if (!sid) return;
+
+    try {
+      const svgBlob = new Blob(
+        [serializeGlyphToSvg(strokes, trimmed, svgViewBoxOverride)],
+        {
+          type: 'image/svg+xml;charset=utf-8',
+        },
+      );
+
+      if (glyphId != null) {
+        // existing variant → replace
+        await replaceGlyphFromEditor(glyphId, svgBlob);
+      } else {
+        // new variant
+        await uploadGlyphFromEditor(trimmed, svgBlob);
+      }
+      // Optional: you could refetch here if you want list/UI to refresh elsewhere
+      // await fetchGlyphs({ letter: trimmed });
+    } catch (err) {
+      console.error(
+        '[SvgGlyphEditor] upload/replace glyph failed:',
+        err,
+      );
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // Backend sync
+  // ---------------------------------------------------------------------------
+
+  // 1) fetch glyphs for this letter
   useEffect(() => {
-    const trimmedLetterLocal = letter.trim();
-    if (!sid || !trimmedLetterLocal) {
+    const trimmed = letter.trim();
+    if (!sid || !trimmed) {
       resetEditorToEmpty();
       return;
     }
 
-    fetchGlyphs({ letter: trimmedLetterLocal }).catch(err => {
+    fetchGlyphs({ letter: trimmed }).catch(err => {
       console.error('[SvgGlyphEditor] fetchGlyphs failed:', err);
       resetEditorToEmpty();
     });
   }, [sid, letter, fetchGlyphs]);
 
-  // 2) Whenever glyphs change, try to load the default SVG for this letter
-  useEffect(() => {
-    const trimmedLetterLocal = letter.trim();
-    if (!sid || !trimmedLetterLocal) {
-      resetEditorToEmpty();
-      return;
-    }
+  // 2) pick the active glyph variant (glyphId → variantIndex → default → first)
+  const activeGlyph: Glyph | null = useMemo(() => {
+    if (!glyphs.length) return null;
 
-    const glyphsForLetter = glyphs.filter(
-      g => g.letter === trimmedLetterLocal,
+    // constrain to this letter, just in case
+    const forLetter = glyphs.filter(g => g.letter === trimmedLetter);
+    if (!forLetter.length) return null;
+
+    return (
+      (glyphId != null
+        ? forLetter.find(g => g.id === glyphId)
+        : undefined) ??
+      (typeof variantIndex === 'number'
+        ? forLetter.find(g => g.variant_index === variantIndex)
+        : undefined) ??
+      forLetter.find(g => g.is_default) ??
+      forLetter[0]
     );
-    if (!glyphsForLetter.length) {
+  }, [glyphs, glyphId, variantIndex, trimmedLetter]);
+
+  // 3) load SVG of active glyph and parse to strokes
+  useEffect(() => {
+    if (!sid || !trimmedLetter) {
       resetEditorToEmpty();
       return;
     }
 
-    const requested =
-      typeof variantIndex === 'number'
-        ? glyphsForLetter.find(
-          g => g.variant_index === variantIndex,
-        )
-        : undefined;
-
-    const svgGlyph =
-      requested ??
-      glyphsForLetter.find(g => g.is_default) ??
-      glyphsForLetter[0];
-
-    if (!svgGlyph || !svgGlyph.image_path) {
+    if (!activeGlyph || !activeGlyph.image_path) {
+      // no existing glyph for this letter → start empty
       resetEditorToEmpty();
       return;
     }
 
-    let url = svgGlyph.image_path;
+    let url = activeGlyph.image_path;
 
-    // Heuristic: if it's a relative media path, prefix /media/
+    // make absolute path if needed
     if (!/^https?:\/\//i.test(url)) {
       if (!url.startsWith('/')) {
         url = `/media/${url}`;
       }
+      // kill browser cache: always add dummy query param
+      const sep = url.includes('?') ? '&' : '?';
+      url = `${url}${sep}cb=${Date.now()}`;
     }
 
     let cancelled = false;
@@ -739,6 +802,7 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
         setSelectedIds([]);
         setGroups([]);
         clearTransientState();
+        // metrics bleiben wie gesetzt; SVG wird nur als Strokes übernommen
       } catch (err) {
         console.warn(
           '[SvgGlyphEditor] Failed to load existing SVG, starting empty:',
@@ -753,36 +817,37 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [glyphs, sid, letter, variantIndex]);
+  }, [sid, trimmedLetter, activeGlyph]);
 
-  // ---------- render ----------
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
 
   return (
     <section className="bf-panel">
       <h2>Canvas (SVG vector)</h2>
       <p className="bf-helptext">
-        Five-line handwriting grid: majuscule, ascender, x-height, baseline,
-        descender. Choose a tool: stroke for manual lines, circle for round
-        shapes, letter skeleton to drop a constructed base for the current
-        letter, or selection rectangle. New objects are easy to select,
-        group and move as a block. Undo/Redo steps backwards and forwards.
+        Five-line handwriting grid: capital height, ascender, x-height,
+        baseline, descender. Draw strokes or circles, move and group them,
+        or insert a default skeleton for the current letter as a starting
+        point. The exported SVG only contains the strokes.
       </p>
 
       <div className="bf-glyph-editor__svg-layout">
-        {/* Left / top: canvas + tools */}
+        {/* Left / main column: canvas + controls */}
         <div className="bf-glyph-editor__svg-layout-main">
           <div className="bf-glyph-editor__canvas-wrapper bf-glyph-editor__canvas-wrapper--svg">
             <SvgGlyphCanvas
               svgRef={svgRef}
-              width={SVG_CANVAS_WIDTH}
-              height={SVG_CANVAS_HEIGHT}
+              width={CANVAS_WIDTH}
+              height={CANVAS_HEIGHT}
               strokes={strokes}
               selectedIds={selectedIds}
               pendingStart={pendingStart}
               previewPoint={previewPoint}
               selectionRectStart={selectionRectStart}
               selectionRectEnd={selectionRectEnd}
-              anyMarquee={!!anyMarquee}
+              anyMarquee={anyMarquee}
               drawMode={drawMode}
               glyphXMin={glyphXMin}
               glyphXMax={glyphXMax}
@@ -804,15 +869,16 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
             />
           </div>
 
+          {/* Toolbar: tools, width, grouping, history, delete, default letter */}
           <SvgGlyphToolbar
             drawMode={drawMode}
-            onChangeDrawMode={mode => setDrawMode(mode)}
+            onChangeDrawMode={setDrawMode}
             hasSelection={hasSelection}
-            canGroupSelection={selectedIds.length >= 2}
-            canUngroupSelection={hasGroupForSelection}
-            canUndo={history.length > 0}
-            canRedo={redoStack.length > 0}
-            hasStrokes={strokes.length > 0}
+            canGroupSelection={canGroupSelection}
+            canUngroupSelection={canUngroupSelection}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            hasStrokes={hasStrokes}
             onThinner={() => adjustWidth(-1)}
             onThicker={() => adjustWidth(+1)}
             onGroup={handleGroupSelection}
@@ -822,35 +888,41 @@ const SvgGlyphEditor: React.FC<SvgGlyphEditorProps> = ({
             onDeleteSelected={handleDeleteSelected}
             onClearAll={handleClearAll}
             onInsertDefaultLetter={handleInsertDefaultLetter}
-            onScaleWider={() => scaleSelection(1.1, 1.0)}
-            onScaleNarrower={() => scaleSelection(0.9, 1.0)}
-            onScaleTaller={() => scaleSelection(1.0, 1.1)}
-            onScaleShorter={() => scaleSelection(1.0, 0.9)}
-            onScaleBigger={() => scaleSelection(1.1, 1.1)}
-            onScaleSmaller={() => scaleSelection(0.9, 0.9)}
           />
 
-
-          <SvgGlyphGridControls
-            draftLineFactors={draftLineFactors}
-            onDraftChange={handleDraftLineChange}
-            onApply={applyLineFactors}
-            onReset={resetLineFactors}
-          />
-
-          <SvgGlyphUploadPanel
-            isUploading={isUploadingGlyph}
-            canUpload={
-              strokes.length > 0 &&
-              !!letter.trim() &&
-              !!sid &&
-              !isUploadingGlyph
+          {/* Horizontal metrics: left / right (in canvas pixels) */}
+          <SvgGlyphMetricsControls
+            left={draftMetrics.left}
+            right={draftMetrics.right}
+            canvasWidth={CANVAS_WIDTH}
+            onChangeLeft={value =>
+              setDraftMetrics(prev => ({ ...prev, left: value }))
             }
+            onChangeRight={value =>
+              setDraftMetrics(prev => ({ ...prev, right: value }))
+            }
+            onApply={applyMetrics}
+          />
+
+          {/* Grid / handwriting line controls */}
+          <SvgGlyphGridControls
+            draftLineFactors={draftFontLineFactors}
+            onChangeDraft={handleDraftLinesChange}
+            onApplyGrid={applyGrid}
+            onResetGrid={resetGrid}
+          />
+
+          {/* Upload button (SVG via useGlyphs hook) */}
+          <SvgGlyphUploadPanel
+            canUpload={
+              !!strokes.length && !!letter.trim() && !!sid
+            }
+            isUploading={isUploadingGlyph}
             onUpload={handleUploadToBackend}
           />
         </div>
 
-        {/* Right / bottom: SVG code */}
+        {/* Right column: SVG code preview */}
         <SvgGlyphCodePanel svgCode={svgCode} />
       </div>
     </section>

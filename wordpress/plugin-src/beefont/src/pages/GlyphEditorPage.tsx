@@ -10,21 +10,32 @@ import PngGlyphEditor from '@components/PngGlyphEditor';
 import SvgGlyphEditor from '@components/SvgGlyphEditor/SvgGlyphEditor';
 
 const GlyphEditorPage: React.FC = () => { 
-  const [searchParams] = useSearchParams();
+const [searchParams] = useSearchParams();
   const initialLetter = searchParams.get('letter') ?? '';
+
   const variantParam = searchParams.get('variant');
+  const glyphIdParam = searchParams.get('glyph_id');
+
   const initialVariantIndex = (() => {
     if (!variantParam) return undefined;
     const n = parseInt(variantParam, 10);
     return Number.isNaN(n) ? undefined : n;
   })();
 
-  const { activeJob, activeGlyphFormat } = useApp();
+  const initialGlyphId = (() => {
+    if (!glyphIdParam) return undefined;
+    const n = parseInt(glyphIdParam, 10);
+    return Number.isNaN(n) ? undefined : n;
+  })();
 
+  const { activeJob, activeGlyphFormat } = useApp();
   const effectiveSid = useMemo(
-    () => activeJob?.sid || '',
-    [activeJob],
+    () => activeJob?.sid || searchParams.get('sid') || '',
+    [activeJob, searchParams],
   );
+ 
+
+
 
   const [letter, setLetter] = useState<string>(initialLetter);
 
@@ -94,6 +105,7 @@ const GlyphEditorPage: React.FC = () => {
           sid={effectiveSid}
           letter={letter}
           variantIndex={initialVariantIndex}
+          glyphId={initialGlyphId}
         />
       )}
 

@@ -1,15 +1,6 @@
-// src/utils/svgGeometry.ts
+// src/utils/svg/svgGeometry.ts
 
 import type { Point, Stroke } from '@mytypes/glyphEditor';
-
-/**
- * Euclidean distance between 2 points.
- */
-export function distance(a: Point, b: Point): number {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  return Math.sqrt(dx * dx + dy * dy);
-}
 
 /**
  * Midpoint between two points.
@@ -22,7 +13,16 @@ export function midpoint(a: Point, b: Point): Point {
 }
 
 /**
- * Bounding box of a stroke, including control point if present.
+ * Euclidean distance between two points.
+ */
+export function distance(a: Point, b: Point): number {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+/**
+ * Bounding box of a stroke (includes control point if present).
  */
 export function strokeBoundingBox(s: Stroke) {
   const xs = [s.p0.x, s.p1.x];
@@ -33,16 +33,16 @@ export function strokeBoundingBox(s: Stroke) {
     ys.push(s.ctrl.y);
   }
 
-  return {
-    minX: Math.min(...xs),
-    maxX: Math.max(...xs),
-    minY: Math.min(...ys),
-    maxY: Math.max(...ys),
-  };
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+
+  return { minX, maxX, minY, maxY };
 }
 
 /**
- * Center of the stroke's bounding box.
+ * Center of a stroke's bounding box.
  */
 export function strokeCenter(s: Stroke): Point {
   const { minX, maxX, minY, maxY } = strokeBoundingBox(s);
@@ -53,16 +53,17 @@ export function strokeCenter(s: Stroke): Point {
 }
 
 /**
- * Whether a point lies inside a given rectangle.
+ * Check if a point lies within a rectangle.
+ * Rectangle is given by (x1,y1) – (x2,y2), any ordering.
  */
 export function pointInRect(
   p: Point,
   rect: { x1: number; y1: number; x2: number; y2: number },
 ): boolean {
-  return (
-    p.x >= rect.x1 &&
-    p.x <= rect.x2 &&
-    p.y >= rect.y1 &&
-    p.y <= rect.y2
-  );
+  const minX = Math.min(rect.x1, rect.x2);
+  const maxX = Math.max(rect.x1, rect.x2);
+  const minY = Math.min(rect.y1, rect.y2);
+  const maxY = Math.max(rect.y1, rect.y2);
+
+  return p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY;
 }

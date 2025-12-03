@@ -1,7 +1,7 @@
 // src/pages/FontBuildPage.tsx
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useApp } from '@context/AppContext';
@@ -9,6 +9,7 @@ import useJobDetail from '@hooks/useJobDetail';
 import useFontBuild from '@hooks/useFontBuild';
 
 import LanguageStatusList from '@components/LanguageStatusList';
+import FontTestPanel from '@components/FontTestPanel'; // ← NEW
 
 import { friendlyMessage, type AppError } from '@bee/common/error';
 
@@ -39,8 +40,8 @@ const FontBuildPage: React.FC = () => {
     isBuilding,
     error: buildError,
     buildLanguage,
-    getTtfDownloadUrl, // ← bring this back
-    downloadTtf,       // authenticated helper
+    getTtfDownloadUrl,
+    downloadTtf,
     downloadZip,
   } = useFontBuild(effectiveSid || '');
 
@@ -49,6 +50,10 @@ const FontBuildPage: React.FC = () => {
     () => (error ? friendlyMessage(error as AppError) : null),
     [error],
   );
+
+  // ---------------- NEW STATE: active preview font ----------------
+  const [previewLanguage, setPreviewLanguage] = useState<string | null>(null);
+  const [previewFontUrl, setPreviewFontUrl] = useState<string | null>(null);
 
   if (!effectiveSid) {
     return (
@@ -63,7 +68,6 @@ const FontBuildPage: React.FC = () => {
     );
   }
 
-  // which languages actually have at least one successful build
   const languagesWithBuild = useMemo(() => {
     const set = new Set<string>();
     builds.forEach(b => {
@@ -92,7 +96,6 @@ const FontBuildPage: React.FC = () => {
     );
   };
 
-  // LOCAL helper: only used to decide if "Download TTF" should be enabled
   const getTtfUrl = (languageCode: string): string | null => {
     if (!languagesWithBuild.has(languageCode)) return null;
     return getTtfDownloadUrl(languageCode);
@@ -110,12 +113,26 @@ const FontBuildPage: React.FC = () => {
     });
   };
 
+  // ---------------- NEW: open/close test panel ----------------
+  const handleTestFont = (languageCode: string) => {
+    const url = getTtfDownloadUrl(languageCode);
+    if (!url) {
+      console.warn('[FontBuildPage] No TTF URL for language', languageCode);
+      return;
+    }
+    setPreviewLanguage(languageCode);
+    setPreviewFontUrl(url);
+  };
+
+  const handleClosePreview = () => {
+    setPreviewLanguage(null);
+    setPreviewFontUrl(null);
+  };
+
   return (
     <section className="bf-page bf-page--font-build">
       <header className="bf-page__header">
         <h1>BeeFont – Builds and downloads</h1>
-
-
         <p className="bf-page__subtitle">
           Build fonts per language and download TTF files or a ZIP bundle.
         </p>
@@ -179,8 +196,8 @@ const FontBuildPage: React.FC = () => {
             items={languageStatuses}
             onBuildFont={handleBuildFont}
             onShowMissing={handleShowMissing}
-            getTtfUrl={getTtfUrl}              // now defined
-            onDownloadTtf={handleDownloadTtf}  // authenticated download
+            getTtfUrl={getTtfUrl}
+            onDownloadTtf={handleDownloadTtf}
           />
         )}
 
@@ -217,25 +234,51 @@ const FontBuildPage: React.FC = () => {
                 <th>Language</th>
                 <th>Created at</th>
                 <th>Success</th>
+                <th>Test font</th> {/* ← NEW COLUMN */}
               </tr>
             </thead>
             <tbody>
-              {builds.map(b => (
-                <tr key={b.id}>
-                  <td>{b.id}</td>
-                  <td>{b.language_code ?? '-'}</td>
-                  <td>
-                    {b.created_at
-                      ? new Date(b.created_at).toLocaleString()
-                      : 'n/a'}
-                  </td>
-                  <td>{b.success ? 'yes' : 'no'}</td>
-                </tr>
-              ))}
+              {builds.map(b => {
+                const lang = b.language_code ?? '';
+                const canTest = !!(b.success && lang && getTtfUrl(lang));
+
+                return (
+                  <tr key={b.id}>
+                    <td>{b.id}</td>
+                    <td>{lang || '-'}</td>
+                    <td>
+                      {b.created_at
+                        ? new Date(b.created_at).toLocaleString()
+                        : 'n/a'}
+                    </td>
+                    <td>{b.success ? 'yes' : 'no'}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="bf-button bf-button--small bf-button--secondary"
+                        onClick={() => handleTestFont(lang)}
+                        disabled={!canTest}
+                      >
+                        Test font
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
       </section>
+
+      {/* ---------------- NEW: live preview panel ---------------- */}
+      {previewFontUrl && (
+        <FontTestPanel
+          fontUrl={previewFontUrl}
+          languageCode={previewLanguage ?? undefined}
+          jobName={job?.name ?? null}
+          onClose={handleClosePreview}
+        />
+      )}
     </section>
   );
 };

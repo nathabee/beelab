@@ -28,7 +28,7 @@
     "pk": "t1",
     "fields": {
       "name": "Test Uno",
-      "alphabet": "ABCDEFGHIJKLabcdefghijkl"
+      "alphabet": "ABCDEFGabcdefg"
     }
   }
 ]

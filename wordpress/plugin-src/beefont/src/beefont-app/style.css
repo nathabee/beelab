@@ -331,6 +331,47 @@
 }
 
 
+/* Font test panel layout */
+.bf-font-test__layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.bf-font-test__editor {
+  flex: 1 1 0;
+}
+
+.bf-font-test__preview-wrapper {
+  flex: 1 1 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.bf-font-test__preview {
+  padding: 1rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: #ffffff;
+  min-height: 150px;
+  max-height: 300px;
+  overflow: auto;
+  line-height: 1.5;
+  font-size: 1.15rem;
+}
+
+/* If you don't already have this for textareas: */
+.bf-input.bf-input--textarea {
+  width: 100%;
+  resize: vertical;
+}
+@media (max-width: 900px) {
+  .bf-font-test__layout {
+    flex-direction: column;
+  }
+}
+
+
 @media (max-width: 900px) {
   .bf-glyph-editor__svg-layout {
     flex-direction: column;

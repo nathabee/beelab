@@ -78,6 +78,10 @@ def job_sid_media(job: FontJob):
     return os.path.join( "beefont", "jobs", job.sid)
   
 
+def get_job_or_404_by_sid(sid: str) -> FontJob:
+    """Job lookup without user restriction (for public / font-preview use)."""
+    return get_object_or_404(FontJob, sid=sid)
+
 def normalize_formattype_or_400(formattype: str):
     fmt = (formattype or "").lower()
     if fmt not in (GlyphFormatType.PNG, GlyphFormatType.SVG):
@@ -1031,10 +1035,15 @@ def build_ttf(request, sid: str, language: str, formattype: str):
 
     return Response(FontBuildSerializer(font_build).data, status=status.HTTP_200_OK)
 
+
+# allow any permission in order to test the ttf from url
+# @permission_classes([permissions.IsAuthenticated])
+# @permission_classes([permissions.AllowAny])
 @api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.AllowAny])
 def download_ttf(request, sid: str, language: str):
-    job = get_job_or_404_for_user(sid, request.user)
+    # IMPORTANT: no user filter → works for AnonymousUser / font preview
+    job = get_job_or_404_by_sid(sid)
     lang = get_object_or_404(SupportedLanguage, code=language)
 
     build = (
@@ -1051,8 +1060,10 @@ def download_ttf(request, sid: str, language: str):
 
     file = default_storage.open(build.ttf_path, "rb")
     filename = os.path.basename(build.ttf_path)
+
+    # For @font-face it’s nicer to serve inline, but attachment also works.
     response = FileResponse(file, content_type="font/ttf")
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response["Content-Disposition"] = f'inline; filename="{filename}"'
     return response
 
 @api_view(["GET"])
@@ -1412,3 +1423,70 @@ def upload_glyph_from(request, sid: str, formattype: str):
     )
 
     return Response(GlyphSerializer(glyph).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def replace_glyph_variant(request, sid: str, formattype: str, glyph_id: int):
+    """
+    Replace the file for a single existing glyph variant.
+
+    - formattype: 'png' or 'svg'
+    - Does NOT change letter, variant_index or is_default.
+    """
+    job = get_job_or_404_for_user(sid, request.user)
+
+    fmt, error_response = normalize_formattype_or_400(formattype)
+    if error_response is not None:
+        return error_response
+
+    upload = request.FILES.get("file")
+    if not upload:
+        return Response(
+            {"detail": f"Expected file field 'file' with a {fmt.upper()} file."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    glyph = get_object_or_404(
+        Glyph,
+        pk=glyph_id,
+        job=job,
+        formattype=fmt,
+    )
+
+    media_root = Path(settings.MEDIA_ROOT)
+    job_root_rel = job_sid_media(job)
+    glyphs_rel_dir = os.path.join(job_root_rel, "glyphs")
+    (media_root / glyphs_rel_dir).mkdir(parents=True, exist_ok=True)
+
+    old_path = glyph.image_path
+
+    # wenn schon ein Pfad da ist, wiederverwenden, sonst neuen erzeugen
+    if old_path:
+        rel_path = old_path
+    else:
+        filename = f"{glyph.letter}_v{glyph.variant_index}.{fmt}"
+        rel_path = os.path.join(glyphs_rel_dir, filename)
+
+    # alte Datei löschen (best effort)
+    if old_path and default_storage.exists(old_path):
+        try:
+            default_storage.delete(old_path)
+        except Exception as e:
+            print(
+                f"[BeeFont][replace_glyph_variant] Failed to delete old file '{old_path}': {e}"
+            )
+
+    try:
+        saved_path = default_storage.save(rel_path, upload)
+    except Exception as e:
+        return Response(
+            {"detail": f"Failed to store glyph file: {e}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    glyph.image_path = str(saved_path).replace("\\", "/")
+    glyph.save(update_fields=["image_path"])
+
+    return Response(GlyphSerializer(glyph).data, status=status.HTTP_200_OK)

@@ -31,6 +31,7 @@ from .views import (
     download_default_glyphs_zip,
     download_all_glyphs_zip,
     upload_glyphs_zip,
+    replace_glyph_variant,
 
     # Font builds
     list_builds,            # GET : list of all builds for a job
@@ -158,7 +159,11 @@ urlpatterns = [
         upload_glyph_from,
         name="upload_glyph_from",
     ),
- 
+   path(
+       "jobs/<str:sid>/glyphs/<str:formattype>/<int:glyph_id>/replace/",
+       replace_glyph_variant,
+       name="replace_glyph_variant",
+   ),
     # ------------------------------------------------------------------
     # Glyphs (logical variants + selection, per formattype)
     # ------------------------------------------------------------------

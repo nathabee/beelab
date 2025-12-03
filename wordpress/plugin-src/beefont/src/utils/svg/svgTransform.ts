@@ -1,53 +1,112 @@
-// utils/svg/svgTransform.ts
-import type { Stroke, Point } from '@mytypes/glyphEditor';
-import { strokeBoundingBox } from '@utils/svg/svgGeometry';
+// src/utils/svg/svgTransform.ts
 
-export function scaleStrokes(
+import type { Point, Stroke } from '@mytypes/glyphEditor';
+
+/**
+ * Internal helper: deep-clone a stroke.
+ */
+function cloneStroke(s: Stroke): Stroke {
+  return {
+    id: s.id,
+    width: s.width,
+    p0: { ...s.p0 },
+    p1: { ...s.p1 },
+    ...(s.ctrl ? { ctrl: { ...s.ctrl } } : {}),
+  };
+}
+
+/**
+ * Translate a set of strokes by (dx, dy), but only for those whose IDs are
+ * in selectedIds. Non-selected strokes are returned unchanged.
+ */
+export function translateSelection(
   strokes: Stroke[],
   selectedIds: string[],
-  sx: number,
-  sy: number,
-  origin?: Point,
+  dx: number,
+  dy: number,
 ): Stroke[] {
-  if (!selectedIds.length) return strokes;
-
-  const selected = strokes.filter(s => selectedIds.includes(s.id));
-  if (!selected.length) return strokes;
-
-  let center: Point;
-  if (origin) {
-    center = origin;
-  } else {
-    // bounding box center der Selektion
-    const xs: number[] = [];
-    const ys: number[] = [];
-    selected.forEach(s => {
-      const box = strokeBoundingBox(s);
-      xs.push(box.minX, box.maxX);
-      ys.push(box.minY, box.maxY);
-    });
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
-    center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
+  if (!selectedIds.length || (!dx && !dy)) {
+    return strokes;
   }
 
+  const selectedSet = new Set(selectedIds);
+
+  return strokes.map(s => {
+    if (!selectedSet.has(s.id)) {
+      return s;
+    }
+
+    const next: Stroke = cloneStroke(s);
+
+    next.p0.x += dx;
+    next.p0.y += dy;
+    next.p1.x += dx;
+    next.p1.y += dy;
+
+    if (next.ctrl) {
+      next.ctrl.x += dx;
+      next.ctrl.y += dy;
+    }
+
+    return next;
+  });
+}
+
+/**
+ * Options for scaling the selected strokes.
+ *
+ * scaleX / scaleY: factors relative to the origin (1 = unchanged).
+ * origin:          the point to scale around (e.g. selection center);
+ *                  if omitted, (0,0) is used.
+ */
+export type ScaleSelectionOptions = {
+  scaleX: number;
+  scaleY: number;
+  origin?: Point;
+};
+
+/**
+ * Scale the selected strokes around a given origin.
+ *
+ * - Only strokes whose ID is in selectedIds are changed.
+ * - Non-selected strokes pass through unchanged.
+ *
+ * This is meant to be applied as a *single* undo-step:
+ *   setStrokes(prev => scaleSelection(prev, selectedIds, { ... }))
+ */
+export function scaleSelection(
+  strokes: Stroke[],
+  selectedIds: string[],
+  options: ScaleSelectionOptions,
+): Stroke[] {
+  const { scaleX, scaleY, origin } = options;
+
+  if (!selectedIds.length) return strokes;
+  if (scaleX === 1 && scaleY === 1) return strokes;
+
+  const ox = origin?.x ?? 0;
+  const oy = origin?.y ?? 0;
+  const selectedSet = new Set(selectedIds);
+
   const scalePoint = (p: Point): Point => ({
-    x: center.x + (p.x - center.x) * sx,
-    y: center.y + (p.y - center.y) * sy,
+    x: ox + (p.x - ox) * scaleX,
+    y: oy + (p.y - oy) * scaleY,
   });
 
   return strokes.map(s => {
-    if (!selectedIds.includes(s.id)) return s;
-    const scaled: Stroke = {
-      ...s,
-      p0: scalePoint(s.p0),
-      p1: scalePoint(s.p1),
-    };
-    if (s.ctrl) {
-      scaled.ctrl = scalePoint(s.ctrl);
+    if (!selectedSet.has(s.id)) {
+      return s;
     }
-    return scaled;
+
+    const next: Stroke = cloneStroke(s);
+
+    next.p0 = scalePoint(next.p0);
+    next.p1 = scalePoint(next.p1);
+
+    if (next.ctrl) {
+      next.ctrl = scalePoint(next.ctrl);
+    }
+
+    return next;
   });
 }

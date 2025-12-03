@@ -31,7 +31,7 @@ const Header: React.FC = () => {
         {isLoggedIn ? (
           <>
             {/* Global navigation entries */}
-            <Link to="/joboverview" className="nav-link">📊 Job Overview</Link>
+            <Link to="/joboverview" className="nav-link">📊 All my fonts</Link>
             {/*<Link to="/dashboard" className="nav-link">📊 Dashboard</Link> */}
 
             {/* Globale Aktion: immer verfügbar, solange eingeloggt */}
@@ -42,6 +42,7 @@ const Header: React.FC = () => {
                 <div className="text-muted small">
                   Active job: {activeJob.name}
                 </div>
+                <Link to="/jobdetail" className="nav-link">selected font Overview</Link>
                 {activeGlyphFormat === 'png' && (
                   <Link to="/printupload" className="nav-link">
                     📄 Upload scanned pages

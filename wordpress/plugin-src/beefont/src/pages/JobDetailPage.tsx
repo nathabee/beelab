@@ -18,9 +18,14 @@ import { friendlyMessage, type AppError } from '@bee/common/error';
 const JobDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { activeGlyphFormat } = useApp();
+  const { activeJob, activeGlyphFormat } = useApp();
 
-  const sid = searchParams.get('sid') ?? '';
+  const effectiveSid = useMemo(
+    () => activeJob?.sid || '',
+    [activeJob],
+  );
+
+  const sid = searchParams.get('sid') ?? effectiveSid;
 
   const {
     job,
