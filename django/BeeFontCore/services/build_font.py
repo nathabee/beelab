@@ -7,7 +7,10 @@ import tempfile
 from pathlib import Path
  
 from django.conf import settings
+from fontTools.ttLib import TTFont
+from fontTools.colorLib.builder import buildCOLR, buildCPAL
 
+from .palette import get_palette_for_job
 """
 V3-only Font-Build:
 
@@ -382,3 +385,100 @@ def build_ttf_svg(job, language, default_glyphs, out_ttf) -> None:
 
     if not out_ttf.is_file() or out_ttf.stat().st_size == 0:
         raise RuntimeError(f"build_ttf_svg: FontForge hat keine gültige TTF erzeugt: {out_ttf}")
+
+
+#############################################
+# COLOR FONT
+#############################################
+
+def _safe_hex_to_rgba_float(hex_color: str, fallback: str) -> tuple[float, float, float, float]:
+    try:
+        return _hex_to_rgba_float(hex_color)
+    except Exception:
+        return _hex_to_rgba_float(fallback)
+
+
+def _hex_to_rgba_float(hex_color: str) -> tuple[float, float, float, float]:
+    """
+    #RRGGBB or #RRGGBBAA  → (r,g,b,a) as floats 0..1 for buildCPAL.
+    """
+    hex_color = hex_color.strip()
+    if not hex_color.startswith("#"):
+        raise ValueError(f"Invalid hex color (missing #): {hex_color}")
+
+    hex_color = hex_color[1:]
+    if len(hex_color) == 6:
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+        a = 255
+    elif len(hex_color) == 8:
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+        a = int(hex_color[6:8], 16)
+    else:
+        raise ValueError(f"Invalid hex color length: {hex_color!r}")
+
+    return (r / 255.0, g / 255.0, b / 255.0, a / 255.0)
+
+
+def _apply_colr_cpal(ttf_path: Path, palette_dict: dict[str, str]) -> None:
+    """
+    Fügt dem bestehenden TTF eine einfache COLR/CPAL-Struktur hinzu:
+
+    - CPAL:  eine Palette mit [primary, accent, secondary]
+    - COLR:  für **alle** Glyphen eine einzelne Layer,
+             die die Basisglyphe mit primary (Index 0) zeichnet.
+
+    Das nutzt die Palette pro Job, aber *ignoriert* zunächst alle
+    data-beefont-layer-Infos aus dem SVG. Das ist der bewusst einfache
+    erste Schritt, den wir später verfeinern können.
+    """
+    ttf_path = Path(ttf_path)
+    if not ttf_path.is_file():
+        raise RuntimeError(f"_apply_colr_cpal: TTF not found: {ttf_path}")
+
+    font = TTFont(str(ttf_path))
+
+    # 1) CPAL: eine Palette mit 3 Einträgen
+    primary = _safe_hex_to_rgba_float(palette_dict.get("primary", "#000000"), "#000000")
+    accent = _safe_hex_to_rgba_float(palette_dict.get("accent", "#ff9900"), "#ff9900")
+    secondary = _safe_hex_to_rgba_float(palette_dict.get("secondary", "#ffffff"), "#ffffff")
+
+
+    palettes = [[primary, accent, secondary]]
+    font["CPAL"] = buildCPAL(palettes)
+
+    # 2) COLR v0: jede Glyphe bekommt eine Layer mit colorIndex 0 (primary)
+    color_glyphs: dict[str, list[tuple[str, int]]] = {}
+
+    # getBestCmap: codepoint → glyphName, wir wollen aber alle Glyphen
+    glyph_order = font.getGlyphOrder()
+    for glyph_name in glyph_order:
+        # Eine Layer, die die gleiche Glyphe (self) in Palette 0 zeichnet
+        color_glyphs[glyph_name] = [(glyph_name, 0)]
+
+    font["COLR"] = buildCOLR(color_glyphs)
+
+    font.save(str(ttf_path))
+
+
+def build_ttf_svg_color(job, language, default_glyphs, out_ttf) -> None:
+    """
+    Wie build_ttf_svg, aber fügt nach dem FontForge-Build noch
+    COLR/CPAL auf Basis der Job-Palette hinzu.
+
+    Aktuell:
+    - Alle Glyphen werden als eine einzige Layer mit 'primary' Farbe angelegt.
+    - SVG-Layer-Infos (data-beefont-layer, data-beefont-color) werden NOCH NICHT
+      ausgewertet – das ist ein späterer Schritt.
+    """
+    # Erst normalen SVG-Build machen (schwarz/weiß, nur Outline)
+    build_ttf_svg(job, language, default_glyphs, out_ttf)
+
+    # Palette für diesen Job holen (inkl. Defaults)
+    palette = get_palette_for_job(job)
+
+    # COLR/CPAL in das vorhandene TTF injizieren
+    _apply_colr_cpal(out_ttf, palette)

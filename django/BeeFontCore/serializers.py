@@ -8,10 +8,12 @@ from .models import (
     FontJob,
     JobPage,
     Glyph,
-    FontBuild,
-    GlyphFormatType,
+    FontBuild, 
+    JobPalette
 )
 
+
+ 
 
 class SupportedLanguageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -166,3 +168,32 @@ class LanguageStatusSerializer(serializers.Serializer):
     required_chars = serializers.CharField()
     missing_chars = serializers.CharField()
     missing_count = serializers.IntegerField()
+
+
+
+class JobPaletteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobPalette
+        fields = ["primary", "accent", "secondary"]
+
+    def validate_primary(self, value: str) -> str:
+        return self._validate_hex_color(value, "primary")
+
+    def validate_accent(self, value: str) -> str:
+        return self._validate_hex_color(value, "accent")
+
+    def validate_secondary(self, value: str) -> str:
+        return self._validate_hex_color(value, "secondary")
+
+    def _validate_hex_color(self, value: str, field_name: str) -> str:
+        # Sehr simple Hex-Validierung: #RRGGBB oder #RRGGBBAA
+        import re
+
+        if not isinstance(value, str):
+            raise serializers.ValidationError(f"{field_name}: must be a string.")
+
+        if not re.match(r"^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$", value):
+            raise serializers.ValidationError(
+                f"{field_name}: invalid color '{value}', expected #RRGGBB or #RRGGBBAA."
+            )
+        return value

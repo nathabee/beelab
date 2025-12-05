@@ -199,6 +199,11 @@ PY"
 }
 dcdjcleanup_demos() { dcdjango python manage.py cleanup_demo; }
 
+
+
+dcdjsuperuser() { 
+dcdjango python manage.py createsuperuser; }
+
 # -------------------------------------------------------------------
 # WORDPRESS
 # -------------------------------------------------------------------
@@ -533,6 +538,7 @@ dcdjseed_beefont() {
   # Fixtures laden
   dcdjango python manage.py loaddata BeeFontCore/fixtures/initial_beefont_languages.json
   dcdjango python manage.py loaddata BeeFontCore/fixtures/initial_beefont_templates.json
+  dcdjango python manage.py loaddata BeeFontCore/fixtures/initial_beefont_palettes.json
 }
  
 dcdjseed_all() { dcdjseed_pomolobee && dcdjseed_competence && dcdjseed_beefont; }
@@ -667,6 +673,7 @@ dcdjshow_demos       # list DemoAccount summary
 dcdjexpire_demo_user USER [--deactivate]
 dcdjexpire_demo_all [--deactivate]
 dcdjcleanup_demos    # run the cleaner NOW
+dcdjsuperuser        # create a superuser
 
 ###### WORDPRESS #####
 dcwplogs | dcwplog   # follow wordpress logs

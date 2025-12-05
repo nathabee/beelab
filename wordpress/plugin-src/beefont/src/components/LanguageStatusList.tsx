@@ -8,6 +8,7 @@ import type { LanguageStatus } from '@mytypes/languageStatus';
 type LanguageStatusListProps = {
   items: LanguageStatus[];
   onBuildFont: (languageCode: string) => void;
+  onBuildColorFont?: (languageCode: string) => void;
   onShowMissing: (languageCode: string) => void;
   getTtfUrl?: (languageCode: string) => string | null;  // optional
   onDownloadTtf: (languageCode: string) => void;
@@ -16,6 +17,7 @@ type LanguageStatusListProps = {
 const LanguageStatusList: React.FC<LanguageStatusListProps> = ({
   items,
   onBuildFont,
+  onBuildColorFont,
   onShowMissing,
   getTtfUrl,
   onDownloadTtf,
@@ -55,6 +57,16 @@ const LanguageStatusList: React.FC<LanguageStatusListProps> = ({
               >
                 Build font
               </button>
+              {onBuildColorFont && (
+                <button
+                  type="button"
+                  disabled={!isReady}
+                  onClick={() => onBuildColorFont(lang.language)}
+                >
+                  Build color font
+                </button>
+              )}
+
 
               {!isReady && (
                 <button

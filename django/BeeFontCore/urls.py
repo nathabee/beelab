@@ -36,15 +36,18 @@ from .views import (
     # Font builds
     list_builds,            # GET : list of all builds for a job
     build_ttf,              # POST: build font for a given language + formattype
+    build_ttf_color,
     download_ttf,           # GET: download TTF for job+language
     download_job_zip,       # GET: zip of all builds + metadata for a job
 
     # Status per language (formattype-specific)
     job_languages_status,   # GET: overview per language (ready/missing chars) for given formattype
     job_language_status,    # GET: status for one language for given formattype 
+
+    job_palette
 )
 
-  
+   
 
 
 app_name = "beefont"
@@ -90,7 +93,7 @@ urlpatterns = [
     # ------------------------------------------------------------------
     path("jobs/", JobListCreate.as_view(), name="jobs"),
     path("jobs/<str:sid>/", JobDetail.as_view(), name="job_detail"),
-
+    path(    "jobs/<str:sid>/palette/",    job_palette,    name="job_palette",),
     # ------------------------------------------------------------------
     # Job pages (scan pages)
     # ------------------------------------------------------------------
@@ -198,6 +201,13 @@ urlpatterns = [
         build_ttf,
         name="build_ttf",
     ),
+
+    path(
+        "jobs/<str:sid>/build-ttf-color/<str:language>/",
+        build_ttf_color,
+        name="build_ttf_color",
+    ),
+
     path(
         "jobs/<str:sid>/download/ttf/<str:language>/",
         download_ttf,

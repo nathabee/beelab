@@ -10,26 +10,30 @@ from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from django.core.files.storage import default_storage
 
-from rest_framework import generics, permissions, status 
-from rest_framework.response import Response
+from rest_framework import status 
  
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    parser_classes, 
-)
-
-
+from .models import FontJob, JobPalette
+from .serializers import JobPaletteSerializer
+from .services.palette import get_palette_for_job 
+from rest_framework.decorators import      parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
+#from rest_framework.views import APIView
+from rest_framework import generics, permissions
+from django.db.models import Case, When, IntegerField
+
+# RAUS:
+# from rest_framework.decorators import api_view, permission_classes
+# from rest_framework.response import Response
+# from rest_framework import permissions
+
+
+ 
 
 from django.core.files.base import ContentFile
 import io
-
-from rest_framework import generics, permissions
+ 
 from pathlib import Path
-
-import cv2
-import numpy as np
+ 
 
 from .models import (
     SupportedLanguage,
@@ -1013,16 +1017,20 @@ def build_ttf(request, sid: str, language: str, formattype: str):
         log = str(e)
 
     #print(        "[BeeFont][build_ttf] 10  "    )
+ 
+
     font_build, _created = FontBuild.objects.update_or_create(
         job=job,
         language=lang,
         glyph_formattype=fmt,
+        style=FontBuild.FontBuildStyle.MONO,   # oder einfach "mono"
         defaults={
             "ttf_path": rel_path,
             "success": success,
             "log": log,
         },
     )
+
 
     if not success:
         return Response(
@@ -1046,12 +1054,22 @@ def download_ttf(request, sid: str, language: str):
     job = get_job_or_404_by_sid(sid)
     lang = get_object_or_404(SupportedLanguage, code=language)
 
+
+
     build = (
         FontBuild.objects
         .filter(job=job, language=lang, success=True)
-        .order_by("-created_at")
+        .order_by(
+            Case(
+                When(style=FontBuild.FontBuildStyle.COLOR, then=0),
+                default=1,
+                output_field=IntegerField(),
+            ),
+            "-created_at",
+        )
         .first()
     )
+
     if not build:
         raise Http404("Kein erfolgreicher Build für diese Sprache gefunden.")
 
@@ -1066,13 +1084,11 @@ def download_ttf(request, sid: str, language: str):
     response["Content-Disposition"] = f'inline; filename="{filename}"'
     return response
 
+import os
+
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def download_job_zip(request, sid: str):
-    """
-    Erzeuge ein ZIP mit allen erfolgreichen TTFs dieses Jobs.
-    Du kannst deine bestehende ZIP-Logik hier einbauen.
-    """
     import io
     import zipfile
 
@@ -1091,7 +1107,9 @@ def download_job_zip(request, sid: str):
             if default_storage.exists(build.ttf_path):
                 with default_storage.open(build.ttf_path, "rb") as f:
                     data = f.read()
-                arcname = f"{job.name}_{build.language.code}.ttf".replace(" ", "_")
+
+                # WICHTIG: echten Dateinamen aus dem Pfad nehmen
+                arcname = os.path.basename(build.ttf_path)
                 zf.writestr(arcname, data)
 
     buffer.seek(0)
@@ -1099,6 +1117,7 @@ def download_job_zip(request, sid: str):
     response = HttpResponse(buffer, content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
+
 
 ##########################################
 
@@ -1490,3 +1509,128 @@ def replace_glyph_variant(request, sid: str, formattype: str, glyph_id: int):
     glyph.save(update_fields=["image_path"])
 
     return Response(GlyphSerializer(glyph).data, status=status.HTTP_200_OK)
+
+
+
+
+@api_view(["GET", "PUT"])
+@permission_classes([permissions.IsAuthenticated])
+def job_palette(request, sid: str):
+    """
+    GET  /api/beefont/jobs/<sid>/palette/  → Palette (mit Defaults, auch wenn kein Datensatz existiert)
+    PUT  /api/beefont/jobs/<sid>/palette/  → Palette für diesen Job anlegen/ändern
+    """
+    # optional: user scoping wie bei den anderen Job-Views
+    job = get_object_or_404(FontJob, sid=sid, user=request.user)
+
+    if request.method == "GET":
+        try:
+            palette = job.palette
+            serializer = JobPaletteSerializer(palette)
+            data = serializer.data
+        except JobPalette.DoesNotExist:
+            # Kein Eintrag → Defaults aus get_palette_for_job()
+            data = get_palette_for_job(job)
+
+        return Response(data)
+
+    # PUT
+    palette, _created = JobPalette.objects.get_or_create(job=job)
+
+    serializer = JobPaletteSerializer(palette, data=request.data, partial=True)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+   
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def build_ttf_color(request, sid: str, language: str):
+    """
+    Baue einen COLOR-TTF (COLR/CPAL) für einen Job + Sprache auf Basis der SVG-Glyphen
+    und der Job-Palette.
+
+    - verwendet NUR SVG-Default-Glyphen
+    - gleiche Coverage-Prüfung wie build_ttf
+    - erzeugt aktuell einen einfachen COLR v0 mit einer Layer pro Glyphe (primary)
+    """
+    job = get_job_or_404_for_user(sid, request.user)
+    fmt = "svg"
+
+    lang = get_object_or_404(SupportedLanguage, code=language)
+    alphabet = lang.alphabet or ""
+    alphabet_chars = list(alphabet)
+
+    # Default SVG-Glyphs dieses Jobs
+    default_glyphs = Glyph.objects.filter(
+        job=job,
+        is_default=True,
+        formattype=fmt,
+    )
+    covered = {g.letter for g in default_glyphs}
+    missing = [c for c in alphabet_chars if c not in covered]
+
+    if missing:
+        status_data = {
+            "language": lang.code,
+            "ready": False,
+            "required_chars": alphabet,
+            "missing_chars": "".join(missing),
+            "missing_count": len(missing),
+        }
+        return Response(
+            {
+                "detail": "Nicht alle Zeichen sind abgedeckt (SVG).",
+                "status": status_data,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    media_root = Path(settings.MEDIA_ROOT)
+    job_root_rel = job_sid_media(job)
+    build_rel_dir = os.path.join(job_root_rel, "build")
+
+    # z.B. MyFont_de_svg_color.ttf
+    filename = f"{job.name}_{lang.code}_{fmt}_color.ttf".replace(" ", "_")
+    rel_path = os.path.join(build_rel_dir, filename)
+    full_path = media_root / rel_path
+    full_path.parent.mkdir(parents=True, exist_ok=True)
+
+    glyphs_for_lang = default_glyphs.filter(letter__in=alphabet_chars)
+
+    try:
+        # SVG → FontForge → COLR/CPAL per Palette
+        build_font.build_ttf_svg_color(job, lang, glyphs_for_lang, full_path)
+        success = True
+        log = ""
+    except Exception as e:
+        success = False
+        log = str(e)
+
+    # Fürs erste: wir überschreiben den bisherigen SVG-Build-Eintrag.
+    # Wenn du monochrom + color getrennt verfolgen willst, brauchst du
+    # ein extra Flag/Feld in FontBuild.
+    font_build, _created = FontBuild.objects.update_or_create(
+        job=job,
+        language=lang,
+        glyph_formattype=fmt,                     # fmt = "svg"
+        style=FontBuild.FontBuildStyle.COLOR,     # oder "color"
+        defaults={
+            "ttf_path": rel_path,
+            "success": success,
+            "log": log,
+        },
+    )
+
+
+    if not success:
+        return Response(
+            {
+                "detail": "COLOR TTF-Build fehlgeschlagen.",
+                "log": log,
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return Response(FontBuildSerializer(font_build).data, status=status.HTTP_200_OK)

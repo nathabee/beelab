@@ -1,6 +1,7 @@
 // src/mytype/fontBuild.ts
 
-import type { GlyphFormat } from './glyphSkeletons';
+import type { GlyphFormat } from './glyph';
+export type FontBuildStyle = 'mono' | 'color';
 
 /**
  * FontBuildSerializer
@@ -36,7 +37,13 @@ export interface FontBuild {
 
   // Optional extras in case the serializer still exposes them:
   job?: number;        // FontJob PK
+  glyph_formattype: 'png' | 'svg';
+  style: FontBuildStyle;      // neu
 }
+
+
+ 
+
 
 /**
  * Payload for requesting a build.

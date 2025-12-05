@@ -51,10 +51,10 @@ const JobDetailPage: React.FC = () => {
     isBuilding,
     error: buildError,
     buildLanguage,
+    buildLanguageColor,  
     downloadTtf,
   } = useFontBuild(sid, { manual: true });
-
-  // NEW: rename hook
+ 
   const {
     rename,
     isRenaming,
@@ -119,6 +119,17 @@ const JobDetailPage: React.FC = () => {
         console.error('[JobDetailPage] buildLanguage failed:', err);
       });
   };
+  // Color build handler: POST /jobs/{sid}/build-ttf-color/<language>/
+  const handleBuildColor = (languageCode: string) => {
+    buildLanguageColor(languageCode)
+      .then(build => {
+        console.log('[JobDetailPage] buildLanguageColor OK:', build);
+      })
+      .catch(err => {
+        console.error('[JobDetailPage] buildLanguageColor failed:', err);
+      });
+  };
+
 
   // Download handler – goes through hook (with auth)
   const handleDownloadTtf = (languageCode: string) => {
@@ -315,6 +326,9 @@ const JobDetailPage: React.FC = () => {
             <LanguageStatusList
               items={languageStatuses}
               onBuildFont={handleBuild}
+              onBuildColorFont={
+                activeGlyphFormat === 'svg' ? handleBuildColor : undefined
+              }
               onShowMissing={handleShowMissing}
               onDownloadTtf={handleDownloadTtf}
             />
@@ -368,7 +382,7 @@ const JobDetailPage: React.FC = () => {
 
 
           {/* Font builds for this job */}
-          <FontBuildsPanel sid={sid} />
+          <FontBuildsPanel sid={sid} jobName={job?.name ?? null} />
         </>
       )}
 

@@ -4,7 +4,9 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 
-
+class GlyphFormatType(models.TextChoices): 
+        PNG = "png", "PNG bitmap" 
+        SVG = "svg", "SVG vector"
 
 
 def generate_sid():
@@ -91,6 +93,52 @@ class FontJob(models.Model):
     def __str__(self) -> str:
         return f"{self.name} [{self.sid}]"
 
+
+class FontBuild(models.Model):
+    """
+    Ein konkreter Font-Build für einen Job und eine Sprache.
+    Ab V3 wird zusätzlich gespeichert, ob der Build aus PNG- oder SVG-Glyphs
+    erzeugt wurde (glyph_formattype) und ob es ein monochromer oder Color-Build ist.
+    """
+
+    class FontBuildStyle(models.TextChoices):
+        MONO = "mono", "Monochrome"
+        COLOR = "color", "Color"
+
+    job = models.ForeignKey(FontJob, on_delete=models.CASCADE, related_name="builds")
+    language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    ttf_path = models.CharField(max_length=512)
+    log = models.TextField(blank=True)
+    success = models.BooleanField(default=True)
+
+    # Welches Glyphen-FormatType lag dem Build zugrunde?
+    glyph_formattype = models.CharField(
+        max_length=8,
+        choices=GlyphFormatType.choices,
+        default=GlyphFormatType.PNG,
+    )
+
+    # Neu: mono vs color
+    style = models.CharField(
+        max_length=16,
+        choices=FontBuildStyle.choices,
+        default=FontBuildStyle.MONO,
+    )
+
+    class Meta:
+        verbose_name = "Font build"
+        verbose_name_plural = "Font builds"
+        ordering = ["-created_at"]
+        # Pro Job/Sprache/Formattype/Style nur ein aktueller Build-Eintrag
+        unique_together = ("job", "language", "glyph_formattype", "style")
+
+    def __str__(self) -> str:
+        status = "ok" if self.success else "failed"
+        return (
+            f"Build {self.job.sid} "
+            f"[{self.language.code}, {self.glyph_formattype}, {self.style}] – {status}"
+        )
 
 class JobPage(models.Model):
     """
@@ -180,34 +228,31 @@ class Glyph(models.Model):
         ]
 
 
-class FontBuild(models.Model):
+
+class JobPalette(models.Model):
     """
-    Ein konkreter Font-Build für einen Job und eine Sprache.
-    Ab V3 wird zusätzlich gespeichert, ob der Build aus PNG- oder SVG-Glyphs
-    erzeugt wurde (glyph_formattype).
+    Per-job color palette.
+    Special row with pk=1 and job=None is used as global default.
     """
 
-    job = models.ForeignKey(FontJob, on_delete=models.CASCADE, related_name="builds")
-    language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    ttf_path = models.CharField(max_length=512)
-    log = models.TextField(blank=True)
-    success = models.BooleanField(default=True)
+    id = models.AutoField(primary_key=True)
 
-    # Welches Glyphen-FormatType lag dem Build zugrunde?
-    glyph_formattype = models.CharField(
-        max_length=8,
-        choices=GlyphFormatType.choices,
-        default=GlyphFormatType.PNG,
+    job = models.OneToOneField(
+        FontJob,
+        on_delete=models.CASCADE,
+        related_name="palette",
+        null=True,          # allow global default
+        blank=True,         # allow global default
     )
 
-    class Meta:
-        verbose_name = "Font build"
-        verbose_name_plural = "Font builds"
-        ordering = ["-created_at"]
-        # Pro Job/Sprache/Formattype nur ein aktueller Build-Eintrag
-        unique_together = ("job", "language", "glyph_formattype")
+    primary = models.CharField(max_length=9, default="#000000")
+    accent = models.CharField(max_length=9, default="#ff9900")
+    secondary = models.CharField(max_length=9, default="#ffffff")
 
-    def __str__(self) -> str:
-        status = "ok" if self.success else "failed"
-        return f"Build {self.job.sid} [{self.language.code}, {self.glyph_formattype}] – {status}"
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        if self.job:
+            return f"Palette for job {self.job.sid}"
+        return "Global default palette"
+

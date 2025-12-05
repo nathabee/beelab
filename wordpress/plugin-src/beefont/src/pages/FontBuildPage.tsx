@@ -9,7 +9,7 @@ import useJobDetail from '@hooks/useJobDetail';
 import useFontBuild from '@hooks/useFontBuild';
 
 import LanguageStatusList from '@components/LanguageStatusList';
-import FontTestPanel from '@components/FontTestPanel'; // ← NEW
+import FontBuildsPanel from '@components/FontBuildsPanel';
 
 import { friendlyMessage, type AppError } from '@bee/common/error';
 
@@ -42,7 +42,6 @@ const FontBuildPage: React.FC = () => {
     buildLanguage,
     getTtfDownloadUrl,
     downloadTtf,
-    downloadZip,
   } = useFontBuild(effectiveSid || '');
 
   const error = jobError ?? buildError ?? null;
@@ -51,9 +50,6 @@ const FontBuildPage: React.FC = () => {
     [error],
   );
 
-  // ---------------- NEW STATE: active preview font ----------------
-  const [previewLanguage, setPreviewLanguage] = useState<string | null>(null);
-  const [previewFontUrl, setPreviewFontUrl] = useState<string | null>(null);
 
   if (!effectiveSid) {
     return (
@@ -107,27 +103,9 @@ const FontBuildPage: React.FC = () => {
     });
   };
 
-  const handleDownloadZip = () => {
-    downloadZip().catch(err => {
-      console.error('[FontBuildPage] downloadZip failed:', err);
-    });
-  };
 
-  // ---------------- NEW: open/close test panel ----------------
-  const handleTestFont = (languageCode: string) => {
-    const url = getTtfDownloadUrl(languageCode);
-    if (!url) {
-      console.warn('[FontBuildPage] No TTF URL for language', languageCode);
-      return;
-    }
-    setPreviewLanguage(languageCode);
-    setPreviewFontUrl(url);
-  };
 
-  const handleClosePreview = () => {
-    setPreviewLanguage(null);
-    setPreviewFontUrl(null);
-  };
+
 
   return (
     <section className="bf-page bf-page--font-build">
@@ -201,84 +179,11 @@ const FontBuildPage: React.FC = () => {
           />
         )}
 
-        <div className="bf-panel__actions">
-          <button
-            type="button"
-            className="bf-button bf-button--secondary"
-            onClick={handleDownloadZip}
-            disabled={builds.length === 0}
-          >
-            Download ZIP (all fonts)
-          </button>
-        </div>
+
+        {/* Shared build history + test panel */}
+        <FontBuildsPanel sid={effectiveSid} jobName={job?.name ?? null} />
+
       </section>
-
-      <section className="bf-panel bf-panel--history">
-        <h2>Build history</h2>
-
-        {isLoadingBuilds && builds.length === 0 && (
-          <div className="bf-loading">
-            Loading build history…
-          </div>
-        )}
-
-        {!isLoadingBuilds && builds.length === 0 && !buildError && (
-          <p>No builds yet. Use “Build font” above to create your first TTF.</p>
-        )}
-
-        {builds.length > 0 && (
-          <table className="bf-table bf-table--builds">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Language</th>
-                <th>Created at</th>
-                <th>Success</th>
-                <th>Test font</th> {/* ← NEW COLUMN */}
-              </tr>
-            </thead>
-            <tbody>
-              {builds.map(b => {
-                const lang = b.language_code ?? '';
-                const canTest = !!(b.success && lang && getTtfUrl(lang));
-
-                return (
-                  <tr key={b.id}>
-                    <td>{b.id}</td>
-                    <td>{lang || '-'}</td>
-                    <td>
-                      {b.created_at
-                        ? new Date(b.created_at).toLocaleString()
-                        : 'n/a'}
-                    </td>
-                    <td>{b.success ? 'yes' : 'no'}</td>
-                    <td>
-                      <button
-                        type="button"
-                        className="bf-button bf-button--small bf-button--secondary"
-                        onClick={() => handleTestFont(lang)}
-                        disabled={!canTest}
-                      >
-                        Test font
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </section>
-
-      {/* ---------------- NEW: live preview panel ---------------- */}
-      {previewFontUrl && (
-        <FontTestPanel
-          fontUrl={previewFontUrl}
-          languageCode={previewLanguage ?? undefined}
-          jobName={job?.name ?? null}
-          onClose={handleClosePreview}
-        />
-      )}
     </section>
   );
 };

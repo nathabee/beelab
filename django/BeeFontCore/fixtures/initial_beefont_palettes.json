@@ -1,0 +1,13 @@
+[
+  {
+    "model": "beefontcore.jobpalette",
+    "pk": 1,
+    "fields": {
+      "job": null,
+      "primary": "#000000",
+      "accent": "#A86A2A",
+      "secondary": "#66E0FF",
+      "updated_at": "2025-01-01T00:00:00Z"
+    }
+  }
+]
