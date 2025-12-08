@@ -12,15 +12,15 @@ import {
  * (e.g. 600x600).
  */
 export const GLYPH_SKELETON_SVGS: Record<string, string> = {
-  A: `
+  A: ` 
     <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <line x1="171.89" y1="534.83" x2="294.89" y2="228.83" stroke-width="16" />
     <line x1="299.89" y1="226.83" x2="430.89" y2="542.83" stroke-width="16" />
     <line x1="219.89" y1="430.83" x2="379.89" y2="430.83" stroke-width="16" />
-  </g>
+  </g>  
   `, 
-  B: `
-<g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+  B: ` 
+    <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <line x1="200.89" y1="539.83" x2="201.89" y2="229.83" stroke-width="16" />
     <line x1="205.89" y1="232.83" x2="338.89" y2="231.83" stroke-width="16" />
     <line x1="205.89" y1="378.83" x2="343.89" y2="380.83" stroke-width="16" />
@@ -29,7 +29,7 @@ export const GLYPH_SKELETON_SVGS: Record<string, string> = {
     <path d="M 423.89 445.83 Q 408.39 379.83 344.89 380.83" stroke-width="16" />
     <path d="M 342.89 374.83 Q 411.39 362.83 407.89 302.83" stroke-width="16" />
     <path d="M 407.39 298.83 Q 390.39 242.83 342.39 232.83" stroke-width="16" />
-  </g>
+   </g>  
   `, 
   C: `
     <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
@@ -69,6 +69,161 @@ export const GLYPH_SKELETON_SVGS: Record<string, string> = {
     <line x1="312.89" y1="384.83" x2="434.89" y2="385.83" stroke-width="16" />
   </g>
   `,   
+  H:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="188.89" y1="234.83" x2="189.89" y2="541.83" stroke-width="8" />
+    <line x1="195.89" y1="380.83" x2="407.89" y2="381.83" stroke-width="8" />
+    <line x1="403.89" y1="231.83" x2="406.89" y2="540.83" stroke-width="8" />
+  </g>   
+  `,   
+  I:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="300.89" y1="231.83" x2="300.89" y2="538.83" stroke-width="8" />
+  </g>
+  `,    
+  J:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="299.89" y1="247.83" x2="366.89" y2="248.83" stroke-width="8" />
+    <path d="M 352.89 254.83 Q 351.89 371.33 350.89 487.83" stroke-width="8" />
+    <path d="M 346.89 495.83 Q 339.89 583.83 209.89 465.83" stroke-width="8" />
+  </g> 
+  `,  
+
+  K:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="206.89" y1="534.83" x2="200.89" y2="229.83" stroke-width="8" />
+    <line x1="213.89" y1="413.83" x2="408.89" y2="227.83" stroke-width="8" />
+    <line x1="274.89" y1="369.83" x2="417.89" y2="538.83" stroke-width="8" />
+  </g>
+  `,  
+  L:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 237.89 232.83 Q 236.39 384.33 234.89 535.83" stroke-width="8" />
+    <line x1="405.89" y1="537.83" x2="234.89" y2="539.83" stroke-width="8" />
+  </g>
+  `,  
+  M:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="169.89" y1="533.83" x2="166.89" y2="228.83" stroke-width="8" />
+    <line x1="173.89" y1="236.83" x2="301.89" y2="536.83" stroke-width="8" />
+    <line x1="306.89" y1="535.83" x2="422.89" y2="231.83" stroke-width="8" />
+    <line x1="427.89" y1="231.83" x2="427.89" y2="538.83" stroke-width="8" />
+  </g>
+  `,
+  N:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="191.89" y1="535.83" x2="187.89" y2="231.83" stroke-width="8" />
+    <line x1="193.89" y1="230.83" x2="396.89" y2="538.83" stroke-width="8" />
+    <line x1="408.89" y1="539.83" x2="404.89" y2="230.83" stroke-width="8" />
+  </g>
+  `,    
+  O:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="438.95" y1="391.83" x2="433.97" y2="429.63" stroke-width="8" />
+    <line x1="433.97" y1="429.63" x2="419.38" y2="464.86" stroke-width="8" />
+    <line x1="419.38" y1="464.86" x2="396.17" y2="495.10" stroke-width="8" />
+    <line x1="396.17" y1="495.10" x2="365.92" y2="518.32" stroke-width="8" />
+    <line x1="365.92" y1="518.32" x2="330.69" y2="532.91" stroke-width="8" />
+    <line x1="330.69" y1="532.91" x2="292.89" y2="537.88" stroke-width="8" />
+    <line x1="292.89" y1="537.88" x2="255.09" y2="532.91" stroke-width="8" />
+    <line x1="255.09" y1="532.91" x2="219.86" y2="518.32" stroke-width="8" />
+    <line x1="219.86" y1="518.32" x2="189.61" y2="495.10" stroke-width="8" />
+    <line x1="189.61" y1="495.10" x2="166.40" y2="464.86" stroke-width="8" />
+    <line x1="166.40" y1="464.86" x2="151.81" y2="429.63" stroke-width="8" />
+    <line x1="151.81" y1="429.63" x2="146.84" y2="391.83" stroke-width="8" />
+    <line x1="146.84" y1="391.83" x2="151.81" y2="354.03" stroke-width="8" />
+    <line x1="151.81" y1="354.03" x2="166.40" y2="318.80" stroke-width="8" />
+    <line x1="166.40" y1="318.80" x2="189.61" y2="288.55" stroke-width="8" />
+    <line x1="189.61" y1="288.55" x2="219.86" y2="265.34" stroke-width="8" />
+    <line x1="219.86" y1="265.34" x2="255.09" y2="250.75" stroke-width="8" />
+    <line x1="255.09" y1="250.75" x2="292.89" y2="245.77" stroke-width="8" />
+    <line x1="292.89" y1="245.77" x2="330.69" y2="250.75" stroke-width="8" />
+    <line x1="330.69" y1="250.75" x2="365.92" y2="265.34" stroke-width="8" />
+    <line x1="365.92" y1="265.34" x2="396.17" y2="288.55" stroke-width="8" />
+    <line x1="396.17" y1="288.55" x2="419.38" y2="318.80" stroke-width="8" />
+    <line x1="419.38" y1="318.80" x2="433.97" y2="354.03" stroke-width="8" />
+    <line x1="433.97" y1="354.03" x2="438.95" y2="391.83" stroke-width="8" />
+  </g>
+  `,  
+  P:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="202.89" y1="539.83" x2="199.89" y2="233.83" stroke-width="8" />
+    <line x1="205.89" y1="231.83" x2="344.89" y2="234.83" stroke-width="8" />
+    <line x1="207.89" y1="404.83" x2="352.89" y2="401.83" stroke-width="8" />
+    <path d="M 353.89 236.83 Q 445.89 321.83 356.89 398.83" stroke-width="8" />
+  </g>
+  `,  
+  Q:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="438.95" y1="391.83" x2="433.97" y2="429.63" stroke-width="8" />
+    <line x1="433.97" y1="429.63" x2="419.38" y2="464.86" stroke-width="8" />
+    <line x1="419.38" y1="464.86" x2="396.17" y2="495.10" stroke-width="8" />
+    <line x1="396.17" y1="495.10" x2="365.92" y2="518.32" stroke-width="8" />
+    <line x1="365.92" y1="518.32" x2="330.69" y2="532.91" stroke-width="8" />
+    <line x1="330.69" y1="532.91" x2="292.89" y2="537.88" stroke-width="8" />
+    <line x1="292.89" y1="537.88" x2="255.09" y2="532.91" stroke-width="8" />
+    <line x1="255.09" y1="532.91" x2="219.86" y2="518.32" stroke-width="8" />
+    <line x1="219.86" y1="518.32" x2="189.61" y2="495.10" stroke-width="8" />
+    <line x1="189.61" y1="495.10" x2="166.40" y2="464.86" stroke-width="8" />
+    <line x1="166.40" y1="464.86" x2="151.81" y2="429.63" stroke-width="8" />
+    <line x1="151.81" y1="429.63" x2="146.84" y2="391.83" stroke-width="8" />
+    <line x1="146.84" y1="391.83" x2="151.81" y2="354.03" stroke-width="8" />
+    <line x1="151.81" y1="354.03" x2="166.40" y2="318.80" stroke-width="8" />
+    <line x1="166.40" y1="318.80" x2="189.61" y2="288.55" stroke-width="8" />
+    <line x1="189.61" y1="288.55" x2="219.86" y2="265.34" stroke-width="8" />
+    <line x1="219.86" y1="265.34" x2="255.09" y2="250.75" stroke-width="8" />
+    <line x1="255.09" y1="250.75" x2="292.89" y2="245.77" stroke-width="8" />
+    <line x1="292.89" y1="245.77" x2="330.69" y2="250.75" stroke-width="8" />
+    <line x1="330.69" y1="250.75" x2="365.92" y2="265.34" stroke-width="8" />
+    <line x1="365.92" y1="265.34" x2="396.17" y2="288.55" stroke-width="8" />
+    <line x1="396.17" y1="288.55" x2="419.38" y2="318.80" stroke-width="8" />
+    <line x1="419.38" y1="318.80" x2="433.97" y2="354.03" stroke-width="8" />
+    <line x1="433.97" y1="354.03" x2="438.95" y2="391.83" stroke-width="8" />
+    <line x1="351.39" y1="506.83" x2="439.39" y2="585.83" stroke-width="8" />
+  </g>
+
+  `,  
+  R:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="194.89" y1="534.83" x2="192.89" y2="234.83" stroke-width="8" />
+    <line x1="200.89" y1="234.83" x2="362.89" y2="239.83" stroke-width="8" />
+    <line x1="199.89" y1="394.83" x2="332.89" y2="392.83" stroke-width="8" />
+    <line x1="333.89" y1="396.83" x2="422.89" y2="540.83" stroke-width="8" />
+    <path d="M 343.89 390.83 Q 456.89 350.83 370.89 241.83" stroke-width="8" />
+  </g>
+  `,  
+  S:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none"> 
+  </g> 
+  `,  
+  T:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none"> 
+  </g> 
+  `,  
+  U:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none"> 
+  </g> 
+  `,  
+  V:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none"> 
+  </g> 
+  `,  
+  W:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none"> 
+  </g> 
+  `,  
+  X:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none"> 
+  </g> 
+  `,  
+  Y:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none"> 
+  </g> 
+  `,  
+  Z:`
+  <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none"> 
+  </g> 
+  `,  
   a: `
   <g stroke="black" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <line x1="373.89" y1="534.83" x2="360.89" y2="311.83" stroke-width="16" />

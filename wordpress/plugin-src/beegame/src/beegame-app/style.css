@@ -1,0 +1,146 @@
+:root {
+  /* Theme-aware color variables with fallbacks */
+  --custom-dark: var(--wp--preset--color--primary, #22473f);
+  --custom-blue: var(--wp--preset--color--surface-1, #d4f0eb);
+  --custom-blue-complement: var(--wp--preset--color--secondary, #deecbe);
+  --custom-text: var(--wp--preset--color--base, #343a40);
+  --custom-text-on-dark: var(--wp--preset--color--background, white);
+  --custom-warning: var(--wp--preset--color--contrast, #fae46a);
+  --custom-alert: var(--wp--preset--color--tertiary, #c4361d);
+  --custom-link-hover: var(--wp--preset--color--primary, #ff9100);
+  --custom-link-disabled: var(--wp--preset--color--contrast, #999999);
+  --custom-light: var(--wp--preset--color--background, #d1f3f1);
+  --custom-dark-shadow: rgba(0, 0, 0, 0.1);
+  --custom-gradient: linear-gradient(
+    to right,
+    var(--custom-blue-complement),
+    var(--custom-blue)
+  );
+}
+
+/* Layout container */
+.beegame-app-container .app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar (left) */
+.beegame-app-container .sidebar {
+  width: 250px;
+  min-width: 250px;
+  background-color: var(--custom-dark);
+  color: var(--custom-text-on-dark);
+  padding: 1rem;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Hide hamburger on desktop */
+.beegame-app-container .sidebar .hamburger-icon {
+  display: none;
+}
+
+/* Main content area */
+.beegame-app-container .content-container {
+  flex-grow: 1;
+  padding: 1rem;
+  background-color: var(--custom-blue);
+}
+
+/* Responsive: show hamburger and collapse sidebar */
+@media (max-width: 768px) {
+  .beegame-app-container .sidebar {
+    position: absolute;
+    transform: translateX(-100%);
+    z-index: 1000;
+  }
+
+  .beegame-app-container .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .beegame-app-container .sidebar .hamburger-icon {
+    display: block;
+    position: absolute;
+    top: 10px;
+    right: -40px;
+    background: var(--custom-dark);
+    color: var(--custom-text-on-dark);
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+  }
+}
+
+/* Nav link */
+.beegame-app-container .nav-link {
+  text-decoration: none;
+  color: var(--custom-text);
+  transition: color 0.3s;
+}
+
+.beegame-app-container .nav-link:hover {
+  color: var(--custom-link-hover);
+}
+
+/* Disabled nav links */
+.beegame-app-container .nav-link.disabled {
+  color: var(--custom-link-disabled);
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+  text-decoration: none;
+}
+
+.beegame-app-container .life-grid {
+  width: 100%;
+}
+
+.beegame-app-container .life-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: var(--custom-light);
+  aspect-ratio: 1 / 1; /* keep squares */
+}
+
+.beegame-app-container .life-cell--alive {
+  background: var(--custom-dark);
+}
+
+.beegame-app-container .life-cell--dead {
+  background: var(--custom-light);
+}
+
+.beegame-app-container .life-cell:disabled {
+  cursor: default;
+}
+
+
+.beegame-app-container .forest-grid {
+  width: 100%;
+}
+
+.beegame-app-container .forest-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+}
+
+.beegame-app-container .forest-cell--empty {
+  background: #f5f5f5;
+}
+
+.beegame-app-container .forest-cell--tree {
+  background: #208d3c; /* green */
+}
+
+.beegame-app-container .forest-cell--burning {
+  background: #c92020; /* red/orange */
+}
+
+.beegame-app-container .forest-cell:disabled {
+  cursor: default;
+}
