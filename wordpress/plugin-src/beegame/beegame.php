@@ -49,6 +49,12 @@ function beegame_wp_create_pages()
             'type'  => 'beegame_page',
         ],
         [
+            'title' => 'Epidemic Spread Modele SIR',
+            'slug'  => 'epidemic',
+            'block' => '<!-- wp:beegame/beegame-app /-->',
+            'type'  => 'beegame_page',
+        ],
+        [
             'title' => 'Error Management',
             'slug'  => 'error_mgt',
             'block' => '<!-- wp:beegame/beegame-app /-->',

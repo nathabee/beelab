@@ -1,18 +1,20 @@
-// src/components/LifeSimCard.tsx
+// src/components/EpidemicSpreadCard.tsx
 'use client';
 
 import React from 'react';
-import { useLifeSim } from '@context/LifeSimContext';
+import { useEpidemicSpread, EpidemicCell } from '@context/EpidemicSpreadContext';
 
-const LifeSimCard: React.FC = () => {
-  const { state, actions } = useLifeSim();
+const EpidemicSpreadCard: React.FC = () => {
+  const { state, actions } = useEpidemicSpread();
 
   const {
     gridWidth,
     gridHeight,
     cells,
     generation,
-    aliveCount,
+    susceptibleCount,
+    infectedCount,
+    recoveredCount,
     isRunning,
     boundaryMode,
   } = state;
@@ -37,40 +39,44 @@ const LifeSimCard: React.FC = () => {
     aspectRatio: `${gridWidth} / ${gridHeight}`,
   };
 
-  const getCellClass = (alive: boolean) =>
-    alive ? 'life-cell life-cell--alive' : 'life-cell life-cell--dead';
+  const getCellClass = (cell: EpidemicCell) => {
+    if (cell === 1) return 'epidemic-cell epidemic-cell--infected';
+    if (cell === 2) return 'epidemic-cell epidemic-cell--recovered';
+    return 'epidemic-cell epidemic-cell--susceptible';
+  };
 
   return (
     <div className="card mb-3">
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-baseline mb-2">
-          <h2 className="h5 mb-0">Game of Life</h2>
+          <h2 className="h5 mb-0">Epidemic Spread (SIR)</h2>
           <small className="text-muted">
-            Gen {generation} · Alive {aliveCount} ·{' '}
+            Gen {generation} · S {susceptibleCount} · I {infectedCount} · R{' '}
+            {recoveredCount} ·{' '}
             {boundaryMode === 'toroidal' ? 'Wrapping' : 'Finite'}
           </small>
         </div>
 
-        <div className="life-grid" style={gridStyle}>
+        <div className="epidemic-grid" style={gridStyle}>
           {cells.map((row, y) =>
-            row.map((alive, x) => (
+            row.map((cell, x) => (
               <button
                 key={`${x}-${y}`}
                 type="button"
-                className={getCellClass(alive)}
+                className={getCellClass(cell)}
                 onClick={() => handleCellClick(x, y)}
                 disabled={isRunning}
               />
             )),
           )}
         </div>
-
       </div>
-      <div className="mt-2 small text-muted">
-        Tip: click cells to toggle alive/dead while paused.
+
+      <div className="card-footer small text-muted">
+        Tip: click cells while paused to cycle through susceptible → infected → recovered.
       </div>
     </div>
   );
 };
 
-export default LifeSimCard;
+export default EpidemicSpreadCard;

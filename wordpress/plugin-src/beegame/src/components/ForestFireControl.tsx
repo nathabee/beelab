@@ -1,10 +1,14 @@
 // src/components/ForestFireControl.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useForestFire } from '@context/ForestFireContext';
+import PlayControls from '@components/common/PlayControls';
+import SpeedSlider from '@components/common/SpeedSlider';
+import GridSizeControl from '@components/common/GridSizeControl';
+import BoundaryModeSelect from '@components/common/BoundaryModeSelect';
 
-const ForestFireControl: React.FC = () => { 
+const ForestFireControl: React.FC = () => {
   const { state, actions } = useForestFire();
 
   const {
@@ -32,29 +36,13 @@ const ForestFireControl: React.FC = () => {
     setBoundaryMode,
   } = actions;
 
-  const [widthInput, setWidthInput] = useState(gridWidth.toString());
-  const [heightInput, setHeightInput] = useState(gridHeight.toString());
   const [showHelp, setShowHelp] = useState(true);
 
-  useEffect(() => {
-    setWidthInput(gridWidth.toString());
-  }, [gridWidth]);
-
-  useEffect(() => {
-    setHeightInput(gridHeight.toString());
-  }, [gridHeight]);
- 
-
-  const handleApplySize = () => {
-    const w = parseInt(widthInput, 10);
-    const h = parseInt(heightInput, 10);
-    if (!Number.isFinite(w) || !Number.isFinite(h)) return;
+  const handleApplySize = (w: number, h: number) => {
     resizeGrid(w, h);
   };
 
-  const handleSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value, 10);
-    if (!Number.isFinite(val)) return;
+  const handleSpeedChange = (val: number) => {
     setSpeed(val);
   };
 
@@ -110,106 +98,32 @@ const ForestFireControl: React.FC = () => {
           <div>Trees: {treeCount} · Burning: {burningCount}</div>
         </div>
 
-        {/* Play / step / reset */}
-        <div className="mb-3 d-flex gap-2 flex-wrap">
-          <button
-            type="button"
-            className={`btn btn-sm ${isRunning ? 'btn-warning' : 'btn-success'}`}
-            onClick={() => setRunning(!isRunning)}
-          >
-            {isRunning ? 'Pause' : 'Play'}
-          </button>
+        {/* Shared play controls */}
+        <PlayControls
+          isRunning={isRunning}
+          onToggleRun={() => setRunning(!isRunning)}
+          onStep={stepOnce}
+          onClear={clearGrid}
+          onRandomize={() => randomizeGrid()}
+          randomizeLabel="Randomize forest"
+        />
 
-          <button
-            type="button"
-            className="btn btn-sm btn-secondary"
-            onClick={stepOnce}
-            disabled={isRunning}
-          >
-            Step
-          </button>
+        {/* Shared speed slider */}
+        <SpeedSlider value={intervalMs} onChange={handleSpeedChange} />
 
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-secondary"
-            onClick={clearGrid}
-            disabled={isRunning}
-          >
-            Clear
-          </button>
+        {/* Shared grid size control */}
+        <GridSizeControl
+          width={gridWidth}
+          height={gridHeight}
+          disabled={isRunning}
+          onApply={handleApplySize}
+        />
 
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-primary"
-            onClick={randomizeGrid}
-            disabled={isRunning}
-          >
-            Randomize forest
-          </button>
-        </div>
-
-        {/* Speed */}
-        <div className="mb-3">
-          <label className="form-label">
-            Speed (ms per step): <strong>{intervalMs}</strong>
-          </label>
-          <input
-            type="range"
-            className="form-range"
-            min={50}
-            max={1000}
-            step={10}
-            value={intervalMs}
-            onChange={handleSpeedChange}
-          />
-        </div>
-
-        {/* Grid size */}
-        <div className="mb-3">
-          <label className="form-label">Grid size (width × height)</label>
-          <div className="d-flex gap-2">
-            <input
-              type="number"
-              className="form-control form-control-sm"
-              min={5}
-              max={200}
-              value={widthInput}
-              onChange={(e) => setWidthInput(e.target.value)}
-            />
-            <span className="align-self-center">×</span>
-            <input
-              type="number"
-              className="form-control form-control-sm"
-              min={5}
-              max={200}
-              value={heightInput}
-              onChange={(e) => setHeightInput(e.target.value)}
-            />
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              onClick={handleApplySize}
-              disabled={isRunning}
-            >
-              Apply
-            </button>
-          </div>
-        </div>
-
-        {/* Boundary mode */}
-        <div className="mb-3">
-          <label className="form-label">Boundary mode</label>
-          <select
-            className="form-select form-select-sm"
-            value={boundaryMode}
-            onChange={(e) =>
-              setBoundaryMode(e.target.value as 'finite' | 'toroidal')
-            }
-          >
-            <option value="toroidal">Wrapping (torus)</option>
-            <option value="finite">Finite (edges)</option>
-          </select>
-        </div>
+        {/* Shared boundary mode selector */}
+        <BoundaryModeSelect
+          value={boundaryMode}
+          onChange={setBoundaryMode}
+        />
 
         {/* Growth */}
         <div className="mb-3">

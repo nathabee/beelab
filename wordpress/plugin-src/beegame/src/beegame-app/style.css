@@ -144,3 +144,27 @@
 .beegame-app-container .forest-cell:disabled {
   cursor: default;
 }
+
+
+.beegame-app-container .epidemic-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+}
+
+
+.beegame-app-container .epidemic-cell--susceptible {
+  background: #e8f5e9; /* pale green */
+}
+
+
+.beegame-app-container .epidemic-cell--infected {
+  background: #c62828; /* red */
+}
+
+
+.beegame-app-container .epidemic-cell--recovered {
+  background: #1565c0; /* blue */
+}

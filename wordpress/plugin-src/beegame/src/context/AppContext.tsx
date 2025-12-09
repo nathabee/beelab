@@ -10,18 +10,18 @@ import React, {
 
 interface AppContextType {
   reset: () => void;
-  activeGame: 'lifeSim' | 'forestFire' | null;
-  setActiveGame: (game: 'lifeSim' | 'forestFire' | null) => void;
+  activeGame: 'lifeSim' | 'forestFire' |  'epidemic' | null;
+  setActiveGame: (game: 'lifeSim' | 'forestFire' |  'epidemic' | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeGame, setActiveGameInternal] =
-    React.useState<'lifeSim' | 'forestFire' | null>(null);
+    React.useState<'lifeSim' | 'forestFire' | 'epidemic' | null>(null);
 
   const setActiveGame = useCallback(
-    (game: 'lifeSim' | 'forestFire' | null) => {
+    (game: 'lifeSim' | 'forestFire' | 'epidemic' | null) => {
       setActiveGameInternal(game);
     },
     [],

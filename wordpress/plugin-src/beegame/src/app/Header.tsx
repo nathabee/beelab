@@ -18,6 +18,7 @@ const Header = () => {
  
         <Link to="/lifesim" className="nav-link"> Life of Game</Link> 
         <Link to="/forestfire" className="nav-link"> Burning Forest</Link> 
+        <Link to="/epidemic" className="nav-link"> Epidemic Spread Model SIR</Link> 
  
  
         <Link to="/error_mgt" className="nav-link">Error Management</Link>
