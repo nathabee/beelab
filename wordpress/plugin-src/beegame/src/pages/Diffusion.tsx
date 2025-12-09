@@ -11,13 +11,13 @@ import { useApp } from '@context/AppContext';
 const DiffusionPage: React.FC = () => {
   const { setActiveGame } = useApp();
   useEffect(() => {
-    setActiveGame('epidemic');
+    setActiveGame('diffusion');
   }, [setActiveGame]);
 
   return (
     <DiffusionProvider>
       <SimulationLayout
-        title="Epidemic Spread (SIR)"
+        title="Diffusion"
         left={<DiffusionCard />}
         right={<DiffusionControl />}
       />

@@ -61,6 +61,18 @@ function beegame_wp_create_pages()
             'type'  => 'beegame_page',
         ],
         [
+            'title' => 'Elementary Automata',
+            'slug'  => 'elementary',
+            'block' => '<!-- wp:beegame/beegame-app /-->',
+            'type'  => 'beegame_page',
+        ],
+        [
+            'title' => 'Chaos Map',
+            'slug'  => 'logisticmap',
+            'block' => '<!-- wp:beegame/beegame-app /-->',
+            'type'  => 'beegame_page',
+        ],
+        [
             'title' => 'Error Management',
             'slug'  => 'error_mgt',
             'block' => '<!-- wp:beegame/beegame-app /-->',

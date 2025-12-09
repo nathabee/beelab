@@ -14,7 +14,7 @@ const Home: React.FC = () => {
         <p>
           BeeGame is a collection of interactive, browser-based simulations that run entirely
           inside WordPress using React. Each simulation explores a different mathematical or
-          dynamical system — from cellular automata to growth, diffusion, and epidemic models.
+          dynamical system — from cellular automata to growth, diffusion, epidemics, and chaos.
         </p>
         <p>
           All simulations run directly in your browser with no backend required.
@@ -84,27 +84,55 @@ const Home: React.FC = () => {
             </Link>
           </div>
         </div>
+
+        {/* Elementary Cellular Automata */}
+        <div className="card mb-3">
+          <div className="card-body">
+            <h4 className="h6">Elementary Cellular Automata</h4>
+            <p className="mb-2">
+              One-dimensional rules such as Rule 30, Rule 90, and Rule 110. Start from a simple
+              initial row and watch how a single line of cells generates rich triangular and
+              fractal patterns over time.
+            </p>
+            <Link to="/elementary" className="btn btn-sm btn-primary">
+              Start Elementary Automaton
+            </Link>
+          </div>
+        </div>
+
+        {/* Logistic Map */}
+        <div className="card mb-3">
+          <div className="card-body">
+            <h4 className="h6">Logistic Map (Growth & Chaos)</h4>
+            <p className="mb-2">
+              The discrete-time population model
+              {' '}x<sub>n+1</sub> = r·x<sub>n</sub>(1 - x<sub>n</sub>).
+              Slide the parameter r to travel from stable equilibrium through period-doubling
+              into chaotic behaviour, and see how a simple formula generates complex dynamics.
+            </p>
+            <Link to="/logisticmap" className="btn btn-sm btn-primary">
+              Start Logistic Map
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* Coming Soon */}
       <section className="mb-4">
-        <h3 className="h5">Upcoming Simulations</h3>
+        <h3 className="h5">More Experiments Coming</h3>
         <p className="mb-3">
-          Additional simulations planned for future versions:
+          BeeGame is modular. New simulation types can be added as separate pages without
+          changing the core plugin. Future versions may explore:
         </p>
 
         <ul className="list-group small">
           <li className="list-group-item">
-            <strong>Elementary Cellular Automata</strong>
-            – 1D rules such as Rule 30, Rule 110, and Rule 90, showing complex patterns
-            emerging from very simple local updates.
+            <strong>Phase transitions & percolation</strong>
+            – models of connectivity, clustering, and critical thresholds.
           </li>
-
           <li className="list-group-item">
-            <strong>Logistic Growth & Chaos Map</strong>
-            – a discrete population model
-            {' '}x<sub>n+1</sub> = r·x<sub>n</sub>(1 - x<sub>n</sub>) showing the journey from
-            stability to period-doubling and chaos as the parameter r increases.
+            <strong>Agent-based swarms</strong>
+            – simple motion rules giving rise to flocking and collective behaviour.
           </li>
         </ul>
       </section>

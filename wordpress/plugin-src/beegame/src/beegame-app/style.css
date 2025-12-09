@@ -185,3 +185,127 @@
 .beegame-app-container .diffusion-cell:disabled {
   cursor: default;
 }
+ 
+.beegame-app-container .eca-cell--history { opacity: 0.7; }
+.beegame-app-container .eca-cell--current { opacity: 1; }
+
+.beegame-app-container .logistic-chart-wrapper {
+  width: 100%;
+  max-width: 100%;
+}
+
+.beegame-app-container .logistic-chart {
+  width: 100%;
+  height: 220px;
+}
+
+.beegame-app-container .logistic-chart-grid {
+  stroke: rgba(0, 0, 0, 0.08);
+  stroke-width: 0.25;
+}
+
+.beegame-app-container .logistic-chart-axis {
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: 0.4;
+}
+
+.beegame-app-container .logistic-line {
+  fill: none;
+  stroke: #111;
+  stroke-width: 0.6;
+}
+
+.beegame-app-container .logistic-point {
+  fill: #111;
+}
+
+
+/* logo *****************************************/
+/* Sidebar logo wrapper */
+/* ===== Sidebar logo wrapper ===== */
+/* ============================
+   Sidebar logo container
+===============================*/
+.sidebar-logo {
+  padding: 1rem 1rem 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-logo #logo {
+  display: block;
+  max-width: 180px;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.sidebar-logo #logo:hover {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,.3));
+}
+
+/* ============================
+   Colors
+===============================*/
+.sidebar-logo #logo .line1 { fill: transparent; color: #ffffff; }
+.sidebar-logo #logo .line2 { fill: transparent; color: #ff6b6b; }
+.sidebar-logo #logo .powered { fill: #b3dcff; }
+
+/* ============================
+   Draw + fill animation
+===============================*/
+.sidebar-logo #logo .line1,
+.sidebar-logo #logo .line2 {
+  stroke: currentColor;
+  paint-order: stroke fill;
+  stroke-width: 2px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+}
+
+.sidebar-logo #logo .line1 {
+  animation: draw 1.2s ease-out forwards,
+             fill-line1 .6s ease-out .9s forwards;
+}
+
+.sidebar-logo #logo .line2 {
+  animation: draw 1.2s ease-out .15s forwards,
+             fill-line2 .6s ease-out 1.05s forwards;
+}
+
+/* Tagline fade */
+.sidebar-logo #logo #tagline {
+  opacity: 0;
+  transform: translate(256,0);
+  animation: tagline .6s ease-out 1.2s forwards;
+}
+
+/* ============================
+   Keyframes
+===============================*/
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fill-line1 {
+  to { fill: #ffffff; }
+}
+
+@keyframes fill-line2 {
+  to { fill: #ff6b6b; }
+}
+
+@keyframes tagline {
+  to {
+    opacity: 1;
+    transform: translate(256,120);
+  }
+}
