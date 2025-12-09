@@ -6,6 +6,7 @@ import Home from '@pages/Home';
 import LifeSim from '@pages/LifeSim';
 import ForestFire from '@pages/ForestFire';
 import EpidemicSpread from '@pages/EpidemicSpread';
+import Diffusion from '@pages/Diffusion';
 import ErrorMgt from '@pages/ErrorMgt';
 
 import { ErrorPage } from '@bee/common/error';  
@@ -18,6 +19,7 @@ const AppRoutes: React.FC = () => (
     <Route path="/lifesim" element={<LifeSim />} /> 
     <Route path="/forestfire" element={<ForestFire />} /> 
     <Route path="/epidemic" element={<EpidemicSpread />} /> 
+    <Route path="/diffusion" element={<Diffusion />} /> 
     <Route path="/error_mgt" element={<ErrorMgt/>} />
 
     {/* Error route */}

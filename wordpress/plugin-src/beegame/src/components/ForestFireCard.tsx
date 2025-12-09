@@ -29,15 +29,14 @@ const ForestFireCard: React.FC = () => {
         if (isRunning) return;
         toggleCell(x, y);
     };
-
-    const gridStyle: React.CSSProperties = {
-        display: 'grid',
-        gridTemplateColumns: `repeat(${gridWidth}, minmax(0, 1fr))`,
-        gap: 1,
-        border: '1px solid #ccc',
-        maxHeight: '500px',
-        aspectRatio: `${gridWidth} / ${gridHeight}`,
-    };
+  const gridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: `repeat(${gridWidth}, 1fr)`,
+  gap: 1,
+  border: '1px solid #ccc',
+  width: '100%',
+  aspectRatio: `${gridWidth} / ${gridHeight}`,
+};
 
     const getCellClass = (state: ForestCellState) => {
         if (state === 1) return 'forest-cell--tree';

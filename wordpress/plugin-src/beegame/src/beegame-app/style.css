@@ -168,3 +168,20 @@
 .beegame-app-container .epidemic-cell--recovered {
   background: #1565c0; /* blue */
 }
+
+
+.beegame-app-container .diffusion-grid {
+  width: 100%;
+}
+
+.beegame-app-container .diffusion-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+}
+
+.beegame-app-container .diffusion-cell:disabled {
+  cursor: default;
+}

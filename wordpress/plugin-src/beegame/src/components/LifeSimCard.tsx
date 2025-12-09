@@ -30,10 +30,10 @@ const LifeSimCard: React.FC = () => {
 
   const gridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: `repeat(${gridWidth}, minmax(0, 1fr))`,
+    gridTemplateColumns: `repeat(${gridWidth}, 1fr)`,
     gap: 1,
     border: '1px solid #ccc',
-    maxHeight: '500px',
+    width: '100%',
     aspectRatio: `${gridWidth} / ${gridHeight}`,
   };
 
