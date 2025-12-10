@@ -63,26 +63,10 @@ const ForestFireControl: React.FC = () => {
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-center mb-2">
           <h2 className="h5 mb-0">Forest Controls</h2>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-info"
-            onClick={() => setShowHelp(v => !v)}
-          >
-            {showHelp ? 'Hide help' : 'How it works'}
-          </button>
+          
         </div>
 
-        {showHelp && (
-          <div className="alert alert-info small mb-3">
-            <strong>Model:</strong> each cell is empty, tree, or burning.
-            <ul className="mb-1 ps-3">
-              <li>Burning → becomes empty next step.</li>
-              <li>Tree → catches fire if a neighbour burns or by lightning.</li>
-              <li>Empty → grows a tree with probability “Growth”.</li>
-            </ul>
-            <div>Use Randomize to start with a forest, then press Play.</div>
-          </div>
-        )}
+
 
         {/* Status */}
         <div className="mb-3 small text-muted">

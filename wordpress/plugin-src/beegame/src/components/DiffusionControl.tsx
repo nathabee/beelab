@@ -73,39 +73,13 @@ const DiffusionControl: React.FC = () => {
   return (
     <div className="card">
       <div className="card-body">
-        {/* Header + help toggle */}
+        {/* Header   */}
         <div className="d-flex justify-content-between align-items-center mb-2">
           <h2 className="h5 mb-0">Diffusion Controls</h2>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-info"
-            onClick={() => setShowHelp(v => !v)}
-          >
-            {showHelp ? 'Hide help' : 'Model info'}
-          </button>
+ 
         </div>
 
-        {showHelp && (
-          <div className="alert alert-info small mb-3">
-            <strong>Model:</strong> a scalar field (heat or concentration) diffuses over the grid.
-            <ul className="mb-1 ps-3">
-              <li>
-                Each cell holds a value between 0 (cold/empty) and 1 (hot/high concentration).
-              </li>
-              <li>
-                At each step, values move towards the average of their neighbours
-                (<strong>Diffusion</strong>).
-              </li>
-              <li>
-                Optionally, values decay over time (<strong>Decay</strong>).
-              </li>
-            </ul>
-            <div>
-              Click cells to create hot spots, or use <strong>Random field</strong> as a starting
-              point.
-            </div>
-          </div>
-        )}
+       
 
         {/* Status */}
         <div className="mb-3 small text-muted">

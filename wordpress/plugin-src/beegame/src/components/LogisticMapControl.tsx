@@ -81,35 +81,13 @@ const LogisticMapControl: React.FC = () => {
   return (
     <div className="card">
       <div className="card-body">
-        {/* Header + help toggle */}
+        {/* Header  */}
         <div className="d-flex justify-content-between align-items-center mb-2">
           <h2 className="h5 mb-0">Logistic Map Controls</h2>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-info"
-            onClick={() => setShowHelp(v => !v)}
-          >
-            {showHelp ? 'Hide help' : 'What is this?'}
-          </button>
+          
         </div>
 
-        {/* Help box */}
-        {showHelp && (
-          <div className="alert alert-info small mb-3">
-            <strong>Model:</strong> xₙ₊₁ = r·xₙ(1 − xₙ) with x in [0,1].
-            <ul className="mb-1 ps-3">
-              <li>For small r, the population converges to a stable value.</li>
-              <li>As r increases, you get period-doubling and then chaos.</li>
-              <li>
-                Try r≈2.8, 3.2, 3.5, 3.9 and watch how the orbit changes.
-              </li>
-            </ul>
-            <div className="mb-0">
-              You can change <strong>r</strong>, the initial value x₀, and the
-              number of steps plotted.
-            </div>
-          </div>
-        )}
+
 
         {/* Status */}
         <div className="mb-3 small text-muted">

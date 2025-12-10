@@ -11,6 +11,13 @@ import React, {
 
 export type BoundaryMode = 'finite' | 'toroidal';
 
+export type DiffusionStatPoint = {
+  generation: number;
+  min: number;
+  max: number;
+  avg: number;
+};
+
 export interface DiffusionState {
   gridWidth: number;
   gridHeight: number;
@@ -29,6 +36,8 @@ export interface DiffusionState {
   minValue: number;
   maxValue: number;
   avgValue: number;
+
+  statsHistory: DiffusionStatPoint[];  // NEW: time series for statistics
 }
 
 export interface DiffusionActions {
@@ -145,7 +154,7 @@ function nextDiffusionStep(
       const neighbourAvg = (up + down + left + right) / 4;
 
       let nv = v + d * (neighbourAvg - v); // diffusion
-      nv -= k * v;                          // decay
+      nv -= k * v;                         // decay
 
       next[y][x] = clamp01(nv);
     }
@@ -161,6 +170,7 @@ const DEFAULT_H = 25;
 
 const initialField = createZeroField(DEFAULT_W, DEFAULT_H);
 const initialStats = fieldStats(initialField);
+const MAX_HISTORY_POINTS = 500;
 
 const initialState: DiffusionState = {
   gridWidth: DEFAULT_W,
@@ -180,6 +190,15 @@ const initialState: DiffusionState = {
   minValue: initialStats.min,
   maxValue: initialStats.max,
   avgValue: initialStats.avg,
+
+  statsHistory: [
+    {
+      generation: 0,
+      min: initialStats.min,
+      max: initialStats.max,
+      avg: initialStats.avg,
+    },
+  ],
 };
 
 export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -202,6 +221,7 @@ export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
           const field = prev.field.map(row => row.slice());
           field[y][x] = clamp01(value);
           const stats = fieldStats(field);
+          // do NOT touch statsHistory here – editing initial condition
           return {
             ...prev,
             field,
@@ -227,6 +247,7 @@ export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
           const next = current > 0.5 ? 0 : 1; // toggle cold/hot
           field[y][x] = next;
           const stats = fieldStats(field);
+          // do NOT touch statsHistory here – editing initial condition
           return {
             ...prev,
             field,
@@ -246,13 +267,30 @@ export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
             prev.decayRate,
           );
           const stats = fieldStats(field);
+          const nextGen = prev.generation + 1;
+
+          const point: DiffusionStatPoint = {
+            generation: nextGen,
+            min: stats.min,
+            max: stats.max,
+            avg: stats.avg,
+          };
+
+          let statsHistory = [...prev.statsHistory, point];
+          if (statsHistory.length > MAX_HISTORY_POINTS) {
+            statsHistory = statsHistory.slice(
+              statsHistory.length - MAX_HISTORY_POINTS,
+            );
+          }
+
           return {
             ...prev,
             field,
-            generation: prev.generation + 1,
+            generation: nextGen,
             minValue: stats.min,
             maxValue: stats.max,
             avgValue: stats.avg,
+            statsHistory,
           };
         });
       },
@@ -264,6 +302,12 @@ export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
         setState(prev => {
           const field = createZeroField(prev.gridWidth, prev.gridHeight);
           const stats = fieldStats(field);
+          const point: DiffusionStatPoint = {
+            generation: 0,
+            min: stats.min,
+            max: stats.max,
+            avg: stats.avg,
+          };
           return {
             ...prev,
             field,
@@ -271,6 +315,7 @@ export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
             minValue: stats.min,
             maxValue: stats.max,
             avgValue: stats.avg,
+            statsHistory: [point],
           };
         }),
 
@@ -282,6 +327,12 @@ export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
               : prev.randomMaxIntensity;
           const field = randomField(prev.gridWidth, prev.gridHeight, mi);
           const stats = fieldStats(field);
+          const point: DiffusionStatPoint = {
+            generation: 0,
+            min: stats.min,
+            max: stats.max,
+            avg: stats.avg,
+          };
           return {
             ...prev,
             field,
@@ -290,6 +341,7 @@ export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
             minValue: stats.min,
             maxValue: stats.max,
             avgValue: stats.avg,
+            statsHistory: [point],
           };
         }),
 
@@ -299,6 +351,12 @@ export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
           const height = Math.max(5, Math.min(200, h));
           const field = createZeroField(width, height);
           const stats = fieldStats(field);
+          const point: DiffusionStatPoint = {
+            generation: 0,
+            min: stats.min,
+            max: stats.max,
+            avg: stats.avg,
+          };
           return {
             ...prev,
             gridWidth: width,
@@ -308,6 +366,7 @@ export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
             minValue: stats.min,
             maxValue: stats.max,
             avgValue: stats.avg,
+            statsHistory: [point],
           };
         }),
 
@@ -315,10 +374,16 @@ export const DiffusionProvider: React.FC<{ children: React.ReactNode }> = ({
         setState(prev => ({ ...prev, intervalMs: Math.max(20, ms) })),
 
       setDiffusionRate: (d: number) =>
-        setState(prev => ({ ...prev, diffusionRate: Math.max(0, Math.min(0.5, d)) })),
+        setState(prev => ({
+          ...prev,
+          diffusionRate: Math.max(0, Math.min(0.5, d)),
+        })),
 
       setDecayRate: (d: number) =>
-        setState(prev => ({ ...prev, decayRate: Math.max(0, Math.min(1, d)) })),
+        setState(prev => ({
+          ...prev,
+          decayRate: Math.max(0, Math.min(1, d)),
+        })),
 
       setRandomMaxIntensity: (v: number) =>
         setState(prev => ({

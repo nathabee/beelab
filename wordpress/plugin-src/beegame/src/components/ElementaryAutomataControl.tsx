@@ -75,7 +75,7 @@ const ElementaryAutomataControl: React.FC = () => {
   return (
     <div className="card">
       <div className="card-body">
-        {/* Header + help toggle */}
+        {/* Header   */}
         <div className="d-flex justify-content-between align-items-center mb-2">
           <h2 className="h5 mb-0">Elementary CA Controls</h2>
           <button
@@ -87,32 +87,7 @@ const ElementaryAutomataControl: React.FC = () => {
           </button>
         </div>
 
-        {/* Help box */}
-        {showHelp && (
-          <div className="alert alert-info small mb-3">
-            <strong>How it works:</strong>
-            <ul className="mb-1 ps-3">
-              <li>
-                This is a <strong>1D elementary cellular automaton</strong> (Wolfram
-                rules). Each row is computed from the row above using a rule between 0 and
-                255.
-              </li>
-              <li>
-                Only the <strong>bottom row</strong> is editable. Click cells while paused
-                or use <strong>Randomize</strong> to set up the initial row.
-              </li>
-              <li>
-                Rule controls which neighbourhood patterns (111, 110, …, 000) become
-                alive in the next row.
-              </li>
-            </ul>
-            <div className="mb-0">
-              Typical interesting rules: <strong>30</strong>, <strong>90</strong>,{' '}
-              <strong>110</strong>, <strong>184</strong>.
-            </div>
-          </div>
-        )}
-
+         
         {/* Status */}
         <div className="mb-3 small text-muted">
           <div>

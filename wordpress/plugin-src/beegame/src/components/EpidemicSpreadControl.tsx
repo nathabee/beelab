@@ -84,38 +84,10 @@ const EpidemicSpreadControl: React.FC = () => {
         {/* Header + help toggle */}
         <div className="d-flex justify-content-between align-items-center mb-2">
           <h2 className="h5 mb-0">Epidemic Controls</h2>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-info"
-            onClick={() => setShowHelp(v => !v)}
-          >
-            {showHelp ? 'Hide help' : 'Model info'}
-          </button>
+ 
         </div>
 
-        {showHelp && (
-          <div className="alert alert-info small mb-3">
-            <strong>Model:</strong> grid-based SIR.
-            <ul className="mb-1 ps-3">
-              <li>
-                <strong>Susceptible (S)</strong> become infected if neighbours
-                are infected (probability = Infection).
-              </li>
-              <li>
-                <strong>Infected (I)</strong> recover each step with probability
-                Recovery.
-              </li>
-              <li>
-                <strong>Recovered (R)</strong> are immune; optionally lose
-                immunity with Loss of immunity.
-              </li>
-            </ul>
-            <div>
-              Use <strong>Random infection</strong> to seed the grid, then press{' '}
-              <strong>Play</strong>.
-            </div>
-          </div>
-        )}
+ 
 
         {/* Status */}
         <div className="mb-3 small text-muted">

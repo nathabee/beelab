@@ -17,6 +17,16 @@ export type ForestCellState = ForestCell;
 
 export type BoundaryMode = 'finite' | 'toroidal';
 
+export type ForestFireStatPoint = {
+  generation: number;
+  treeCount: number;
+  burningCount: number;
+  emptyCount: number;
+  fracTree: number;
+  fracBurning: number;
+  fracEmpty: number;
+};
+
 export interface ForestFireState {
   gridWidth: number;
   gridHeight: number;
@@ -34,6 +44,8 @@ export interface ForestFireState {
 
   treeCount: number;
   burningCount: number;
+
+  statsHistory: ForestFireStatPoint[];
 }
 
 export interface ForestFireActions {
@@ -76,9 +88,10 @@ function createEmptyGrid(w: number, h: number): ForestCell[][] {
 }
 
 function randomGrid(w: number, h: number, treeChance: number): ForestCell[][] {
+  const p = clamp01(treeChance);
   return Array.from({ length: h }, () =>
     Array.from({ length: w }, () =>
-      Math.random() < treeChance ? (1 as ForestCell) : (0 as ForestCell),
+      Math.random() < p ? (1 as ForestCell) : (0 as ForestCell),
     ),
   );
 }
@@ -93,6 +106,25 @@ function countForest(cells: ForestCell[][]): { trees: number; burning: number } 
     }
   }
   return { trees, burning };
+}
+
+function makeStatPoint(
+  generation: number,
+  counts: { trees: number; burning: number },
+  totalCells: number,
+): ForestFireStatPoint {
+  const { trees, burning } = counts;
+  const N = totalCells || 1;
+  const empty = Math.max(0, N - trees - burning);
+  return {
+    generation,
+    treeCount: trees,
+    burningCount: burning,
+    emptyCount: empty,
+    fracTree: trees / N,
+    fracBurning: burning / N,
+    fracEmpty: empty / N,
+  };
 }
 
 function nextGeneration(
@@ -119,6 +151,10 @@ function nextGeneration(
     Array.from({ length: W }, () => 0 as ForestCell),
   );
 
+  const pG = clamp01(pGrowth);
+  const pL = clamp01(pLightning);
+  const pS = clamp01(pSpread);
+
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const cell = cells[y][x];
@@ -143,12 +179,12 @@ function nextGeneration(
           if (neighbourBurning) break;
         }
 
-        if (neighbourBurning && Math.random() < pSpread) {
+        if (neighbourBurning && Math.random() < pS) {
           next[y][x] = 2;
           continue;
         }
 
-        if (Math.random() < pLightning) {
+        if (Math.random() < pL) {
           next[y][x] = 2;
           continue;
         }
@@ -158,7 +194,7 @@ function nextGeneration(
       }
 
       // empty
-      if (Math.random() < pGrowth) {
+      if (Math.random() < pG) {
         next[y][x] = 1;
       } else {
         next[y][x] = 0;
@@ -173,9 +209,15 @@ function nextGeneration(
 
 const DEFAULT_W = 40;
 const DEFAULT_H = 25;
+const MAX_STATS_HISTORY = 500;
 
 const initialCells = createEmptyGrid(DEFAULT_W, DEFAULT_H);
 const initialCounts = countForest(initialCells);
+const initialStat = makeStatPoint(
+  0,
+  initialCounts,
+  DEFAULT_W * DEFAULT_H,
+);
 
 const initialState: ForestFireState = {
   gridWidth: DEFAULT_W,
@@ -194,6 +236,8 @@ const initialState: ForestFireState = {
 
   treeCount: initialCounts.trees,
   burningCount: initialCounts.burning,
+
+  statsHistory: [initialStat],
 };
 
 export const ForestFireProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -217,8 +261,15 @@ export const ForestFireProvider: React.FC<{ children: React.ReactNode }> = ({
           const current = cells[y][x];
           const next: ForestCell = current === 0 ? 1 : current === 1 ? 2 : 0;
           cells[y][x] = next;
-          const { trees, burning } = countForest(cells);
-          return { ...prev, cells, treeCount: trees, burningCount: burning };
+          const counts = countForest(cells);
+          // treat manual editing as changing the current configuration;
+          // we leave statsHistory untouched until the next step/reset
+          return {
+            ...prev,
+            cells,
+            treeCount: counts.trees,
+            burningCount: counts.burning,
+          };
         });
       },
 
@@ -231,13 +282,25 @@ export const ForestFireProvider: React.FC<{ children: React.ReactNode }> = ({
             prev.pLightning,
             prev.pSpread,
           );
-          const { trees, burning } = countForest(cells);
+          const counts = countForest(cells);
+          const nextGen = prev.generation + 1;
+          const total = prev.gridWidth * prev.gridHeight;
+          const point = makeStatPoint(nextGen, counts, total);
+
+          let statsHistory = [...prev.statsHistory, point];
+          if (statsHistory.length > MAX_STATS_HISTORY) {
+            statsHistory = statsHistory.slice(
+              statsHistory.length - MAX_STATS_HISTORY,
+            );
+          }
+
           return {
             ...prev,
             cells,
-            generation: prev.generation + 1,
-            treeCount: trees,
-            burningCount: burning,
+            generation: nextGen,
+            treeCount: counts.trees,
+            burningCount: counts.burning,
+            statsHistory,
           };
         });
       },
@@ -248,26 +311,32 @@ export const ForestFireProvider: React.FC<{ children: React.ReactNode }> = ({
       clearGrid: () =>
         setState(prev => {
           const cells = createEmptyGrid(prev.gridWidth, prev.gridHeight);
-          const { trees, burning } = countForest(cells);
+          const counts = countForest(cells);
+          const total = prev.gridWidth * prev.gridHeight;
+          const point = makeStatPoint(0, counts, total);
           return {
             ...prev,
             cells,
             generation: 0,
-            treeCount: trees,
-            burningCount: burning,
+            treeCount: counts.trees,
+            burningCount: counts.burning,
+            statsHistory: [point],
           };
         }),
 
       randomizeGrid: (treeChance = 0.6) =>
         setState(prev => {
           const cells = randomGrid(prev.gridWidth, prev.gridHeight, treeChance);
-          const { trees, burning } = countForest(cells);
+          const counts = countForest(cells);
+          const total = prev.gridWidth * prev.gridHeight;
+          const point = makeStatPoint(0, counts, total);
           return {
             ...prev,
             cells,
             generation: 0,
-            treeCount: trees,
-            burningCount: burning,
+            treeCount: counts.trees,
+            burningCount: counts.burning,
+            statsHistory: [point],
           };
         }),
 
@@ -276,15 +345,18 @@ export const ForestFireProvider: React.FC<{ children: React.ReactNode }> = ({
           const width = Math.max(5, Math.min(200, w));
           const height = Math.max(5, Math.min(200, h));
           const cells = createEmptyGrid(width, height);
-          const { trees, burning } = countForest(cells);
+          const counts = countForest(cells);
+          const total = width * height;
+          const point = makeStatPoint(0, counts, total);
           return {
             ...prev,
             gridWidth: width,
             gridHeight: height,
             cells,
             generation: 0,
-            treeCount: trees,
-            burningCount: burning,
+            treeCount: counts.trees,
+            burningCount: counts.burning,
+            statsHistory: [point],
           };
         }),
 

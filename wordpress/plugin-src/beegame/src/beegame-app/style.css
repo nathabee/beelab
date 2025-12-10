@@ -16,6 +16,27 @@
     var(--custom-blue-complement),
     var(--custom-blue)
   );
+  /* Tabs – theme-aware fallback tokens */
+  --beegame-tab-color: var(--wp--preset--color--foreground, #222);
+  --beegame-tab-bg: var(--wp--preset--color--background, #f7f7f7);
+  --beegame-tab-border: var(--wp--preset--color--contrast, #ccc);
+
+  --beegame-tab-active-color: var(--wp--preset--color--foreground, #000);
+  --beegame-tab-active-bg: var(--wp--preset--color--background, #fff);
+  --beegame-tab-active-border: var(--wp--preset--color--primary, #444);
+}
+
+/* Force visibility of tabs inside Beegame */
+.beegame-app-container .nav-tabs .nav-link {
+  color: var(--beegame-tab-color, #222) !important;
+  background: var(--beegame-tab-bg, transparent) !important;
+  border-color: var(--beegame-tab-border, #ccc) !important;
+}
+
+.beegame-app-container .nav-tabs .nav-link.active {
+  color: var(--beegame-tab-active-color, #000) !important;
+  background: var(--beegame-tab-active-bg, #fff) !important;
+  border-color: var(--beegame-tab-active-border, #aaa) !important;
 }
 
 /* Layout container */

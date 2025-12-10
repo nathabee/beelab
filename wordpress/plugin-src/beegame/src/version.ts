@@ -1,1 +1,1 @@
-export const VERSION='v1.1.10'; export const COMMIT='ad64db7'; export const BUILT_AT='2025-12-09T20:49:13.830Z';
+export const VERSION='v1.1.10'; export const COMMIT='579b5db'; export const BUILT_AT='2025-12-10T13:03:45.302Z';

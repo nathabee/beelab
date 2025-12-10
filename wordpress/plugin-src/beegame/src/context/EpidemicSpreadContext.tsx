@@ -14,6 +14,16 @@ export type BoundaryMode = 'finite' | 'toroidal';
 export type EpidemicCell = 0 | 1 | 2;
 // 0 = susceptible, 1 = infected, 2 = recovered
 
+export type EpidemicStatPoint = {
+  generation: number;
+  susceptible: number;
+  infected: number;
+  recovered: number;
+  fracS: number;
+  fracI: number;
+  fracR: number;
+};
+
 export interface EpidemicState {
   gridWidth: number;
   gridHeight: number;
@@ -33,6 +43,8 @@ export interface EpidemicState {
   susceptibleCount: number;
   infectedCount: number;
   recoveredCount: number;
+
+  statsHistory: EpidemicStatPoint[];
 }
 
 export interface EpidemicActions {
@@ -104,6 +116,24 @@ function countSIR(cells: EpidemicCell[][]): {
     }
   }
   return { susceptible: s, infected: i, recovered: r };
+}
+
+function makeStatPoint(
+  generation: number,
+  counts: { susceptible: number; infected: number; recovered: number },
+  totalCells: number,
+): EpidemicStatPoint {
+  const { susceptible, infected, recovered } = counts;
+  const N = totalCells || 1;
+  return {
+    generation,
+    susceptible,
+    infected,
+    recovered,
+    fracS: susceptible / N,
+    fracI: infected / N,
+    fracR: recovered / N,
+  };
 }
 
 function nextGeneration(
@@ -186,9 +216,15 @@ function nextGeneration(
 
 const DEFAULT_W = 40;
 const DEFAULT_H = 25;
+const MAX_STATS_HISTORY = 500;
 
 const initialCells = createSusceptibleGrid(DEFAULT_W, DEFAULT_H);
 const initialCounts = countSIR(initialCells);
+const initialStat = makeStatPoint(
+  0,
+  initialCounts,
+  DEFAULT_W * DEFAULT_H,
+);
 
 const initialState: EpidemicState = {
   gridWidth: DEFAULT_W,
@@ -209,6 +245,8 @@ const initialState: EpidemicState = {
   susceptibleCount: initialCounts.susceptible,
   infectedCount: initialCounts.infected,
   recoveredCount: initialCounts.recovered,
+
+  statsHistory: [initialStat],
 };
 
 export const EpidemicSpreadProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -234,13 +272,19 @@ export const EpidemicSpreadProvider: React.FC<{ children: React.ReactNode }> = (
           const next: EpidemicCell = current === 0 ? 1 : current === 1 ? 2 : 0;
           cells[y][x] = next;
 
-          const { susceptible, infected, recovered } = countSIR(cells);
+          const counts = countSIR(cells);
+          const total = prev.gridWidth * prev.gridHeight;
+          const stat = makeStatPoint(prev.generation, counts, total);
+
+          // When editing manually we do not touch statsHistory (we treat it as initial condition),
+          // so we only update the counts in state here.
           return {
             ...prev,
             cells,
-            susceptibleCount: susceptible,
-            infectedCount: infected,
-            recoveredCount: recovered,
+            susceptibleCount: counts.susceptible,
+            infectedCount: counts.infected,
+            recoveredCount: counts.recovered,
+            // statsHistory unchanged
           };
         });
       },
@@ -254,14 +298,26 @@ export const EpidemicSpreadProvider: React.FC<{ children: React.ReactNode }> = (
             prev.pRecovery,
             prev.pLossImmunity,
           );
-          const { susceptible, infected, recovered } = countSIR(cells);
+          const counts = countSIR(cells);
+          const nextGen = prev.generation + 1;
+          const total = prev.gridWidth * prev.gridHeight;
+          const point = makeStatPoint(nextGen, counts, total);
+
+          let statsHistory = [...prev.statsHistory, point];
+          if (statsHistory.length > MAX_STATS_HISTORY) {
+            statsHistory = statsHistory.slice(
+              statsHistory.length - MAX_STATS_HISTORY,
+            );
+          }
+
           return {
             ...prev,
             cells,
-            generation: prev.generation + 1,
-            susceptibleCount: susceptible,
-            infectedCount: infected,
-            recoveredCount: recovered,
+            generation: nextGen,
+            susceptibleCount: counts.susceptible,
+            infectedCount: counts.infected,
+            recoveredCount: counts.recovered,
+            statsHistory,
           };
         });
       },
@@ -272,14 +328,17 @@ export const EpidemicSpreadProvider: React.FC<{ children: React.ReactNode }> = (
       clearGrid: () =>
         setState(prev => {
           const cells = createSusceptibleGrid(prev.gridWidth, prev.gridHeight);
-          const { susceptible, infected, recovered } = countSIR(cells);
+          const counts = countSIR(cells);
+          const total = prev.gridWidth * prev.gridHeight;
+          const point = makeStatPoint(0, counts, total);
           return {
             ...prev,
             cells,
             generation: 0,
-            susceptibleCount: susceptible,
-            infectedCount: infected,
-            recoveredCount: recovered,
+            susceptibleCount: counts.susceptible,
+            infectedCount: counts.infected,
+            recoveredCount: counts.recovered,
+            statsHistory: [point],
           };
         }),
 
@@ -294,15 +353,18 @@ export const EpidemicSpreadProvider: React.FC<{ children: React.ReactNode }> = (
             prev.gridHeight,
             density,
           );
-          const { susceptible, infected, recovered } = countSIR(cells);
+          const counts = countSIR(cells);
+          const total = prev.gridWidth * prev.gridHeight;
+          const point = makeStatPoint(0, counts, total);
           return {
             ...prev,
             cells,
             generation: 0,
-            susceptibleCount: susceptible,
-            infectedCount: infected,
-            recoveredCount: recovered,
-            randomInfectedDensity: density,
+            susceptibleCount: counts.susceptible,
+            infectedCount: counts.infected,
+            recoveredCount: counts.recovered,
+            randomInfectedDensity: clamp01(density),
+            statsHistory: [point],
           };
         }),
 
@@ -311,16 +373,19 @@ export const EpidemicSpreadProvider: React.FC<{ children: React.ReactNode }> = (
           const width = Math.max(5, Math.min(200, w));
           const height = Math.max(5, Math.min(200, h));
           const cells = createSusceptibleGrid(width, height);
-          const { susceptible, infected, recovered } = countSIR(cells);
+          const counts = countSIR(cells);
+          const total = width * height;
+          const point = makeStatPoint(0, counts, total);
           return {
             ...prev,
             gridWidth: width,
             gridHeight: height,
             cells,
             generation: 0,
-            susceptibleCount: susceptible,
-            infectedCount: infected,
-            recoveredCount: recovered,
+            susceptibleCount: counts.susceptible,
+            infectedCount: counts.infected,
+            recoveredCount: counts.recovered,
+            statsHistory: [point],
           };
         }),
 

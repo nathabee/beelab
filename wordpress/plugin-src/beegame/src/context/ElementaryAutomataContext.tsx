@@ -9,7 +9,15 @@ import React, {
   useEffect,
 } from 'react';
 
-type BoundaryMode = 'finite' | 'toroidal';
+export type BoundaryMode = 'finite' | 'toroidal';
+
+export type ElementaryStatPoint = {
+  generation: number;
+  aliveCount: number;
+  aliveFraction: number;
+  transitions: number;
+  transitionsFraction: number;
+};
 
 type ElementaryState = {
   width: number;
@@ -21,6 +29,8 @@ type ElementaryState = {
   boundaryMode: BoundaryMode;
   randomFillDensity: number;
   aliveCount: number;      // alive in last row
+
+  statsHistory: ElementaryStatPoint[];
 };
 
 type ElementaryActions = {
@@ -46,6 +56,7 @@ const ElementaryAutomataContext =
 
 const DEFAULT_WIDTH = 80;
 const MAX_HISTORY = 200;
+const MAX_STATS_HISTORY = 500;
 
 function createEmptyRow(width: number): boolean[] {
   return Array.from({ length: width }, () => false);
@@ -53,6 +64,33 @@ function createEmptyRow(width: number): boolean[] {
 
 function countAlive(row: boolean[]): number {
   return row.reduce((sum, c) => sum + (c ? 1 : 0), 0);
+}
+
+function countTransitions(row: boolean[]): number {
+  if (row.length <= 1) return 0;
+  let t = 0;
+  for (let i = 0; i < row.length - 1; i += 1) {
+    if (row[i] !== row[i + 1]) t += 1;
+  }
+  return t;
+}
+
+function makeStatPoint(
+  generation: number,
+  row: boolean[],
+): ElementaryStatPoint {
+  const aliveCount = countAlive(row);
+  const transitions = countTransitions(row);
+  const width = row.length || 1;
+  const aliveFraction = aliveCount / width;
+  const transitionsFraction = transitions / (width - 1 || 1);
+  return {
+    generation,
+    aliveCount,
+    aliveFraction,
+    transitions,
+    transitionsFraction,
+  };
 }
 
 // Standard Wolfram rule: pattern 111..000 → bits 7..0 of rule.
@@ -87,6 +125,7 @@ function nextRowFromRule(
 }
 
 const initialRow = createEmptyRow(DEFAULT_WIDTH);
+const initialStat = makeStatPoint(0, initialRow);
 
 const initialState: ElementaryState = {
   width: DEFAULT_WIDTH,
@@ -97,7 +136,8 @@ const initialState: ElementaryState = {
   rule: 110,
   boundaryMode: 'toroidal',
   randomFillDensity: 0.5,
-  aliveCount: 0,
+  aliveCount: initialStat.aliveCount,
+  statsHistory: [initialStat],
 };
 
 export const ElementaryAutomataProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -123,6 +163,8 @@ export const ElementaryAutomataProvider: React.FC<{ children: React.ReactNode }>
           const newHistory = prev.history.slice();
           newHistory[lastIndex] = lastRow;
 
+          // we *do not* change statsHistory here: think of this as editing the initial condition
+
           return {
             ...prev,
             history: newHistory,
@@ -141,17 +183,27 @@ export const ElementaryAutomataProvider: React.FC<{ children: React.ReactNode }>
             prev.boundaryMode,
           );
           const aliveCount = countAlive(nextRow);
+          const nextGen = prev.generation + 1;
 
           let newHistory = prev.history.concat([nextRow]);
           if (newHistory.length > MAX_HISTORY) {
             newHistory = newHistory.slice(newHistory.length - MAX_HISTORY);
           }
 
+          const point = makeStatPoint(nextGen, nextRow);
+          let statsHistory = [...prev.statsHistory, point];
+          if (statsHistory.length > MAX_STATS_HISTORY) {
+            statsHistory = statsHistory.slice(
+              statsHistory.length - MAX_STATS_HISTORY,
+            );
+          }
+
           return {
             ...prev,
             history: newHistory,
-            generation: prev.generation + 1,
+            generation: nextGen,
             aliveCount,
+            statsHistory,
           };
         });
       },
@@ -163,11 +215,13 @@ export const ElementaryAutomataProvider: React.FC<{ children: React.ReactNode }>
       clear: () => {
         setState(prev => {
           const row = createEmptyRow(prev.width);
+          const point = makeStatPoint(0, row);
           return {
             ...prev,
             history: [row],
             generation: 0,
-            aliveCount: 0,
+            aliveCount: point.aliveCount,
+            statsHistory: [point],
           };
         });
       },
@@ -175,14 +229,18 @@ export const ElementaryAutomataProvider: React.FC<{ children: React.ReactNode }>
       randomizeRow: (densityArg) => {
         setState(prev => {
           const density = densityArg ?? prev.randomFillDensity;
-          const row = Array.from({ length: prev.width }, () => Math.random() < density);
-          const aliveCount = countAlive(row);
+          const row = Array.from(
+            { length: prev.width },
+            () => Math.random() < density,
+          );
+          const point = makeStatPoint(0, row);
           return {
             ...prev,
             history: [row],
             generation: 0,
-            aliveCount,
+            aliveCount: point.aliveCount,
             randomFillDensity: density,
+            statsHistory: [point],
           };
         });
       },
@@ -191,12 +249,14 @@ export const ElementaryAutomataProvider: React.FC<{ children: React.ReactNode }>
         setState(prev => {
           const w = Math.max(5, Math.min(400, width));
           const row = createEmptyRow(w);
+          const point = makeStatPoint(0, row);
           return {
             ...prev,
             width: w,
             history: [row],
             generation: 0,
-            aliveCount: 0,
+            aliveCount: point.aliveCount,
+            statsHistory: [point],
           };
         });
       },
@@ -227,7 +287,7 @@ export const ElementaryAutomataProvider: React.FC<{ children: React.ReactNode }>
     [],
   );
 
-  // Auto-run loop (like LifeSim / ForestFire)
+  // Auto-run loop
   useEffect(() => {
     if (!state.isRunning) return;
 

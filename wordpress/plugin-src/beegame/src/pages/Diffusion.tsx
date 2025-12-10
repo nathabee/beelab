@@ -2,10 +2,15 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { DiffusionProvider } from '@context/DiffusionContext';
 import DiffusionCard from '@components/DiffusionCard';
+import DiffusionStatsCard from '@components/DiffusionStatsCard';
+import DiffusionHelpCard from '@components/DiffusionHelpCard';
+import DiffusionTheorieCard from '@components/DiffusionTheorieCard';
 import DiffusionControl from '@components/DiffusionControl';
+import { DiffusionProvider } from '@context/DiffusionContext';
 import SimulationLayout from '@components/layout/SimulationLayout';
+import SimulationRightTabs from '@components/layout/SimulationRightTabs';
+
 import { useApp } from '@context/AppContext';
 
 const DiffusionPage: React.FC = () => {
@@ -19,10 +24,37 @@ const DiffusionPage: React.FC = () => {
       <SimulationLayout
         title="Diffusion"
         left={<DiffusionCard />}
-        right={<DiffusionControl />}
+        right={
+          <SimulationRightTabs
+            tabs={[
+              {
+                id: 'controls',
+                label: 'Controls',
+                content: <DiffusionControl />,
+              },
+              {
+                id: 'stats',
+                label: 'Statistics',
+                content: <DiffusionStatsCard />,
+              },
+              {
+                id: 'help',
+                label: 'Help',
+                content: <DiffusionHelpCard />,
+              },
+              {
+                id: 'theorie',
+                label: 'Theory',
+                content: <DiffusionTheorieCard />,
+              },
+            ]}
+            initialActiveId="controls"
+          />
+        }
       />
     </DiffusionProvider>
   );
 };
 
 export default DiffusionPage;
+
