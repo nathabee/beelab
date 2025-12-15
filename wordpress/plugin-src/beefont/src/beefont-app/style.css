@@ -1,285 +1,479 @@
-:root {
-  /* Theme-aware color variables with fallbacks */
-  --custom-dark: var(--wp--preset--color--primary, #22473f);
-  --custom-blue: var(--wp--preset--color--surface-1, #d4f0eb);
-  --custom-blue-complement: var(--wp--preset--color--secondary, #deecbe);
-  --custom-text: var(--wp--preset--color--base, #343a40);
-  --custom-text-on-dark: var(--wp--preset--color--background, white);
-  --custom-warning: var(--wp--preset--color--contrast, #fae46a);
-  --custom-alert: var(--wp--preset--color--tertiary, #c4361d);
-  --custom-link-hover: var(--wp--preset--color--primary, #ff9100);
-  --custom-link-disabled: var(--wp--preset--color--contrast, #999999);
-  --custom-light: var(--wp--preset--color--background, #d1f3f1);
-  --custom-dark-shadow: rgba(0, 0, 0, 0.1);
-  --custom-gradient: linear-gradient(
-    to right,
-    var(--custom-blue-complement),
-    var(--custom-blue)
-  );
+/* -----------------------------------------
+ * Scope: alles nur innerhalb des Blocks
+ * --------------------------------------- */
+.wp-block-beefont-beefont-app {
+  /* Plugin-interne Farb-Token, aber theme-aware Defaults */
+  --beefont-dark: var(--wp--preset--color--primary, #22473f);
+  --beefont-light: var(--wp--preset--color--background, #f5f5f5);
+  --beefont-accent: var(--wp--preset--color--secondary, #78ade9);
+  --beefont-text: var(--wp--preset--color--foreground, #222);
+  --beefont-text-on-dark: var(--wp--preset--color--background, #fff);
+
+  /* Zellen / Diagramme */
+  --beefont-grid-alive: var(--beefont-dark);
+  --beefont-grid-dead: var(--beefont-light);
+  --beefont-forest-empty: var(--wp--preset--color--background, #f5f5f5);
+  --beefont-forest-tree: #208d3c;
+  --beefont-forest-burning: #c92020;
+  --beefont-epi-susceptible: #e8f5e9;
+  --beefont-epi-infected: #c62828;
+  --beefont-epi-recovered: #1565c0;
+
+  --beefont-border-subtle: rgba(0, 0, 0, 0.08);
 }
 
-/* Layout container */
-.beefont-app-container .app-layout {
+/* -----------------------------------------
+ * Layout des App-Shells
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .beefont-app-shell {
+  /* WordPress-Theme behält Breite → Block-Ausrichtung regelt das.
+     Du gibst nur etwas Innenabstand, damit die App nicht klebt. */
+  padding: 1rem 0;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .app-layout {
   display: flex;
-  min-height: 100vh;
+  gap: 1rem;
+  align-items: stretch;
+  /* keine 100vh, sonst kollidierst du mit Header/Footer des Themes */
+  min-height: 0;
 }
 
-/* Sidebar (left) */
-.beefont-app-container .sidebar {
-  width: 250px;
-  min-width: 250px;
-  background-color: var(--custom-dark);
-  color: var(--custom-text-on-dark);
+/* -----------------------------------------
+ * Sidebar
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .beefont-app-container .sidebar {
+  flex: 0 0 260px;
+  max-width: 260px;
+
+  /* Theme-Farben übernehmen, kein hartes Dark-Theme erzwingen */
+  background: transparent;
+  color: inherit;
+
   padding: 1rem;
-  transition: transform 0.3s ease-in-out;
+  border-right: 1px solid var(--beefont-border-subtle);
+  box-sizing: border-box;
 }
 
-/* Hide hamburger on desktop */
-.beefont-app-container .sidebar .hamburger-icon {
+/* Sidebar-Menü: Links IMMER untereinander */
+.wp-block-beefont-beefont-app .sidebar .nav-link {
+  display: block;
+}
+
+/* Hamburger im Default: verborgen
+   (wird im Mobile-Viewport eingeblendet) */
+.wp-block-beefont-beefont-app .beefont-app-container .sidebar .hamburger-icon {
   display: none;
 }
 
-/* Main content area */
-.beefont-app-container .content-container {
-  flex-grow: 1;
-  padding: 1rem;
-  background-color: var(--custom-blue);
+/* -----------------------------------------
+ * Content-Bereich
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .beefont-app-container .content-container {
+  flex: 1 1 auto;
+  padding: 1rem 0 1rem 0;
+  background: transparent;
+  color: inherit;
 }
 
-/* Responsive: show hamburger and collapse sidebar */
+/* -----------------------------------------
+ * Responsive Verhalten
+ * --------------------------------------- */
+
 @media (max-width: 768px) {
-  .beefont-app-container .sidebar {
-    position: absolute;
-    transform: translateX(-100%);
-    z-index: 1000;
+  .wp-block-beefont-beefont-app .beefont-app-container .app-layout {
+    position: relative;
   }
 
-  .beefont-app-container .sidebar.open {
+  .wp-block-beefont-beefont-app .beefont-app-container .sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    /* Sidebar standardmäßig ausgeblendet (off-canvas) */
+    transform: translateX(-100%);
+    z-index: 1000;
+
+    background: var(--beefont-dark);
+    color: var(--beefont-text-on-dark);
+  }
+
+  .wp-block-beefont-beefont-app .beefont-app-container .sidebar.open {
     transform: translateX(0);
   }
 
-  .beefont-app-container .sidebar .hamburger-icon {
+  .wp-block-beefont-beefont-app .beefont-app-container .sidebar .hamburger-icon {
     display: block;
     position: absolute;
     top: 10px;
     right: -40px;
-    background: var(--custom-dark);
-    color: var(--custom-text-on-dark);
+    background: var(--beefont-dark);
+    color: var(--beefont-text-on-dark);
     border: none;
     font-size: 24px;
     cursor: pointer;
   }
 }
 
-/* Nav link */
-.beefont-app-container .nav-link {
+/* -----------------------------------------
+ * Navigation / Links (nur im Plugin)
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .beefont-app-container .nav-link {
   text-decoration: none;
-  color: var(--custom-text);
-  transition: color 0.3s;
+  color: var(--beefont-text);
+  transition: color 0.2s ease;
 }
 
-.beefont-app-container .nav-link:hover {
-  color: var(--custom-link-hover);
+.wp-block-beefont-beefont-app .beefont-app-container .nav-link:hover {
+  color: var(--beefont-accent);
 }
 
-/* Disabled nav links */
-.beefont-app-container .nav-link.disabled {
-  color: var(--custom-link-disabled);
+.wp-block-beefont-beefont-app .beefont-app-container .nav-link.disabled {
   opacity: 0.6;
   cursor: not-allowed;
   pointer-events: none;
-  text-decoration: none;
+}
+ 
+/* -----------------------------------------
+ * Game of Life Grid
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .beefont-app-container .life-grid {
+  width: 100%;
 }
 
-
-/* glyph browser layout */
-
-.bf-glyph-browser {
-  /* base scale 1.0, base thumb width 80px */
-  --bf-glyph-thumb-base: 80px;
-  --bf-glyph-scale: 1;
-}
-
-.bf-glyph-browser__group {
-  margin-bottom: 2rem;
-}
-
-.bf-glyph-browser__group-title {
-  margin-bottom: 0.5rem;
-}
-
-/* grid: many per line, wraps automatically */
-.bf-glyph-browser__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 1rem;
-  align-items: flex-start;
-}
-
-/* each glyph item */
-.bf-glyph-browser__item {
-  border: 1px solid var(--bf-border-color, #ddd);
-  border-radius: 4px;
-  padding: 0.5rem;
-  background: #fff;
-}
-
-.bf-glyph-browser__item--default {
-  border-color: var(--bf-accent-color, #0073aa);
-  box-shadow: 0 0 0 1px var(--bf-accent-color, #0073aa);
-}
-
-/* thumbnail wrapper */
-.bf-glyph-browser__thumb {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.5rem;
-}
-
-/* image respects the scale */
-.bf-glyph-browser__thumb img {
-  display: block;
-  width: calc(var(--bf-glyph-thumb-base) * var(--bf-glyph-scale));
-  height: auto;
-}
-
-/* caption/meta */
-.bf-glyph-browser__caption {
-  font-size: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.bf-glyph-browser__meta {
-  color: #555;
-}
-
-/* size control bar in the panel header */
-
-.bf-glyph-browser__controls {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-left: auto; /* push against right edge of panel header */
-}
-
-.bf-glyph-browser__controls-label {
-  font-size: 0.85rem;
-}
-
-.bf-glyph-browser__slider {
-  width: 120px;
-}
-
-
-.bf-page--glyph-browser .bf-panel:last-of-type {
-  max-height: calc(100vh - 260px);  
-  overflow-y: auto;
-}
-
-
-.bf-default-glyph-grid {
-  display: grid;
-  grid-gap: 0.5rem; 
-  grid-template-columns: repeat(
-    auto-fill,
-    minmax(calc(80px * var(--bf-glyph-scale, 1)), 1fr)
-  );
-}
-
-.bf-default-glyph-grid__item {
-  border: 1px solid #ccc;
-  padding: 0.25rem;
-  text-align: center;
+.wp-block-beefont-beefont-app .beefont-app-container .life-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
   cursor: pointer;
+  background: var(--beefont-grid-dead);
+  aspect-ratio: 1 / 1;
 }
 
-.bf-default-glyph-grid__thumb img {
-  display: block;
-  margin: 0 auto;
+.wp-block-beefont-beefont-app .beefont-app-container .life-cell--alive {
+  background: var(--beefont-grid-alive);
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .life-cell--dead {
+  background: var(--beefont-grid-dead);
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .life-cell:disabled {
+  cursor: default;
+}
+
+/* -----------------------------------------
+ * Forest Fire
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .beefont-app-container .forest-grid {
+  width: 100%;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .forest-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .forest-cell--empty {
+  background: var(--beefont-forest-empty);
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .forest-cell--tree {
+  background: var(--beefont-forest-tree);
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .forest-cell--burning {
+  background: var(--beefont-forest-burning);
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .forest-cell:disabled {
+  cursor: default;
+}
+
+/* -----------------------------------------
+ * Epidemic
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .beefont-app-container .epidemic-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .epidemic-cell--susceptible {
+  background: var(--beefont-epi-susceptible);
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .epidemic-cell--infected {
+  background: var(--beefont-epi-infected);
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .epidemic-cell--recovered {
+  background: var(--beefont-epi-recovered);
+}
+
+/* -----------------------------------------
+ * Diffusion
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .beefont-app-container .diffusion-grid {
+  width: 100%;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .diffusion-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .diffusion-cell:disabled {
+  cursor: default;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .eca-cell--history {
+  opacity: 0.7;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .eca-cell--current {
+  opacity: 1;
+}
+
+/* -----------------------------------------
+ * Logistic chart
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .beefont-app-container .logistic-chart-wrapper {
+  width: 100%;
   max-width: 100%;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .logistic-chart {
+  width: 100%;
+  height: 220px;
+}
+
+/* Nutze currentColor, damit das Theme die Farbe steuert */
+.wp-block-beefont-beefont-app .beefont-app-container .logistic-chart-grid {
+  stroke: rgba(0, 0, 0, 0.08);
+  stroke-width: 0.25;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .logistic-chart-axis {
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: 0.4;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .logistic-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 0.6;
+}
+
+.wp-block-beefont-beefont-app .beefont-app-container .logistic-point {
+  fill: currentColor;
+}
+
+/* -----------------------------------------
+ * Sidebar-Logo
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .sidebar-logo {
+  padding: 1rem 1rem 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  border-bottom: 1px solid var(--beefont-border-subtle);
+  margin-bottom: 0.5rem;
+}
+
+.wp-block-beefont-beefont-app .sidebar-logo #logo {
+  display: block;
+  max-width: 180px;
+  width: 100%;
   height: auto;
+  overflow: visible;
+  transition: transform .2s ease, filter .2s ease;
 }
 
-.bf-default-glyph-grid__caption {
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
+.wp-block-beefont-beefont-app .sidebar-logo #logo:hover {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,.3));
 }
 
-/*************************************************/
-/* SVG */
+/* Farben des Logos: an currentColor ankoppeln */
+.wp-block-beefont-beefont-app .sidebar-logo #logo .line1,
+.wp-block-beefont-beefont-app .sidebar-logo #logo .line2 {
+  fill: transparent;
+  color: currentColor;
+}
 
-.bf-glyph-editor__svg-layout {
+.wp-block-beefont-beefont-app .sidebar-logo #logo .powered {
+  fill: var(--beefont-accent);
+}
+
+/* Zeichnen + Animation */
+.wp-block-beefont-beefont-app .sidebar-logo #logo .line1,
+.wp-block-beefont-beefont-app .sidebar-logo #logo .line2 {
+  stroke: currentColor;
+  paint-order: stroke fill;
+  stroke-width: 2px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+}
+
+.wp-block-beefont-beefont-app .sidebar-logo #logo .line1 {
+  animation: beefont-draw 1.2s ease-out forwards,
+             beefont-fill-line1 .6s ease-out .9s forwards;
+}
+
+.wp-block-beefont-beefont-app .sidebar-logo #logo .line2 {
+  animation: beefont-draw 1.2s ease-out .15s forwards,
+             beefont-fill-line2 .6s ease-out 1.05s forwards;
+}
+
+.wp-block-beefont-beefont-app .sidebar-logo #logo #tagline {
+  opacity: 0;
+  transform: translate(256,0);
+  animation: beefont-tagline .6s ease-out 1.2s forwards;
+}
+
+/* Keyframes mit eindeutigem Namen, um Konflikte zu vermeiden */
+
+@keyframes beefont-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes beefont-fill-line1 {
+  to { fill: currentColor; }
+}
+
+@keyframes beefont-fill-line2 {
+  to { fill: currentColor; }
+}
+
+@keyframes beefont-tagline {
+  to {
+    opacity: 1;
+    transform: translate(256,120);
+  }
+}
+
+/* -----------------------------------------
+ * BeeFont glyph editor: layout + panels
+ * --------------------------------------- */
+
+.wp-block-beefont-beefont-app .bf-panel {
+  background: var(--beefont-light);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px var(--beefont-border-subtle);
+  margin-bottom: 1.5rem;
+}
+
+/* SVG editor two-column layout */
+.wp-block-beefont-beefont-app .bf-glyph-editor__svg-layout {
   display: flex;
   gap: 1.5rem;
 }
 
-.bf-glyph-editor__svg-layout-main {
+.wp-block-beefont-beefont-app .bf-glyph-editor__svg-layout-main {
   flex: 2 1 0;
 }
 
-.bf-glyph-editor__svg-layout-code {
+.wp-block-beefont-beefont-app .bf-glyph-editor__svg-layout-code {
   flex: 1 1 0;
   min-height: 200px;
 }
 
-.bf-glyph-editor__svg-layout-code h3 {
+.wp-block-beefont-beefont-app .bf-glyph-editor__svg-layout-code h3 {
   margin-top: 0;
   margin-bottom: 0.5rem;
 }
 
-.bf-glyph-editor__svg-layout-code .bf-helptext {
+.wp-block-beefont-beefont-app .bf-glyph-editor__svg-layout-code .bf-helptext {
   font-size: 0.8rem;
   color: #555;
   margin-bottom: 0.5rem;
 }
 
-
-
-.bf-glyph-editor__code {
+/* Code panel */
+.wp-block-beefont-beefont-app .bf-glyph-editor__code {
   font-family: monospace;
   font-size: 0.8rem;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--beefont-border-subtle);
   border-radius: 4px;
   max-height: 320px;
   overflow: auto;
-  background: #f9f9f9;
+  background: var(--beefont-light);
 }
 
-
-.bf-glyph-editor__canvas-wrapper--svg {
+/* Canvas wrapper */
+.wp-block-beefont-beefont-app .bf-glyph-editor__canvas-wrapper--svg {
   padding: 0.75rem;
   border-radius: 4px;
   background: #ffffff;
-  border: 1px solid #ddd;
-  box-shadow: 0 1px 2px var(--custom-dark-shadow);
+  border: 1px solid var(--beefont-border-subtle);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: auto; /* allow scroll when canvas overflows on small screens */
+  overflow: auto;
 }
 
-/* Toolbar container below the canvas */
-.bf-glyph-editor__toolbar {
+/* Controls / action bar */
+.wp-block-beefont-beefont-app .bf-glyph-editor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.wp-block-beefont-beefont-app .bf-glyph-editor__label {
+  font-size: 0.85rem;
+  margin-right: 0.25rem;
+}
+
+.wp-block-beefont-beefont-app .bf-glyph-editor__label--inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Optional: keep toolbar grouping if you still use those classes */
+.wp-block-beefont-beefont-app .bf-glyph-editor__toolbar {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   margin-top: 0.75rem;
 }
 
-/* One horizontal row; wraps nicely on narrow screens */
-.bf-glyph-editor__toolbar-row {
+.wp-block-beefont-beefont-app .bf-glyph-editor__toolbar-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: flex-start;
 }
 
-/* Visual group around related buttons/controls */
-.bf-glyph-editor__toolbar-group {
+.wp-block-beefont-beefont-app .bf-glyph-editor__toolbar-group {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
@@ -291,8 +485,7 @@
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
 }
 
-/* Small label at the start of each group */
-.bf-glyph-editor__toolbar-group-label {
+.wp-block-beefont-beefont-app .bf-glyph-editor__toolbar-group-label {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -301,79 +494,9 @@
   margin-right: 0.5rem;
 }
 
-/* Generic action bar used by grid controls + upload button */
-.bf-glyph-editor__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-  margin-top: 0.75rem;
-}
-
-.bf-glyph-editor__label {
-  font-size: 0.85rem;
-  margin-right: 0.25rem;
-}
-
-.bf-glyph-editor__label--inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-/* Generic panel styling for BeeFont sections (Job detail, editor, etc.) */
-.bf-panel {
-  background: var(--custom-light);
-  border-radius: 6px;
-  padding: 1rem 1.25rem;
-  box-shadow: 0 1px 3px var(--custom-dark-shadow);
-  margin-bottom: 1.5rem;
-}
-
-
-/* Font test panel layout */
-.bf-font-test__layout {
-  display: flex;
-  gap: 1.5rem;
-  align-items: stretch;
-}
-
-.bf-font-test__editor {
-  flex: 1 1 0;
-}
-
-.bf-font-test__preview-wrapper {
-  flex: 1 1 0;
-  display: flex;
-  align-items: stretch;
-}
-
-.bf-font-test__preview {
-  padding: 1rem;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background: #ffffff;
-  min-height: 150px;
-  max-height: 300px;
-  overflow: auto;
-  line-height: 1.5;
-  font-size: 1.15rem;
-}
-
-/* If you don't already have this for textareas: */
-.bf-input.bf-input--textarea {
-  width: 100%;
-  resize: vertical;
-}
+/* Responsive stacking for the editor columns */
 @media (max-width: 900px) {
-  .bf-font-test__layout {
-    flex-direction: column;
-  }
-}
-
-
-@media (max-width: 900px) {
-  .bf-glyph-editor__svg-layout {
+  .wp-block-beefont-beefont-app .bf-glyph-editor__svg-layout {
     flex-direction: column;
   }
 }

@@ -1,0 +1,22 @@
+{
+	"name": "beeseen",
+	"version": "0.1.0",
+	"description": "Example block scaffolded with Create Block tool.",
+	"author": "The WordPress Contributors",
+	"license": "GPL-2.0-or-later",
+	"main": "build/index.js",
+	"scripts": {
+		"clean": "rm -rf ./build ./dist",
+		"buildpack": "wp-scripts build --blocks-manifest",
+		"zip": "./scripts/build-zip.sh",
+		"build": "npm run clean && npm run buildpack && npm run zip",
+		"start": "wp-scripts start --blocks-manifest"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^31.1.0"
+	}
+}
+
+
+
+

@@ -11,11 +11,12 @@ rm -rf dist
 mkdir -p "$DIST_DIR"
 
 #echo "🔧 Building the plugin..."
-#npm run build
+# npm run build
 
 echo "📁 Copying plugin files..."
 cp $PLUGIN_NAME.php "$DIST_DIR"
 cp -r build "$DIST_DIR/build"
+#cp -r templates "$DIST_DIR/${PLUGIN}/" 
 
 echo "🗜️ Creating ZIP archive..."
 cd dist

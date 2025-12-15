@@ -133,13 +133,47 @@ function beefont_wp_create_pages()
 /************************************************************** 
  * SECTION FOR STYLES
  *****************************************************************/
+ 
 
-add_action('wp_enqueue_scripts', function () {
+
+add_action( 'wp_enqueue_scripts', function () {
+    // Frontend only
+    if ( is_admin() ) {
+        return;
+    }
+
+    // Only load Bootstrap on pages that actually contain the block
+    if ( ! has_block( 'beefont/beefont-app' ) ) {
+        return;
+    }
+
+    // 1) Official Bootstrap
     wp_enqueue_style(
         'beefont-bootstrap',
-        'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
+        'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
+        [],
+        '5.3.0'
     );
-});
+
+    // 2) Map Bootstrap body colors to WP theme colors
+    $custom_css = "
+        body {
+            --bs-body-bg: var(--wp--preset--color--base, #ffffff);
+            --bs-body-color: var(--wp--preset--color--foreground, #000000);
+        }
+    ";
+    wp_add_inline_style( 'beefont-bootstrap', $custom_css );
+
+    // 3) Your own plugin styles (build output that contains style.css)
+    // If you already enqueue them via block.json, you can skip this.
+    // Otherwise something like:
+    // wp_enqueue_style(
+    //     'beefont-style',
+    //     plugins_url( 'build/style.css', __FILE__ ),
+    //     [ 'beefont-bootstrap' ],
+    //     '1.0.0'
+    // );
+} );
 
 
 /************************************************************** 

@@ -1,0 +1,18 @@
+/**
+ * The following styles get applied inside the editor only.
+ *
+ * Replace them with your own styles or remove the file completely.
+ */
+
+.wp-block-beeseen-bee-orbit {
+  .beeseen-orbit__hint {
+    margin-top: 8px;
+    opacity: 0.75;
+  }
+
+  .beeseen-orbit__empty {
+    padding: 16px;
+    border: 1px dashed currentColor;
+    opacity: 0.75;
+  }
+}

@@ -4,7 +4,7 @@
 
 /* Page background inspired by SVG colors */
 body {
-  background: linear-gradient(to right, #aac300 0%, #cccccc 30%, #aac300 100%);
+  background: linear-gradient(to right, #F5B684 0%, #cccccc 30%, #F5B684 100%);
   margin: 0;
   font-family: sans-serif;
 }
@@ -79,7 +79,7 @@ h2::after, h3::after {
   bottom: 0;
   height: 4px;
   width: 100%;
-  background-color: #ffe500;
+  background-color: #5c6297;
   opacity: 0.5;
   border-radius: 2px;
 }
@@ -88,7 +88,7 @@ h2::after, h3::after {
 hr {
   border: none;
   height: 4px;
-  background: #ffe500;
+  background: #5c6297;
   margin: 2rem 0;
   border-radius: 2px;
 }
@@ -101,7 +101,7 @@ hr {
 }
 
 button {
-  background-color: #ffe500;
+  background-color: #5c6297;
   color: black;
   font-weight: bold;
   padding: 0.5rem 1rem;
@@ -112,11 +112,11 @@ button {
 }
 
 button:hover {
-  background-color: #ffff00;
+  background-color: #ffb980;
 }
 
 .button-like {
-  background-color: #ffe500;
+  background-color: #5c6297;
   color: black;
   font-weight: bold;
   padding: 0.5rem 1rem;
@@ -127,7 +127,7 @@ button:hover {
 }
 
 .button-like:hover {
-  background-color: #ffff00;
+  background-color: #ffb980;
 }
 
 .button-like input[type="file"] {
@@ -179,7 +179,7 @@ label {
 }
 .markdown h2::after,
 .markdown h3::after {
-  background-color: #ffe500;
+  background-color: #5c6297;
   color: #000;
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
@@ -232,7 +232,7 @@ label {
 
 .markdown a:hover {
   text-decoration: underline;
-  color: #ffe500;
+  color: #5c6297;
 }
  
 
@@ -253,7 +253,7 @@ label {
 
 .checklist-section h2::after,
 .checklist-section h3::after {
-  background-color: #ffe500;
+  background-color: #5c6297;
   color: #000;
   padding: 0.4rem 0.8rem;
   border-radius: 6px;

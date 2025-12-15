@@ -1,263 +1,307 @@
-:root {
-  /* Theme-aware color variables with fallbacks */
-  --custom-dark: var(--wp--preset--color--primary, #22473f);
-  --custom-blue: var(--wp--preset--color--surface-1, #d4f0eb);
-  --custom-blue-complement: var(--wp--preset--color--secondary, #deecbe);
-  --custom-text: var(--wp--preset--color--base, #343a40);
-  --custom-text-on-dark: var(--wp--preset--color--background, white);
-  --custom-warning: var(--wp--preset--color--contrast, #fae46a);
-  --custom-alert: var(--wp--preset--color--tertiary, #c4361d);
-  --custom-link-hover: var(--wp--preset--color--primary, #ff9100);
-  --custom-link-disabled: var(--wp--preset--color--contrast, #999999);
-  --custom-light: var(--wp--preset--color--background, #d1f3f1);
-  --custom-dark-shadow: rgba(0, 0, 0, 0.1);
-  --custom-gradient: linear-gradient(
-    to right,
-    var(--custom-blue-complement),
-    var(--custom-blue)
-  );
-  /* Tabs – theme-aware fallback tokens */
-  --beegame-tab-color: var(--wp--preset--color--foreground, #222);
-  --beegame-tab-bg: var(--wp--preset--color--background, #f7f7f7);
-  --beegame-tab-border: var(--wp--preset--color--contrast, #ccc);
+/* -----------------------------------------
+ * Scope: alles nur innerhalb des Blocks
+ * --------------------------------------- */
+.wp-block-beegame-beegame-app {
+  /* Plugin-interne Farb-Token, aber theme-aware Defaults */
+  --beegame-dark: var(--wp--preset--color--primary, #22473f);
+  --beegame-light: var(--wp--preset--color--background, #f5f5f5);
+  --beegame-accent: var(--wp--preset--color--secondary, #deecbe);
+  --beegame-text: var(--wp--preset--color--foreground, #222);
+  --beegame-text-on-dark: var(--wp--preset--color--background, #fff);
 
-  --beegame-tab-active-color: var(--wp--preset--color--foreground, #000);
-  --beegame-tab-active-bg: var(--wp--preset--color--background, #fff);
-  --beegame-tab-active-border: var(--wp--preset--color--primary, #444);
+  /* Zellen / Diagramme */
+  --beegame-grid-alive: var(--beegame-dark);
+  --beegame-grid-dead: var(--beegame-light);
+  --beegame-forest-empty: var(--wp--preset--color--background, #f5f5f5);
+  --beegame-forest-tree: #208d3c;
+  --beegame-forest-burning: #c92020;
+  --beegame-epi-susceptible: #e8f5e9;
+  --beegame-epi-infected: #c62828;
+  --beegame-epi-recovered: #1565c0;
+
+  --beegame-border-subtle: rgba(0, 0, 0, 0.08);
 }
 
-/* Force visibility of tabs inside Beegame */
-.beegame-app-container .nav-tabs .nav-link {
-  color: var(--beegame-tab-color, #222) !important;
-  background: var(--beegame-tab-bg, transparent) !important;
-  border-color: var(--beegame-tab-border, #ccc) !important;
+/* -----------------------------------------
+ * Layout des App-Shells
+ * --------------------------------------- */
+
+.wp-block-beegame-beegame-app .beegame-app-shell {
+  /* WordPress-Theme behält Breite → Block-Ausrichtung regelt das.
+     Du gibst nur etwas Innenabstand, damit die App nicht klebt. */
+  padding: 1rem 0;
 }
 
-.beegame-app-container .nav-tabs .nav-link.active {
-  color: var(--beegame-tab-active-color, #000) !important;
-  background: var(--beegame-tab-active-bg, #fff) !important;
-  border-color: var(--beegame-tab-active-border, #aaa) !important;
-}
-
-/* Layout container */
-.beegame-app-container .app-layout {
+.wp-block-beegame-beegame-app .beegame-app-container .app-layout {
   display: flex;
-  min-height: 100vh;
+  gap: 1rem;
+  align-items: stretch;
+  /* keine 100vh, sonst kollidierst du mit Header/Footer des Themes */
+  min-height: 0;
 }
 
-/* Sidebar (left) */
-.beegame-app-container .sidebar {
-  width: 250px;
-  min-width: 250px;
-  background-color: var(--custom-dark);
-  color: var(--custom-text-on-dark);
+/* -----------------------------------------
+ * Sidebar
+ * --------------------------------------- */
+
+.wp-block-beegame-beegame-app .beegame-app-container .sidebar {
+  flex: 0 0 260px;
+  max-width: 260px;
+
+  /* Theme-Farben übernehmen, kein hartes Dark-Theme erzwingen */
+  background: transparent;
+  color: inherit;
+
   padding: 1rem;
-  transition: transform 0.3s ease-in-out;
+  border-right: 1px solid var(--beegame-border-subtle);
+  box-sizing: border-box;
 }
 
-/* Hide hamburger on desktop */
-.beegame-app-container .sidebar .hamburger-icon {
+/* Sidebar-Menü: Links IMMER untereinander */
+.wp-block-beegame-beegame-app .sidebar .nav-link {
+  display: block;
+}
+
+/* Hamburger im Default: verborgen
+   (wird im Mobile-Viewport eingeblendet) */
+.wp-block-beegame-beegame-app .beegame-app-container .sidebar .hamburger-icon {
   display: none;
 }
 
-/* Main content area */
-.beegame-app-container .content-container {
-  flex-grow: 1;
-  padding: 1rem;
-  background-color: var(--custom-blue);
+/* -----------------------------------------
+ * Content-Bereich
+ * --------------------------------------- */
+
+.wp-block-beegame-beegame-app .beegame-app-container .content-container {
+  flex: 1 1 auto;
+  padding: 1rem 0 1rem 0;
+  background: transparent;
+  color: inherit;
 }
 
-/* Responsive: show hamburger and collapse sidebar */
+/* -----------------------------------------
+ * Responsive Verhalten
+ * --------------------------------------- */
+
 @media (max-width: 768px) {
-  .beegame-app-container .sidebar {
-    position: absolute;
-    transform: translateX(-100%);
-    z-index: 1000;
+  .wp-block-beegame-beegame-app .beegame-app-container .app-layout {
+    position: relative;
   }
 
-  .beegame-app-container .sidebar.open {
+  .wp-block-beegame-beegame-app .beegame-app-container .sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    /* Sidebar standardmäßig ausgeblendet (off-canvas) */
+    transform: translateX(-100%);
+    z-index: 1000;
+
+    background: var(--beegame-dark);
+    color: var(--beegame-text-on-dark);
+  }
+
+  .wp-block-beegame-beegame-app .beegame-app-container .sidebar.open {
     transform: translateX(0);
   }
 
-  .beegame-app-container .sidebar .hamburger-icon {
+  .wp-block-beegame-beegame-app .beegame-app-container .sidebar .hamburger-icon {
     display: block;
     position: absolute;
     top: 10px;
     right: -40px;
-    background: var(--custom-dark);
-    color: var(--custom-text-on-dark);
+    background: var(--beegame-dark);
+    color: var(--beegame-text-on-dark);
     border: none;
     font-size: 24px;
     cursor: pointer;
   }
 }
 
-/* Nav link */
-.beegame-app-container .nav-link {
+/* -----------------------------------------
+ * Navigation / Links (nur im Plugin)
+ * --------------------------------------- */
+
+.wp-block-beegame-beegame-app .beegame-app-container .nav-link {
   text-decoration: none;
-  color: var(--custom-text);
-  transition: color 0.3s;
+  color: var(--beegame-text);
+  transition: color 0.2s ease;
 }
 
-.beegame-app-container .nav-link:hover {
-  color: var(--custom-link-hover);
+.wp-block-beegame-beegame-app .beegame-app-container .nav-link:hover {
+  color: var(--beegame-accent);
 }
 
-/* Disabled nav links */
-.beegame-app-container .nav-link.disabled {
-  color: var(--custom-link-disabled);
+.wp-block-beegame-beegame-app .beegame-app-container .nav-link.disabled {
   opacity: 0.6;
   cursor: not-allowed;
   pointer-events: none;
-  text-decoration: none;
-}
-
-.beegame-app-container .life-grid {
-  width: 100%;
-}
-
-.beegame-app-container .life-cell {
-  border: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  background: var(--custom-light);
-  aspect-ratio: 1 / 1; /* keep squares */
-}
-
-.beegame-app-container .life-cell--alive {
-  background: var(--custom-dark);
-}
-
-.beegame-app-container .life-cell--dead {
-  background: var(--custom-light);
-}
-
-.beegame-app-container .life-cell:disabled {
-  cursor: default;
-}
-
-
-.beegame-app-container .forest-grid {
-  width: 100%;
-}
-
-.beegame-app-container .forest-cell {
-  border: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  aspect-ratio: 1 / 1;
-}
-
-.beegame-app-container .forest-cell--empty {
-  background: #f5f5f5;
-}
-
-.beegame-app-container .forest-cell--tree {
-  background: #208d3c; /* green */
-}
-
-.beegame-app-container .forest-cell--burning {
-  background: #c92020; /* red/orange */
-}
-
-.beegame-app-container .forest-cell:disabled {
-  cursor: default;
-}
-
-
-.beegame-app-container .epidemic-cell {
-  border: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  aspect-ratio: 1 / 1;
-}
-
-
-.beegame-app-container .epidemic-cell--susceptible {
-  background: #e8f5e9; /* pale green */
-}
-
-
-.beegame-app-container .epidemic-cell--infected {
-  background: #c62828; /* red */
-}
-
-
-.beegame-app-container .epidemic-cell--recovered {
-  background: #1565c0; /* blue */
-}
-
-
-.beegame-app-container .diffusion-grid {
-  width: 100%;
-}
-
-.beegame-app-container .diffusion-cell {
-  border: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  aspect-ratio: 1 / 1;
-}
-
-.beegame-app-container .diffusion-cell:disabled {
-  cursor: default;
 }
  
-.beegame-app-container .eca-cell--history { opacity: 0.7; }
-.beegame-app-container .eca-cell--current { opacity: 1; }
+/* -----------------------------------------
+ * Game of Life Grid
+ * --------------------------------------- */
 
-.beegame-app-container .logistic-chart-wrapper {
+.wp-block-beegame-beegame-app .beegame-app-container .life-grid {
+  width: 100%;
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .life-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: var(--beegame-grid-dead);
+  aspect-ratio: 1 / 1;
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .life-cell--alive {
+  background: var(--beegame-grid-alive);
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .life-cell--dead {
+  background: var(--beegame-grid-dead);
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .life-cell:disabled {
+  cursor: default;
+}
+
+/* -----------------------------------------
+ * Forest Fire
+ * --------------------------------------- */
+
+.wp-block-beegame-beegame-app .beegame-app-container .forest-grid {
+  width: 100%;
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .forest-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .forest-cell--empty {
+  background: var(--beegame-forest-empty);
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .forest-cell--tree {
+  background: var(--beegame-forest-tree);
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .forest-cell--burning {
+  background: var(--beegame-forest-burning);
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .forest-cell:disabled {
+  cursor: default;
+}
+
+/* -----------------------------------------
+ * Epidemic
+ * --------------------------------------- */
+
+.wp-block-beegame-beegame-app .beegame-app-container .epidemic-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .epidemic-cell--susceptible {
+  background: var(--beegame-epi-susceptible);
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .epidemic-cell--infected {
+  background: var(--beegame-epi-infected);
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .epidemic-cell--recovered {
+  background: var(--beegame-epi-recovered);
+}
+
+/* -----------------------------------------
+ * Diffusion
+ * --------------------------------------- */
+
+.wp-block-beegame-beegame-app .beegame-app-container .diffusion-grid {
+  width: 100%;
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .diffusion-cell {
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .diffusion-cell:disabled {
+  cursor: default;
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .eca-cell--history {
+  opacity: 0.7;
+}
+
+.wp-block-beegame-beegame-app .beegame-app-container .eca-cell--current {
+  opacity: 1;
+}
+
+/* -----------------------------------------
+ * Logistic chart
+ * --------------------------------------- */
+
+.wp-block-beegame-beegame-app .beegame-app-container .logistic-chart-wrapper {
   width: 100%;
   max-width: 100%;
 }
 
-.beegame-app-container .logistic-chart {
+.wp-block-beegame-beegame-app .beegame-app-container .logistic-chart {
   width: 100%;
   height: 220px;
 }
 
-.beegame-app-container .logistic-chart-grid {
+/* Nutze currentColor, damit das Theme die Farbe steuert */
+.wp-block-beegame-beegame-app .beegame-app-container .logistic-chart-grid {
   stroke: rgba(0, 0, 0, 0.08);
   stroke-width: 0.25;
 }
 
-.beegame-app-container .logistic-chart-axis {
+.wp-block-beegame-beegame-app .beegame-app-container .logistic-chart-axis {
   stroke: rgba(0, 0, 0, 0.35);
   stroke-width: 0.4;
 }
 
-.beegame-app-container .logistic-line {
+.wp-block-beegame-beegame-app .beegame-app-container .logistic-line {
   fill: none;
-  stroke: #111;
+  stroke: currentColor;
   stroke-width: 0.6;
 }
 
-.beegame-app-container .logistic-point {
-  fill: #111;
+.wp-block-beegame-beegame-app .beegame-app-container .logistic-point {
+  fill: currentColor;
 }
 
+/* -----------------------------------------
+ * Sidebar-Logo
+ * --------------------------------------- */
 
-/* logo *****************************************/
-/* Sidebar logo wrapper */
-/* ===== Sidebar logo wrapper ===== */
-/* ============================
-   Sidebar logo container
-===============================*/
-.sidebar-logo {
+.wp-block-beegame-beegame-app .sidebar-logo {
   padding: 1rem 1rem 0.5rem;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: visible;
-  border-bottom: 1px solid rgba(255,255,255,0.25);
+  border-bottom: 1px solid var(--beegame-border-subtle);
   margin-bottom: 0.5rem;
 }
 
-.sidebar-logo #logo {
+.wp-block-beegame-beegame-app .sidebar-logo #logo {
   display: block;
   max-width: 180px;
   width: 100%;
@@ -266,23 +310,25 @@
   transition: transform .2s ease, filter .2s ease;
 }
 
-.sidebar-logo #logo:hover {
+.wp-block-beegame-beegame-app .sidebar-logo #logo:hover {
   transform: translateY(-1px);
   filter: drop-shadow(0 1px 4px rgba(0,0,0,.3));
 }
 
-/* ============================
-   Colors
-===============================*/
-.sidebar-logo #logo .line1 { fill: transparent; color: #ffffff; }
-.sidebar-logo #logo .line2 { fill: transparent; color: #ff6b6b; }
-.sidebar-logo #logo .powered { fill: #b3dcff; }
+/* Farben des Logos: an currentColor ankoppeln */
+.wp-block-beegame-beegame-app .sidebar-logo #logo .line1,
+.wp-block-beegame-beegame-app .sidebar-logo #logo .line2 {
+  fill: transparent;
+  color: currentColor;
+}
 
-/* ============================
-   Draw + fill animation
-===============================*/
-.sidebar-logo #logo .line1,
-.sidebar-logo #logo .line2 {
+.wp-block-beegame-beegame-app .sidebar-logo #logo .powered {
+  fill: var(--beegame-accent);
+}
+
+/* Zeichnen + Animation */
+.wp-block-beegame-beegame-app .sidebar-logo #logo .line1,
+.wp-block-beegame-beegame-app .sidebar-logo #logo .line2 {
   stroke: currentColor;
   paint-order: stroke fill;
   stroke-width: 2px;
@@ -292,39 +338,37 @@
   stroke-dashoffset: 1200;
 }
 
-.sidebar-logo #logo .line1 {
-  animation: draw 1.2s ease-out forwards,
-             fill-line1 .6s ease-out .9s forwards;
+.wp-block-beegame-beegame-app .sidebar-logo #logo .line1 {
+  animation: beegame-draw 1.2s ease-out forwards,
+             beegame-fill-line1 .6s ease-out .9s forwards;
 }
 
-.sidebar-logo #logo .line2 {
-  animation: draw 1.2s ease-out .15s forwards,
-             fill-line2 .6s ease-out 1.05s forwards;
+.wp-block-beegame-beegame-app .sidebar-logo #logo .line2 {
+  animation: beegame-draw 1.2s ease-out .15s forwards,
+             beegame-fill-line2 .6s ease-out 1.05s forwards;
 }
 
-/* Tagline fade */
-.sidebar-logo #logo #tagline {
+.wp-block-beegame-beegame-app .sidebar-logo #logo #tagline {
   opacity: 0;
   transform: translate(256,0);
-  animation: tagline .6s ease-out 1.2s forwards;
+  animation: beegame-tagline .6s ease-out 1.2s forwards;
 }
 
-/* ============================
-   Keyframes
-===============================*/
-@keyframes draw {
+/* Keyframes mit eindeutigem Namen, um Konflikte zu vermeiden */
+
+@keyframes beegame-draw {
   to { stroke-dashoffset: 0; }
 }
 
-@keyframes fill-line1 {
-  to { fill: #ffffff; }
+@keyframes beegame-fill-line1 {
+  to { fill: currentColor; }
 }
 
-@keyframes fill-line2 {
-  to { fill: #ff6b6b; }
+@keyframes beegame-fill-line2 {
+  to { fill: currentColor; }
 }
 
-@keyframes tagline {
+@keyframes beegame-tagline {
   to {
     opacity: 1;
     transform: translate(256,120);

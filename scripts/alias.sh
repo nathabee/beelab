@@ -391,6 +391,189 @@ php -r '\''require "wp-load.php"; global $wp;
 '
 }
 
+# Resets the DB overrides for templates/parts/styles + flushes cache/rewrite.
+# we do that before deploying a theme
+
+dcwpthemeresetdb() {
+  _beelab_ensure_wpcli
+  local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
+
+  dc exec $tty_flags "$BEELAB_WPCLI_SVC" bash -lc '
+set -euo pipefail
+echo "== Active theme =="
+wp theme list --status=active
+
+echo "== Deleting FSE DB overrides (templates/parts/styles) =="
+wp post delete $(wp post list --post_type=wp_template --field=ID 2>/dev/null || true) --force 2>/dev/null || true
+wp post delete $(wp post list --post_type=wp_template_part --field=ID 2>/dev/null || true) --force 2>/dev/null || true
+wp post delete $(wp post list --post_type=wp_global_styles --field=ID 2>/dev/null || true) --force 2>/dev/null || true
+
+echo "== Flush cache + rewrites =="
+wp cache flush || true
+rm -rf /var/www/html/wp-content/cache/* || true
+wp rewrite flush --hard || true
+
+echo "✅ Theme DB overrides reset (env='"$BEELAB_ENV"')."
+'
+}
+
+#dcwpthemeresetinstallzip <zip-on-host> [theme-dirname]
+#Copies a ZIP from host → container, unzips into themes as www-data, optional ownership fix.
+
+dcwpthemeresetinstallzip() {
+  local zip_path="${1:-}"
+  local theme_dir="${2:-beelab-theme}"
+
+  if [[ -z "$zip_path" ]]; then
+    echo "Usage: dcwpthemeresetinstallzip /absolute/or/relative/path/to/theme.zip [theme-dirname]"
+    return 1
+  fi
+  if [[ ! -f "$zip_path" ]]; then
+    echo "❌ ZIP not found: $zip_path"
+    return 1
+  fi
+
+  _beelab_ensure_wpcli
+
+  echo "== Copy ZIP into $BEELAB_WPCLI_SVC =="
+  dc cp "$zip_path" "${BEELAB_WPCLI_SVC}:/tmp/theme.zip"
+
+  echo "== Unzip as www-data into /var/www/html/wp-content/themes =="
+  dc exec -T -u www-data "$BEELAB_WPCLI_SVC" bash -lc '
+set -euo pipefail
+cd /var/www/html/wp-content/themes
+unzip -o /tmp/theme.zip
+'
+
+  echo "== Ensure ownership (best-effort) =="
+  dc exec -T "$BEELAB_WPCLI_SVC" bash -lc "
+chown -R www-data:www-data /var/www/html/wp-content/themes/${theme_dir} 2>/dev/null || true
+"
+
+  dcwpcachflush
+  echo "✅ Installed theme ZIP into container (env=$BEELAB_ENV)."
+}
+
+
+# -------------------------------------------------------------------
+# WORDPRESS — DB + uploads dump/restore (env-agnostic)
+# -------------------------------------------------------------------
+
+# internal: pick the right WP DB service name for current env
+_beelab_wpdb_svc() {
+  if [[ "${BEELAB_ENV:-dev}" == "prod" ]]; then
+    echo "wpdb-prod"
+  else
+    echo "wpdb"
+  fi
+}
+
+# Dump the current env WordPress MariaDB to a SQL file on the host
+# Usage: dcwpdbdump ./_exports/wp-db/wordpress.sql
+dcwpdbdump() {
+  local out="${1:-}"
+  [[ -z "$out" ]] && { echo "Usage: dcwpdbdump /path/to/out.sql"; return 1; }
+
+  local dir; dir="$(dirname "$out")"
+  mkdir -p "$dir"
+
+  local svc; svc="$(_beelab_wpdb_svc)"
+  echo "== dumping WordPress DB (env=$BEELAB_ENV svc=$svc) -> $out =="
+
+  # Use mariadb-dump from inside the DB container; write to host via stdout redirect
+  dc exec -T "$svc" bash -lc '
+set -euo pipefail
+mariadb-dump -uroot -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"
+' > "$out"
+
+  echo "✅ DB dump written: $out"
+}
+
+# Restore a SQL dump into the current env WordPress MariaDB (DESTRUCTIVE)
+# Drops + recreates the database, then imports.
+# Usage: dcwpdbrestore ./_exports/wp-db/wordpress.sql
+dcwpdbrestore() {
+  local in="${1:-}"
+  [[ -z "$in" ]] && { echo "Usage: dcwpdbrestore /path/to/in.sql"; return 1; }
+  [[ ! -f "$in" ]] && { echo "❌ SQL file not found: $in"; return 1; }
+
+  local svc; svc="$(_beelab_wpdb_svc)"
+  echo "== restoring WordPress DB (env=$BEELAB_ENV svc=$svc) from $in =="
+  echo "⚠️  This will DROP and recreate the WordPress database in this env."
+
+  # Drop + recreate DB (keep user grants sane)
+  dc exec -T "$svc" bash -lc '
+set -euo pipefail
+mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" -e "
+DROP DATABASE IF EXISTS \`$MARIADB_DATABASE\`;
+CREATE DATABASE \`$MARIADB_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON \`$MARIADB_DATABASE\`.* TO \`$MARIADB_USER\`@%\`;
+FLUSH PRIVILEGES;
+"
+'
+
+  # Import SQL from host into container stdin
+  dc exec -T "$svc" bash -lc '
+set -euo pipefail
+mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"
+' < "$in"
+
+  echo "✅ DB restored from: $in"
+}
+
+# Zip uploads directory from current env WP volume to a tgz on the host
+# Usage: dcwpuploadszip ./_exports/wp-files/uploads.tgz
+dcwpuploadszip() {
+  local out="${1:-}"
+  [[ -z "$out" ]] && { echo "Usage: dcwpuploadszip /path/to/uploads.tgz"; return 1; }
+
+  local dir; dir="$(dirname "$out")"
+  mkdir -p "$dir"
+
+  _beelab_ensure_wpcli
+  echo "== zipping uploads (env=$BEELAB_ENV) -> $out =="
+
+  # Create archive inside wpcli container, then copy out
+  dc exec -T "$BEELAB_WPCLI_SVC" bash -lc '
+set -euo pipefail
+cd /var/www/html/wp-content
+test -d uploads || { echo "❌ uploads/ not found"; exit 1; }
+tar -czf /tmp/uploads.tgz uploads
+'
+
+  dc cp "${BEELAB_WPCLI_SVC}:/tmp/uploads.tgz" "$out"
+  echo "✅ uploads archive written: $out"
+}
+
+# Restore uploads tgz into current env WP volume (DESTRUCTIVE-ish if you wipe first)
+# Usage: dcwpuploadsunzip ./_exports/wp-files/uploads.tgz [--wipe]
+dcwpuploadsunzip() {
+  local in="${1:-}"
+  local mode="${2:---keep}"
+
+  [[ -z "$in" ]] && { echo "Usage: dcwpuploadsunzip /path/to/uploads.tgz [--wipe|--keep]"; return 1; }
+  [[ ! -f "$in" ]] && { echo "❌ archive not found: $in"; return 1; }
+
+  _beelab_ensure_wpcli
+  echo "== restoring uploads (env=$BEELAB_ENV) from $in (mode=$mode) =="
+
+  dc cp "$in" "${BEELAB_WPCLI_SVC}:/tmp/uploads.tgz"
+
+  dc exec -T "$BEELAB_WPCLI_SVC" bash -lc "
+set -euo pipefail
+cd /var/www/html/wp-content
+if [[ '$mode' == '--wipe' ]]; then
+  echo 'Wiping existing uploads/...'
+  rm -rf uploads
+fi
+tar -xzf /tmp/uploads.tgz
+chown -R www-data:www-data uploads || true
+"
+
+  echo "✅ uploads restored from: $in"
+}
+
+
 # -------------------------------------------------------------------
 # WEB
 # -------------------------------------------------------------------
@@ -687,6 +870,33 @@ dcwpfixroutes        # fix home/siteurl, permalinks, flush rewrites
 dcwpcheck_leftovers <plugin-slug>
 dcwproutediagnose [slug [cpt [post_name]]]
 dcwproute /slug/path
+
+## clone wordpress style from dev to prod :
+0) go in wordpress site editor, select a template in ..., tools- export => create a ZIP
+1) reset DB overrides in prod
+dcwpthemeresetdb
+2) install the theme ZIP from 0) into prod containers
+dcwpthemeresetinstallzip /path/to/beelab-theme.zip beelab-theme
+
+## clone prod in dev  
+# 1) Dump prod
+source scripts/alias.sh prod
+dcup
+dcwpdbdump ./_exports/wp-db/prod.sql
+dcwpuploadszip ./_exports/wp-files/prod_uploads.tgz
+
+# 2) Restore into dev
+source scripts/alias.sh dev
+dcup
+dcwpdbrestore ./_exports/wp-db/prod.sql
+dcwpuploadsunzip ./_exports/wp-files/prod_uploads.tgz --wipe
+
+# 3) Fix URLs in dev content if needed
+dcwp search-replace "https://beelab-wp.nathabee.de" "http://localhost:9082" --all-tables --precise
+dcwp rewrite flush --hard
+dcwpcachflush
+
+
 
 ###### WEB (Next.js) ##
 dcweblogs            # follow web logs

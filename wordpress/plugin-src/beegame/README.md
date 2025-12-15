@@ -1,77 +1,221 @@
-# 📘 BeeGame WP Plugin
+# 📘 BeeGame WP Plugin — README
 
 ## 1. Overview
 
-**BeeGame WP** brings interactive simulation games — starting with **Conway’s Game of Life** — into WordPress using a modern React Single Page Application rendered through a Full Site Editing (FSE) block.
+**BeeGame WP** embeds a full React **single-page application** into WordPress using a custom FSE block.
+It provides a collection of **interactive mathematical and dynamical system simulations**, such as:
 
-This plugin is entirely **frontend-only**:
+* Conway’s Game of Life
+* Forest Fire Model
+* Diffusion / Heat Map
+* Epidemic (SIR) Simulation
+* Elementary Cellular Automata
+* Logistic (Chaos) Map
 
-* No login required
-* No backend dependency
-* No Django integration
-* All simulations run inside the browser
+All simulations run **entirely in the browser** — no backend, no external services, no login required.
 
-After activation, the plugin creates a set of internal pages that all mount the same SPA shell (routing is handled inside React).
+The plugin automatically creates internal pages that host the SPA.
+Routing between simulations is handled **inside React** (via `react-router-dom`), not by WordPress.
 
-Created automatically:
+---
 
-* `/beegame` – Main entry page
-* `/beegame/home` – Internal app home
-* `/beegame/lifesim` – Game of Life view
-* `/beegame/error` – Internal error page
+## 2. Auto-Created Pages
 
-## 2. Features (v1)
+On activation, the plugin creates:
 
-* React-based SPA embedded in WordPress
-* Internal routing (`react-router-dom`)
-* Layout prepared for:
+### Public entry page
 
-  * Header with game selector
-  * Simulation canvas (center)
-  * Parameter panel (right side)
-* Game of Life engine (grid, play/pause, step, presets, etc.) planned for next versions
+* `/beegame` → the public gateway to the entire app
 
-## 3. Build & Installation
+### Internal simulation pages (CPT `beegame_page`)
+
+These all mount the same SPA shell:
+
+* `/beegame/home`
+* `/beegame/lifesim`
+* `/beegame/forestfire`
+* `/beegame/epidemic`
+* `/beegame/diffusion`
+* `/beegame/elementary`
+* `/beegame/logisticmap`
+* `/beegame/error_mgt`
+* `/beegame/error`
+
+These URLs exist so WordPress has something to render on direct browser navigation.
+Inside the SPA, navigation happens using client-side routing.
+
+---
+
+## 3. Features (Current)
+
+### 🔶 React SPA mounted through an FSE block
+
+A single block:
+
+```
+<!-- wp:beegame/beegame-app /-->
+```
+
+renders the entire application.
+
+### 🔶 Simulation layout with right-side tab system
+
+Every simulation uses a consistent layout:
+
+* **Control** – parameters, sliders, play/pause, grid size, etc.
+* **Stats** – live charts or numeric indicators
+* **Help** – how to use the interface
+* **Theory** – mathematical background & model explanation
+
+### 🔶 Multiple interactive simulations
+
+Each simulation has its own engine implemented in React:
+
+* Game of Life with presets and wrapping modes
+* Forest Fire (with pGrowth, pLightning, pSpread)
+* Diffusion model
+* SIR epidemic spread
+* Rule 30/110 cellular automata
+* Logistic map orbit visualizer
+
+### 🔶 Lightweight and theme-friendly
+
+* No CSS frameworks beyond Bootstrap (loaded in plugin)
+* Uses WordPress color presets when available
+* Automatically adapts to both dark/light themes when possible
+
+---
+
+## 4. Build & Installation
 
 ### Requirements
 
 * Node.js 16+
 * npm
 * WordPress 6+
-* FSE (block theme or site editor enabled)
+* A block/FSE-compatible theme (TwentyTwentyFour, etc.)
 
-### Build
+### Build the plugin
 
 ```bash
 npm install
 npm run build
 ```
 
-This generates the production bundle into `build/` and `dist/`.
+This produces:
+
+* `/build` → compiled block assets
+* `/dist/beegame-vX.Y.Z.zip` → distributable plugin ZIP
 
 ### Install in WordPress
 
-1. Copy the entire plugin folder into
-   `wp-content/plugins/beegame`
-2. Activate **BeeGame WP** from the WordPress admin.
-3. Visit the automatically created **BeeGame** page.
+You may:
 
-## 4. Development
+1. Upload the ZIP via **Plugins → Add New**
+2. Or copy the folder manually to:
 
-During development:
+   ```
+   wp-content/plugins/beegame
+   ```
+
+Then activate **BeeGame WP**.
+
+Visit `/beegame` to launch the app.
+
+---
+
+## 5. Development
+
+Start the live compiler:
 
 ```bash
 npm run dev
 ```
 
-This rebuilds the view bundle when files change.
-
 React entry point:
-`src/beegame-app/index.tsx`
 
-## 5. Notes
+```
+src/beegame-app/index.tsx
+```
 
-* The architecture is intentionally generic so you can add more simulation games later (forest fire, epidemics, cellular automata, etc.).
-* No backend configuration or authentication is used in this plugin.
+Block metadata:
 
+```
+src/beegame-app/block.json
+```
+
+Custom SPA components live under:
+
+```
+src/components/
+src/pages/
+src/context/
+```
+
+---
+
+## 6. Template Behavior (Important)
+
+Because WP routing and React routing overlap, behavior differs between:
+
+### A) Clicking inside the React application
+
+WordPress is **not** reloaded — only the SPA updates.
+
+### B) Typing a URL like `/beegame/lifesim` into the browser
+
+WordPress must select a **PHP/HTML template**.
+
+The plugin registers a CPT `beegame_page`.
+For these pages, you may optionally define:
+
+### Template for simulation pages:
+
+```
+yourtheme/templates/single-beegame_page.html
+```
+
+### Template for the public entry page:
+
+```
+yourtheme/templates/page-beegame.html
+```
+
+Creating these templates gives users **full-width, consistent rendering** independent of their theme.
+
+If these files are not provided, WordPress falls back to the active theme’s defaults.
+
+---
+
+## 7. Recommended Instructions for Third-Party Users
+
+If the user installs BeeGame WP into their own WordPress:
+
+1. **Install and activate plugin**
+2. If the simulation pages look cramped or boxed, ask them to create:
+
+```
+/yourtheme/templates/single-beegame_page.html
+```
+
+Paste your supplied “full-width” template snippet.
+
+3. Optionally create a custom entry template:
+
+```
+/yourtheme/templates/page-beegame.html
+```
+
+This ensures consistent appearance across all WordPress themes.
+
+---
+
+## 8. Notes
+
+* BeeGame WP is fully frontend-only — no server logic.
+* The block architecture allows you to add new simulations easily.
+* The plugin does not interfere with other themes or plugins.
+* Works on both local dev and production (Docker or standard WP hosting).
+
+---
  

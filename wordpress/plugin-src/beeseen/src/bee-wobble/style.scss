@@ -1,0 +1,59 @@
+.wp-block-beeseen-bee-wobble,
+.wp-block-beeseen-bee-wobble * {
+  box-sizing: border-box;
+}
+
+.wp-block-beeseen-bee-wobble .beeseen-wobble__grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--beeseen-wobble-columns), minmax(0, 1fr));
+  gap: var(--beeseen-wobble-gap);
+}
+
+.wp-block-beeseen-bee-wobble .beeseen-wobble__item {
+  margin: 0;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #f4f4f4;
+}
+
+.wp-block-beeseen-bee-wobble .beeseen-wobble__item img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+.wp-block-beeseen-bee-wobble[data-fit="contain"] .beeseen-wobble__item,
+.wp-block-beeseen-bee-wobble[data-fit="cover"] .beeseen-wobble__item {
+  aspect-ratio: 4 / 3;
+}
+
+.wp-block-beeseen-bee-wobble[data-fit="contain"] .beeseen-wobble__item img,
+.wp-block-beeseen-bee-wobble[data-fit="cover"] .beeseen-wobble__item img {
+  height: 100%;
+  object-fit: contain; /* overridden below for cover */
+}
+
+.wp-block-beeseen-bee-wobble[data-fit="cover"] .beeseen-wobble__item img {
+  object-fit: cover;
+}
+
+.wp-block-beeseen-bee-wobble[data-fit="auto"] .beeseen-wobble__item img {
+  height: auto;
+  object-fit: initial;
+}
+
+
+
+/* Responsive: don’t force 3+ columns in narrow containers */
+@media (max-width: 900px) {
+  .wp-block-beeseen-bee-wobble {
+    --beeseen-wobble-columns: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .wp-block-beeseen-bee-wobble {
+    --beeseen-wobble-columns: 1;
+  }
+}

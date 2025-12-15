@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "beeseen/bee-orbit",
+  "version": "0.1.0",
+  "title": "Bee Orbit",
+  "category": "widgets",
+  "icon": "format-image",
+  "description": "Circular orbit gallery with drag rotation.",
+  "supports": { "html": false },
+  "textdomain": "beeseen",
+  "attributes": {
+    "images": {
+      "type": "array",
+      "default": [],
+      "items": { "type": "object" }
+    },
+    "radius": { "type": "number", "default": 180 },
+    "itemSize": { "type": "number", "default": 96 },
+    "enableWheel": { "type": "boolean", "default": true },
+    "enableInertia": { "type": "boolean", "default": true },
+    "friction": { "type": "number", "default": 10 }
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "viewScript": "file:./view.js"
+}

@@ -20,3 +20,6 @@ const SimulationLayout: React.FC<SimulationLayoutProps> = ({ title, left, right 
 );
 
 export default SimulationLayout;
+
+
+ 
