@@ -1,17 +1,19 @@
 <?php
 /**
  * Plugin Name:       Beeseen
- * Description:       Example block scaffolded with Create Block tool.
- * Version:           0.1.0
+ * Description:       Small utility blocks and UI experiments for the BeeLab ecosystem.
+ * Version:           v2.0.0
  * Requires at least: 6.7
  * Requires PHP:      7.4
- * Author:            The WordPress Contributors
+ * Author:            Nathabee
+ * Author URI:        https://nathabee.de
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       beeseen
  *
- * @package CreateBlock
+ * @package Beeseen
  */
+
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
