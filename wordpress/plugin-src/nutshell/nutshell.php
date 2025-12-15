@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       Nutshell WP
  * Description:       FSE blocks integrating with Django backend.
- * Version:           v1.1.9
+ * Version:           v2.0.0
  * Author:            Nathabee
  */
 
