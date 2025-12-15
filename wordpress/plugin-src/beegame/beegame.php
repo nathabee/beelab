@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       BeeGame WP
  * Description:       Simulation games (e.g. Conway’s Game of Life) as FSE blocks.
- * Version:           v1.1.10
+ * Version:           v2.0.0
  * Author:            Nathabee
  */
 
