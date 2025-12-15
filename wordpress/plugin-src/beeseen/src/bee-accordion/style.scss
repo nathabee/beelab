@@ -1,0 +1,115 @@
+/**
+ * The following styles get applied inside the view
+ */
+
+
+.wp-block-beeseen-bee-accordion {
+  --beeseen-acc-gap: 10px;
+  --beeseen-acc-height: 360px;
+  --beeseen-acc-radius: 18px;
+  --beeseen-acc-expand: 5;
+
+  width: 100%;
+}
+
+.wp-block-beeseen-bee-accordion .beeseen-accordion__track {
+  display: flex;
+  gap: var(--beeseen-acc-gap);
+  height: var(--beeseen-acc-height);
+}
+
+.wp-block-beeseen-bee-accordion .beeseen-accordion__panel {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+
+  border-radius: var(--beeseen-acc-radius);
+  overflow: hidden;
+
+  transition: flex 260ms ease, transform 260ms ease;
+}
+
+.wp-block-beeseen-bee-accordion .beeseen-accordion__img {
+  width: 100%;
+  height: 100%;
+  display: block;
+
+  object-fit: cover;
+}
+
+.wp-block-beeseen-bee-accordion[data-fit="contain"] .beeseen-accordion__img {
+  object-fit: contain;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Hover expands the panel */
+@media (hover: hover) and (pointer: fine) {
+  .wp-block-beeseen-bee-accordion .beeseen-accordion__track:hover .beeseen-accordion__panel {
+    flex: 1 1 0;
+  }
+
+  .wp-block-beeseen-bee-accordion .beeseen-accordion__track:hover .beeseen-accordion__panel:hover {
+    flex: var(--beeseen-acc-expand) 1 0;
+    transform: translateY(-2px);
+  }
+}
+
+/* Touch / keyboard: .is-active expands */
+.wp-block-beeseen-bee-accordion .beeseen-accordion__panel.is-active {
+  flex: var(--beeseen-acc-expand) 1 0;
+}
+
+/* Caption overlay */
+.wp-block-beeseen-bee-accordion .beeseen-accordion__caption {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+
+  padding: 8px 10px;
+  border-radius: 12px;
+
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+
+  font-size: 14px;
+  line-height: 1.2;
+
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.wp-block-beeseen-bee-accordion[data-show-caption="1"] .beeseen-accordion__panel:hover .beeseen-accordion__caption,
+.wp-block-beeseen-bee-accordion[data-show-caption="1"] .beeseen-accordion__panel.is-active .beeseen-accordion__caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reduced motion */
+.wp-block-beeseen-bee-accordion.beeseen-accordion--reduced .beeseen-accordion__panel,
+.wp-block-beeseen-bee-accordion.beeseen-accordion--reduced .beeseen-accordion__caption {
+  transition: none !important;
+}
+
+/* Small screens: allow horizontal scrolling instead of squeezing */
+@media (max-width: 700px) {
+  .wp-block-beeseen-bee-accordion .beeseen-accordion__track {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 6px;
+  }
+
+  .wp-block-beeseen-bee-accordion .beeseen-accordion__panel {
+    flex: 0 0 72%;
+    scroll-snap-align: start;
+  }
+
+  .wp-block-beeseen-bee-accordion .beeseen-accordion__panel.is-active {
+    flex-basis: 84%;
+  }
+}

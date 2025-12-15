@@ -1,0 +1,33 @@
+.wp-block-beeseen-bee-tilt {
+  --beeseen-tilt-radius: 16px;
+}
+
+.wp-block-beeseen-bee-tilt .beeseen-tilt__card {
+  position: relative;
+  border-radius: var(--beeseen-tilt-radius);
+  overflow: hidden;
+  transform: perspective(800px) rotateX(0) rotateY(0);
+}
+
+.wp-block-beeseen-bee-tilt .beeseen-tilt__img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.wp-block-beeseen-bee-tilt .beeseen-tilt__glare {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+
+  /* glare position comes from JS */
+  background: radial-gradient(
+    circle at var(--beeseen-glare-x, 50%) var(--beeseen-glare-y, 50%),
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0) 55%
+  );
+
+  opacity: 0;
+  mix-blend-mode: soft-light;
+  transition: opacity 120ms linear;
+}

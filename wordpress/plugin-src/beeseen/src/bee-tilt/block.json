@@ -1,43 +1,40 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "beeseen/bee-orbit",
+  "name": "beeseen/bee-tilt",
   "version": "v2.0.0",
-  "title": "Bee Orbit",
+  "title": "Bee Tilt",
   "category": "widgets",
   "icon": "format-image",
-  "description": "Circular orbit gallery with drag rotation.",
+  "description": "Cursor-driven tilt with optional soft glare highlight.",
   "supports": {
     "html": false
   },
   "textdomain": "beeseen",
   "attributes": {
-    "images": {
-      "type": "array",
-      "default": [],
-      "items": {
-        "type": "object"
-      }
+    "image": {
+      "type": "object",
+      "default": null
     },
-    "radius": {
-      "type": "number",
-      "default": 180
-    },
-    "itemSize": {
-      "type": "number",
-      "default": 96
-    },
-    "enableWheel": {
-      "type": "boolean",
-      "default": true
-    },
-    "enableInertia": {
-      "type": "boolean",
-      "default": true
-    },
-    "friction": {
+    "maxTilt": {
       "type": "number",
       "default": 10
+    },
+    "perspective": {
+      "type": "number",
+      "default": 800
+    },
+    "glare": {
+      "type": "boolean",
+      "default": true
+    },
+    "glareStrength": {
+      "type": "number",
+      "default": 0.25
+    },
+    "borderRadius": {
+      "type": "number",
+      "default": 16
     }
   },
   "editorScript": "file:./index.js",

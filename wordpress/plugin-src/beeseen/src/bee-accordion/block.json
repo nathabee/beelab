@@ -1,12 +1,12 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "beeseen/bee-orbit",
+  "name": "beeseen/bee-accordion",
   "version": "v2.0.0",
-  "title": "Bee Orbit",
+  "title": "Bee Accordion Gallery",
   "category": "widgets",
-  "icon": "format-image",
-  "description": "Circular orbit gallery with drag rotation.",
+  "icon": "images-alt2",
+  "description": "Hover expands one panel while others compress.",
   "supports": {
     "html": false
   },
@@ -19,25 +19,29 @@
         "type": "object"
       }
     },
-    "radius": {
-      "type": "number",
-      "default": 180
-    },
-    "itemSize": {
-      "type": "number",
-      "default": 96
-    },
-    "enableWheel": {
-      "type": "boolean",
-      "default": true
-    },
-    "enableInertia": {
-      "type": "boolean",
-      "default": true
-    },
-    "friction": {
+    "gap": {
       "type": "number",
       "default": 10
+    },
+    "height": {
+      "type": "number",
+      "default": 360
+    },
+    "radius": {
+      "type": "number",
+      "default": 18
+    },
+    "expand": {
+      "type": "number",
+      "default": 5
+    },
+    "fit": {
+      "type": "string",
+      "default": "cover"
+    },
+    "showCaption": {
+      "type": "boolean",
+      "default": true
     }
   },
   "editorScript": "file:./index.js",

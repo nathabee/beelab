@@ -2,21 +2,47 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "beeseen/bee-wobble",
-  "version": "0.1.0",
+  "version": "v2.0.0",
   "title": "Bee Wobble",
   "category": "widgets",
   "icon": "format-image",
   "description": "Hover wobble grid: neighbors gently shift away.",
-  "supports": { "html": false },
+  "supports": {
+    "html": false
+  },
   "textdomain": "beeseen",
   "attributes": {
-  "images": { "type": "array", "default": [], "items": { "type": "object" } },
-  "columns": { "type": "number", "default": 3 },
-  "gap": { "type": "number", "default": 12 },
-  "intensity": { "type": "number", "default": 16 },
-  "lift": { "type": "number", "default": 6 },
-  "enableWobble": { "type": "boolean", "default": true },
-  "fit": { "type": "string", "default": "contain" }
+    "images": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object"
+      }
+    },
+    "columns": {
+      "type": "number",
+      "default": 3
+    },
+    "gap": {
+      "type": "number",
+      "default": 12
+    },
+    "intensity": {
+      "type": "number",
+      "default": 16
+    },
+    "lift": {
+      "type": "number",
+      "default": 6
+    },
+    "enableWobble": {
+      "type": "boolean",
+      "default": true
+    },
+    "fit": {
+      "type": "string",
+      "default": "contain"
+    }
   },
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",

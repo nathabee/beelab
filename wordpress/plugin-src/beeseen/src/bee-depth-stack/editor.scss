@@ -1,0 +1,24 @@
+/**
+ * The following styles get applied inside the editor only.
+ *
+ * Replace them with your own styles or remove the file completely.
+ */
+
+.wp-block-beeseen-bee-depth-stack .beeseen-depth__hint {
+  margin-top: 8px;
+  opacity: 0.75;
+}
+
+
+.beeseen-depth__layerWrap {
+  position: absolute;
+  inset: 0;
+}
+
+.beeseen-depth__layerWrap--fg {
+  left: 50%;
+  top: 50%;
+  width: var(--beeseen-fg-w, 70%);
+  height: var(--beeseen-fg-h, 100%);
+  transform: translate(-50%, -50%);
+}

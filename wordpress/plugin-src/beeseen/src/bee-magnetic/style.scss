@@ -1,0 +1,20 @@
+/**
+ * The following styles get applied inside the view
+ */
+.wp-block-beeseen-bee-magnetic {
+  --beeseen-magnetic-radius: 16px;
+}
+
+.wp-block-beeseen-bee-magnetic .beeseen-magnetic__frame {
+  position: relative;
+  border-radius: var(--beeseen-magnetic-radius);
+  overflow: hidden;
+  transform: translate3d(0, 0, 0);
+}
+
+.wp-block-beeseen-bee-magnetic .beeseen-magnetic__img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+

@@ -1,43 +1,40 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "beeseen/bee-orbit",
+  "name": "beeseen/bee-magnetic",
   "version": "v2.0.0",
-  "title": "Bee Orbit",
+  "title": "Bee Magnetic",
   "category": "widgets",
   "icon": "format-image",
-  "description": "Circular orbit gallery with drag rotation.",
+  "description": "Subtle magnetic drift toward cursor with smooth easing.",
   "supports": {
     "html": false
   },
   "textdomain": "beeseen",
   "attributes": {
-    "images": {
-      "type": "array",
-      "default": [],
-      "items": {
-        "type": "object"
-      }
+    "image": {
+      "type": "object",
+      "default": null
     },
-    "radius": {
+    "strength": {
       "type": "number",
-      "default": 180
+      "default": 18
     },
-    "itemSize": {
+    "maxOffset": {
       "type": "number",
-      "default": 96
+      "default": 28
     },
-    "enableWheel": {
-      "type": "boolean",
-      "default": true
-    },
-    "enableInertia": {
-      "type": "boolean",
-      "default": true
-    },
-    "friction": {
+    "ease": {
       "type": "number",
-      "default": 10
+      "default": 0.14
+    },
+    "lift": {
+      "type": "number",
+      "default": 0
+    },
+    "borderRadius": {
+      "type": "number",
+      "default": 16
     }
   },
   "editorScript": "file:./index.js",

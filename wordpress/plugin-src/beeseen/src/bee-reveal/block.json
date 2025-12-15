@@ -1,43 +1,40 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "beeseen/bee-orbit",
+  "name": "beeseen/bee-reveal",
   "version": "v2.0.0",
-  "title": "Bee Orbit",
+  "title": "Bee Reveal",
   "category": "widgets",
   "icon": "format-image",
-  "description": "Circular orbit gallery with drag rotation.",
+  "description": "Hover reveal mask follows cursor to reveal alternate image.",
   "supports": {
     "html": false
   },
   "textdomain": "beeseen",
   "attributes": {
-    "images": {
-      "type": "array",
-      "default": [],
-      "items": {
-        "type": "object"
-      }
+    "baseImage": {
+      "type": "object",
+      "default": null
+    },
+    "revealImage": {
+      "type": "object",
+      "default": null
     },
     "radius": {
       "type": "number",
-      "default": 180
+      "default": 120
     },
-    "itemSize": {
+    "feather": {
       "type": "number",
-      "default": 96
+      "default": 60
     },
-    "enableWheel": {
-      "type": "boolean",
-      "default": true
-    },
-    "enableInertia": {
-      "type": "boolean",
-      "default": true
-    },
-    "friction": {
+    "ease": {
       "type": "number",
-      "default": 10
+      "default": 0.18
+    },
+    "borderRadius": {
+      "type": "number",
+      "default": 16
     }
   },
   "editorScript": "file:./index.js",
