@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "beeseen/bee-perspective-scroll",
+  "version": "v2.0.0",
+  "title": "Bee Perspective Scroll",
+  "category": "widgets",
+  "icon": "columns",
+  "description": "Scroll-driven perspective hallway gallery (rotateX/scale).",
+  "supports": {
+    "html": false
+  },
+  "textdomain": "beeseen",
+  "attributes": {
+    "items": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object"
+      }
+    },
+    "height": {
+      "type": "number",
+      "default": 420
+    },
+    "gap": {
+      "type": "number",
+      "default": 22
+    },
+    "radius": {
+      "type": "number",
+      "default": 18
+    },
+    "perspective": {
+      "type": "number",
+      "default": 900
+    },
+    "rotateMax": {
+      "type": "number",
+      "default": 10
+    },
+    "scaleMin": {
+      "type": "number",
+      "default": 0.94
+    },
+    "liftMax": {
+      "type": "number",
+      "default": 18
+    },
+    "fade": {
+      "type": "boolean",
+      "default": true
+    },
+    "fit": {
+      "type": "string",
+      "default": "cover"
+    }
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "viewScript": "file:./view.js"
+}

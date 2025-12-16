@@ -1,0 +1,55 @@
+/**
+ * The following styles get applied inside the view
+ */
+
+.wp-block-beeseen-bee-perspective-scroll {
+  --beeseen-persp-height: 420px;
+  --beeseen-persp-gap: 22px;
+  --beeseen-persp-radius: 18px;
+  --beeseen-persp-perspective: 900px;
+}
+
+.wp-block-beeseen-bee-perspective-scroll .beeseen-persp__track {
+  display: grid;
+  gap: var(--beeseen-persp-gap);
+}
+
+.wp-block-beeseen-bee-perspective-scroll .beeseen-persp__card {
+  margin: 0;
+  border-radius: var(--beeseen-persp-radius);
+  overflow: hidden;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+
+.wp-block-beeseen-bee-perspective-scroll .beeseen-persp__media {
+  height: var(--beeseen-persp-height);
+  perspective: var(--beeseen-persp-perspective);
+  overflow: hidden;
+}
+
+.wp-block-beeseen-bee-perspective-scroll .beeseen-persp__media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transform: translateZ(0);
+}
+
+.wp-block-beeseen-bee-perspective-scroll[data-fit="contain"] .beeseen-persp__media img {
+  object-fit: contain;
+  background: rgba(0,0,0,0.06);
+}
+
+.wp-block-beeseen-bee-perspective-scroll .beeseen-persp__cap {
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.2;
+  opacity: 0.85;
+}
+
+.wp-block-beeseen-bee-perspective-scroll .beeseen-persp__empty {
+  padding: 16px;
+  border: 1px dashed currentColor;
+  opacity: 0.75;
+}

@@ -5,3 +5,4 @@ import './bee-magnetic';
 import './bee-reveal';
 import './bee-depth-stack';
 import './bee-accordion';
+import './bee-perspective-scroll';
