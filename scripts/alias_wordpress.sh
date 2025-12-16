@@ -527,34 +527,31 @@ dcwpmenuitems <menu>
 dcwpmenu_locations
 dcwpcount
 
-## clone wordpress style from dev to prod :
+############################################################################
+## clone wordpress style from source (usually dev) to target (usually) prod :
+############################################################################
 0) on source wordpress:
 export theme ZIP from Site Editor
-
-1) log on target server, to reset DB overrides and theme files into target environment (here :prod)
+1) log on target server, to reset DB overrides and theme files into target environment (prod)
 source scripts/alias.sh <target env>
- 
-
 # 2) switch away (keeps site stable while you remove the theme folder)
 dcwp theme activate twentytwentyfive
-
 # 3) reset DB overrides + remove old theme folder
 dcwpthemereset beelab-theme
-
 # 4) 2 possibilities
 # 4-1 - install new theme files
 dcwpthemeinstall ./path/to/beelab-theme.zip beelab-theme
 # 4-2 - per wordpress admin interface : menu theme
 add new theme (export made in 0)
-
 # 5) activate your theme again
 dcwp theme activate beelab-theme
-
 # 6) flush
 dcwpcachflush
 
 
-## clone prod in dev
+############################################################################
+## clone wordpress and uploads environement (usually from prod into dev)
+############################################################################
 source scripts/alias.sh prod
 dcup
 dcwpdbdump ./_exports/wp-db/prod.sql
