@@ -1,39 +1,45 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ENV="${1:-undefinedEnv}"
-ENV_FILE=".env.${ENV}"
-PROJECT="beelab_${ENV}"
-WPDB_SERVICE=$([[ "$ENV" == "prod" ]] && echo "wpdb-prod" || echo "wpdb")
-WPVOL="${PROJECT}_wp_data"
-WPDBVOL="${PROJECT}_wp_db_data"
-OUT_DIR="backups/wp"; mkdir -p "$OUT_DIR"
+# BeeLab — production WordPress backup
+# Daily + monthly rotation
 
-[[ -f "$ENV_FILE" ]] || { echo "Missing $ENV_FILE"; exit 1; }
-set -a; source "$ENV_FILE"; set +a
-DB_NAME="${WP_DB_NAME:-wordpress}"
+echo "CAREFUL NOT TESTED YET!!!!!!!!!!!!!!"
 
-compose() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" --profile "$ENV" "$@"; }
+ENV="prod"
+BASE="$HOME/exports"
+DATE="$(date +%Y-%m-%d)"
+MONTH="$(date +%Y-%m)"
 
-TS="$(date +%F_%H%M)"
-SQL_OUT="${OUT_DIR}/${PROJECT}_wp_${DB_NAME}_${TS}.sql.gz"
-FILES_OUT="${OUT_DIR}/${PROJECT}_wp_files_${TS}.tgz"
-DBVOL_OUT="${OUT_DIR}/${PROJECT}_wp_db_volume_${TS}.tgz"
+DB_DAILY="$BASE/wp-db/daily"
+DB_MONTHLY="$BASE/wp-db/monthly"
+FILES_DAILY="$BASE/wp-files/daily"
+FILES_MONTHLY="$BASE/wp-files/monthly"
 
-echo "→ Dumping MariaDB ($WPDB_SERVICE) to $SQL_OUT"
-compose up -d "$WPDB_SERVICE"
-compose exec -T "$WPDB_SERVICE" sh -lc '
-  DB="${MARIADB_DATABASE:-$MYSQL_DATABASE}"; USER="${MARIADB_USER:-$MYSQL_USER}"; PASS="${MARIADB_PASSWORD:-$MYSQL_PASSWORD}";
-  exec mariadb-dump -u"$USER" -p"$PASS" "$DB"
-' | gzip > "$SQL_OUT"
+mkdir -p "$DB_DAILY" "$DB_MONTHLY" "$FILES_DAILY" "$FILES_MONTHLY"
 
-echo "→ Archiving WP files volume ($WPVOL) to $FILES_OUT"
-docker run --rm -v "${WPVOL}:/vol" -v "$PWD/${OUT_DIR}:/backup" alpine \
-  sh -c "cd /vol && tar czf /backup/$(basename "$FILES_OUT") ."
+source "$HOME/beelab/scripts/alias.sh" "$ENV"
 
-echo "→ Archiving WP DB volume ($WPDBVOL) to $DBVOL_OUT"
-docker run --rm -v "${WPDBVOL}:/vol" -v "$PWD/${OUT_DIR}:/backup" alpine \
-  sh -c "cd /vol && tar czf /backup/$(basename "$DBVOL_OUT") ."
+echo "== BeeLab prod backup ($DATE) =="
 
-echo "✓ Done:"
-printf "  - %s\n  - %s\n  - %s\n" "$SQL_OUT" "$FILES_OUT" "$DBVOL_OUT"
+# --- Daily backups ---
+dcwpdbdump "wp-db/daily/prod.${DATE}.sql"
+dcwpuploadszip "wp-files/daily/prod.${DATE}.uploads.tgz"
+
+# --- Monthly snapshot (first day of month only) ---
+if [[ "$(date +%d)" == "01" ]]; then
+  echo "== Monthly snapshot =="
+  dcwpdbdump "wp-db/monthly/prod.${MONTH}.sql"
+  dcwpuploadszip "wp-files/monthly/prod.${MONTH}.uploads.tgz"
+fi
+
+# --- Retention ---
+# keep last 7 daily backups
+ls -1t "$DB_DAILY"/*.sql      | tail -n +8 | xargs -r rm --
+ls -1t "$FILES_DAILY"/*.tgz  | tail -n +8 | xargs -r rm --
+
+# keep last 12 monthly backups
+ls -1t "$DB_MONTHLY"/*.sql     | tail -n +13 | xargs -r rm --
+ls -1t "$FILES_MONTHLY"/*.tgz | tail -n +13 | xargs -r rm --
+
+echo "✓ Backup complete"

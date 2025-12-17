@@ -67,6 +67,15 @@ x-wp-env: &wp_env
       $$_SERVER['HTTP_X_FORWARDED_PORT'] = 443;
     }
 
+    //if (getenv('TRUST_X_FORWARDED_PROTO') === 'true'    && isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) 
+    //    && $$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+    //  $$_SERVER['HTTPS'] = 'on';
+    //  $$_SERVER['SERVER_PORT'] = 443;
+    //  $$_SERVER['REQUEST_SCHEME'] = 'https';
+    //  $$_SERVER['HTTP_X_FORWARDED_PORT'] = 443;
+    //}
+
+
     // (Optional) keep cookie domain/path simple in proxy setups
     if (!defined('COOKIE_DOMAIN'))   define('COOKIE_DOMAIN', '');
     if (!defined('COOKIEPATH'))      define('COOKIEPATH', '/');

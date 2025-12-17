@@ -408,21 +408,28 @@ _beelab_wpdb_svc() {
 
 dcwpdbdump() {
   local out="${1:-}"
-  [[ -z "$out" ]] && { echo "Usage: dcwpdbdump /path/to/out.sql"; return 1; }
+  [[ -z "$out" ]] && {
+    echo "Usage: dcwpdbdump wp-db/<name>.sql"
+    echo "Example: dcwpdbdump wp-db/prod.20251216-1335.sql"
+    return 1
+  }
 
-  local dir; dir="$(dirname "$out")"
+  # Always resolve to ~/exports
+  local OUT="$HOME/exports/$out"
+  local dir; dir="$(dirname "$OUT")"
   mkdir -p "$dir"
 
   local svc; svc="$(_beelab_wpdb_svc)"
-  echo "== dumping WordPress DB (env=$BEELAB_ENV svc=$svc) -> $out =="
+  echo "== dumping WordPress DB (env=$BEELAB_ENV svc=$svc) -> $OUT =="
 
   dc exec -T "$svc" bash -lc '
 set -euo pipefail
 mariadb-dump -uroot -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"
-' > "$out"
+' > "$OUT"
 
-  echo "DB dump written: $out"
+  echo "DB dump written: $OUT"
 }
+
 
 dcwpdbrestore() {
   local in="${1:-}"
@@ -438,7 +445,11 @@ set -euo pipefail
 mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" -e "
 DROP DATABASE IF EXISTS \`$MARIADB_DATABASE\`;
 CREATE DATABASE \`$MARIADB_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-GRANT ALL PRIVILEGES ON \`$MARIADB_DATABASE\`.* TO \`$MARIADB_USER\`@%\`;
+
+CREATE USER IF NOT EXISTS \`$MARIADB_USER\`@'\''%'\'' IDENTIFIED BY '\''$MARIADB_PASSWORD'\'';
+ALTER USER \`$MARIADB_USER\`@'\''%'\'' IDENTIFIED BY '\''$MARIADB_PASSWORD'\'';
+
+GRANT ALL PRIVILEGES ON \`$MARIADB_DATABASE\`.* TO \`$MARIADB_USER\`@'\''%'\'' ;
 FLUSH PRIVILEGES;
 "
 '
@@ -453,49 +464,172 @@ mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"
 
 dcwpuploadszip() {
   local out="${1:-}"
-  [[ -z "$out" ]] && { echo "Usage: dcwpuploadszip /path/to/uploads.tgz"; return 1; }
+  [[ -z "$out" ]] && {
+    echo "Usage: dcwpuploadszip wp-files/<name>.tgz"
+    echo "Example: dcwpuploadszip wp-files/prod.20251216-1145.uploads.tgz"
+    return 1
+  }
 
-  local dir; dir="$(dirname "$out")"
+  # Always resolve to ~/exports
+  local OUT="$HOME/exports/$out"
+  local dir
+  dir="$(dirname "$OUT")"
   mkdir -p "$dir"
 
-  _beelab_ensure_wpcli
-  echo "== zipping uploads (env=$BEELAB_ENV) -> $out =="
+  echo "== zipping WordPress uploads (env=$BEELAB_ENV) -> $OUT =="
 
-  dc exec -T "$BEELAB_WPCLI_SVC" bash -lc '
+  dc exec -T "$BEELAB_WP_SVC" bash -lc '
 set -euo pipefail
 cd /var/www/html/wp-content
-test -d uploads || { echo "uploads/ not found"; exit 1; }
-tar -czf /tmp/uploads.tgz uploads
+test -d uploads || { echo "❌ uploads/ not found"; ls -lah; exit 1; }
+tar -czf /tmp/wp-uploads.tgz uploads
+echo "✓ /tmp/wp-uploads.tgz created"
 '
 
-  dc cp "${BEELAB_WPCLI_SVC}:/tmp/uploads.tgz" "$out"
-  echo "uploads archive written: $out"
+  dc cp "${BEELAB_WP_SVC}:/tmp/wp-uploads.tgz" "$OUT"
+  echo "✓ uploads archive written: $OUT"
 }
+
 
 dcwpuploadsunzip() {
   local in="${1:-}"
   local mode="${2:---keep}"
 
-  [[ -z "$in" ]] && { echo "Usage: dcwpuploadsunzip /path/to/uploads.tgz [--wipe|--keep]"; return 1; }
-  [[ ! -f "$in" ]] && { echo "archive not found: $in"; return 1; }
+  [[ -n "$in" ]] || { echo "Usage: dcwpuploadsunzip /path/to/uploads.tgz [--wipe|--keep]"; return 1; }
+  [[ -f "$in" ]] || { echo "archive not found: $in"; return 1; }
 
   _beelab_ensure_wpcli
   echo "== restoring uploads (env=$BEELAB_ENV) from $in (mode=$mode) =="
 
   dc cp "$in" "${BEELAB_WPCLI_SVC}:/tmp/uploads.tgz"
 
-  dc exec -T "$BEELAB_WPCLI_SVC" bash -lc "
+  dc exec -T -u 33:33 -e MODE="$mode" "$BEELAB_WPCLI_SVC" bash -lc '
 set -euo pipefail
 cd /var/www/html/wp-content
-if [[ '$mode' == '--wipe' ]]; then
-  echo 'Wiping existing uploads/...'
+
+if [[ "${MODE}" == "--wipe" ]]; then
+  echo "Wiping existing uploads/..."
   rm -rf uploads
 fi
-tar -xzf /tmp/uploads.tgz
-chown -R www-data:www-data uploads || true
-"
+
+tar -xzf /tmp/uploads.tgz --no-same-owner --no-same-permissions
+echo "✓ extracted uploads into wp-content"
+'
 
   echo "uploads restored from: $in"
+}
+
+# -------------------------------------------------------------------
+# Clone URL fix (prod <-> dev)
+# -------------------------------------------------------------------
+# Usage:
+#   dcwpfixcloneurls prod2dev
+#   dcwpfixcloneurls dev2prod
+# or:
+#   dcwpfixcloneurls "https://beelab-wp.nathabee.de" "http://localhost:9082"
+# Fix URLs after cloning between prod <-> dev.
+# Target is the currently sourced env ($BEELAB_ENV).
+# - In dev: rewrites prod -> localhost
+# - In prod: rewrites localhost -> prod domain
+#
+# in dev it calls:
+# dc exec -T "$BEELAB_WPCLI_SVC"   sh -lc  'wp option update home "http://localhost:9082"'
+# dc exec -T "$BEELAB_WPCLI_SVC"   sh -lc  'wp option update siteurl "http://localhost:9082"'
+# dc exec -T "$BEELAB_WPCLI_SVC"   sh -lc  'wp option get home && wp option get siteurl'
+# dc exec -T "$BEELAB_WPCLI_SVC"   sh -lc  'wp search-replace "https://beelab-wp.nathabee.de" "http://localhost:9082" --all-tables 
+# dc exec -T "$BEELAB_WPCLI_SVC" sh -lc 'wp search-replace "https:\\/\\/beelab-wp.nathabee.de" "http:\\/\\/localhost:9082" --all-tables dcwpcachflush
+# dc exec -T "$BEELAB_WPCLI_SVC" sh -lc 'wp rewrite flush --hard'
+
+dcwpfixcloneurls() {
+  _beelab_ensure_wpcli
+
+  local env="${BEELAB_ENV:-dev}"
+  local prod="https://beelab-wp.nathabee.de"
+  local dev="http://localhost:9082"
+
+  local from="" to=""
+  if [[ "$env" == "prod" ]]; then
+    from="$dev"
+    to="$prod"
+  else
+    from="$prod"
+    to="$dev"
+  fi
+
+  echo "== dcwpfixcloneurls (target env=$env) =="
+  echo "expected base: $to"
+  echo
+
+  # Read current base URLs
+  local cur_home cur_siteurl
+  cur_home="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc "wp option get home 2>/dev/null || true" | tr -d '\r')"
+  cur_siteurl="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc "wp option get siteurl 2>/dev/null || true" | tr -d '\r')"
+
+  echo "current home:   ${cur_home:-<empty>}"
+  echo "current siteurl:${cur_siteurl:-<empty>}"
+  echo
+
+  # Safety: if the site is already on the expected base, that's fine.
+  # But if it is on some third URL, refuse (prevents accidental damage).
+  if [[ -n "$cur_home" && "$cur_home" != "$to" && "$cur_home" != "$from" ]]; then
+    echo "❌ Refusing: 'home' is neither expected ($to) nor source ($from): $cur_home"
+    return 1
+  fi
+  if [[ -n "$cur_siteurl" && "$cur_siteurl" != "$to" && "$cur_siteurl" != "$from" ]]; then
+    echo "❌ Refusing: 'siteurl' is neither expected ($to) nor source ($from): $cur_siteurl"
+    return 1
+  fi
+
+  # Count occurrences of the source URL in posts (fast signal). If 0, we may be done.
+  local n_plain n_esc
+  n_plain="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc \
+    "wp db query --skip-column-names --quick \"SELECT COUNT(*) FROM wp_posts WHERE post_content LIKE '%${from}%'\" 2>/dev/null || echo 0" \
+    | tr -d '\r' | tail -n 1)"
+  # JSON-escaped search (https:\/\/...):
+  local from_esc="${from//\//\\/}"
+  n_esc="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc \
+    "wp db query --skip-column-names --quick \"SELECT COUNT(*) FROM wp_posts WHERE post_content LIKE '%${from_esc}%'\" 2>/dev/null || echo 0" \
+    | tr -d '\r' | tail -n 1)"
+
+  echo "matches in wp_posts:"
+  echo "  plain:  $n_plain"
+  echo "  esc:    $n_esc"
+  echo
+
+  # Always enforce canonical base URLs (idempotent)
+  dc exec -T "$BEELAB_WPCLI_SVC" sh -lc "
+set -euo pipefail
+wp option update home   '$to' >/dev/null
+wp option update siteurl '$to' >/dev/null
+"
+
+  # Only run search-replace if there is something to do
+  if [[ "${n_plain:-0}" != "0" ]]; then
+    echo "== replacing plain URLs =="
+    dc exec -T "$BEELAB_WPCLI_SVC" sh -lc "
+set -euo pipefail
+wp search-replace '$from' '$to' --all-tables --precise --recurse-objects
+"
+  else
+    echo "== plain replace skipped (no matches detected in wp_posts) =="
+  fi
+
+  if [[ "${n_esc:-0}" != "0" ]]; then
+    echo "== replacing escaped URLs =="
+    local to_esc="${to//\//\\/}"
+    dc exec -T "$BEELAB_WPCLI_SVC" sh -lc "
+set -euo pipefail
+wp search-replace '$from_esc' '$to_esc' --all-tables --precise --recurse-objects
+"
+  else
+    echo "== escaped replace skipped (no matches detected in wp_posts) =="
+  fi
+
+  # Flush (idempotent)
+  dcwpcachflush
+  dc exec -T "$BEELAB_WPCLI_SVC" sh -lc "wp rewrite flush --hard >/dev/null || true"
+
+  echo "✅ dcwpfixcloneurls done."
 }
 
 # -------------------------------------------------------------------
@@ -548,6 +682,11 @@ dcwp theme activate beelab-theme
 # 6) flush
 dcwpcachflush
 
+dcwpfixcloneurls
+#   dcwpfixcloneurls prod2dev
+#   dcwpfixcloneurls dev2prod
+# or:
+#   dcwpfixcloneurls "https://beelab-wp.nathabee.de" "http://localhost:9082"
 
 ############################################################################
 ## clone wordpress and uploads environement (usually from prod into dev)
