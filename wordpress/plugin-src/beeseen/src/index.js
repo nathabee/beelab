@@ -6,3 +6,4 @@ import './bee-reveal';
 import './bee-depth-stack';
 import './bee-accordion';
 import './bee-perspective-scroll';
+import './bee-shuffle-deck';

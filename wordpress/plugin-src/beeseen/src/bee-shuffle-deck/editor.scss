@@ -1,0 +1,58 @@
+.wp-block-beeseen-bee-shuffle-deck {
+  .bee-shuffle__deckPreview {
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .bee-shuffle__empty {
+    padding: 22px;
+    border: 1px dashed rgba(0, 0, 0, 0.28);
+    border-radius: 12px;
+    text-align: center;
+    opacity: 0.75;
+  }
+
+  .bee-shuffle__hint {
+    margin-top: 10px;
+    opacity: 0.75;
+  }
+
+  .bee-shuffle__cardsEditor {
+    margin-top: 12px;
+  }
+
+  .bee-shuffle__cardEditor {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  .bee-shuffle__cardEditorRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .bee-shuffle__thumb {
+    margin-top: 10px;
+    max-width: 220px;
+
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 10px;
+    }
+  }
+
+  .bee-shuffle__meta {
+    margin-top: 10px;
+    font-size: 0.9em;
+    opacity: 0.7;
+  }
+}

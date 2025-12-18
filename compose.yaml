@@ -352,10 +352,11 @@ services:
     volumes:
       - wp_data_prod:/var/www/html
       # remove the bind below if you don't want editing from host in prod
-      - ./wordpress/wp-content:/var/www/html/wp-content
+      #- ./wordpress/wp-content:/var/www/html/wp-content
     depends_on:
       wordpress-prod: { condition: service_started }
       wpdb-prod: { condition: service_healthy }
+    command: sh -c "sleep infinity"  # ← keep it running indefinitly -- for security must be changed later
     profiles: ["prod"]
     logging:
       driver: "json-file"

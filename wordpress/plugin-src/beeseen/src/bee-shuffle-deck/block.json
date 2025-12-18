@@ -1,0 +1,69 @@
+{
+  "apiVersion": 2,
+  "name": "beeseen/bee-shuffle-deck",
+  "title": "Bee Shuffle Deck",
+  "category": "design",
+  "icon": "images-alt2",
+  "description": "Card deck: click cycles the top card with a smooth throw.",
+  "supports": {
+    "html": false
+  },
+  "attributes": {
+    "cards": {
+      "type": "array",
+      "default": [
+        {
+          "title": "Cerberpup, Gatekeeper",
+          "text": "Three shadows, one leash.",
+          "linkUrl": "",
+          "image": {
+            "id": null,
+            "url": "",
+            "alt": ""
+          }
+        },
+        {
+          "title": "Moon-Riven Werehound",
+          "text": "Half dog, half storm.",
+          "linkUrl": "",
+          "image": {
+            "id": null,
+            "url": "",
+            "alt": ""
+          }
+        },
+        {
+          "title": "Hex Poodle, Court Magus",
+          "text": "Curls like smoke. Bites like a contract.",
+          "linkUrl": "",
+          "image": {
+            "id": null,
+            "url": "",
+            "alt": ""
+          }
+        }
+      ]
+    },
+    "throwX": {
+      "type": "number",
+      "default": 140
+    },
+    "throwY": {
+      "type": "number",
+      "default": -40
+    },
+    "throwRot": {
+      "type": "number",
+      "default": 16
+    },
+    "throwMs": {
+      "type": "number",
+      "default": 420
+    }
+  },
+  "editorScript": "file:./index.js",
+  "script": "file:./view.js",
+  "style": "file:./style-index.css",
+  "editorStyle": "file:./index.css",
+  "version": "v2.0.0"
+}

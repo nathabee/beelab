@@ -14,7 +14,7 @@ fi
 # SERVICE HELPERS (WordPress)
 # -------------------------------------------------------------------
 _beelab_ensure_wpcli() {
-  if [[ -z "$(dc ps -q "$BEELAB_WPCLI_SVC")" ]]; then
+  if [[ -z "$(dc ps --status running -q "$BEELAB_WPCLI_SVC" 2>/dev/null)" ]]; then
     dc up -d "$BEELAB_WPCLI_SVC"
   fi
 }
@@ -40,9 +40,19 @@ dcwpcli() {
 
 dcwp() {
   _beelab_ensure_wpcli
-  local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
+   local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
   dc exec $tty_flags "$BEELAB_WPCLI_SVC" wp "$@"
 }
+#dcwp() {
+#  local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
+#  if [[ -z "$(dc ps --status running -q "$BEELAB_WPCLI_SVC")" ]]; then
+#    dc run --rm $tty_flags "$BEELAB_WPCLI_SVC" wp "$@"
+#  else
+#    dc exec $tty_flags "$BEELAB_WPCLI_SVC" wp "$@"
+#  fi
+#}
+
+
 
 dcwpcachflush() {
   _beelab_ensure_wpcli

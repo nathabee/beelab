@@ -1,5 +1,6 @@
-# BeeLab — Install & Clone Guide (`install_clone.sh`)
+# BeeLab — Wordpress clone Guide 
 
+ 
 This document explains how to **update, reset, and clone BeeLab environments** using the standard scripts and aliases, with `install_clone.sh` as the orchestration point.
 
 It covers **four core operations**:
