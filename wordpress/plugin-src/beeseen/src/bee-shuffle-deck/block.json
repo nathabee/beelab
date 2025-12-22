@@ -1,5 +1,5 @@
 {
-  "apiVersion": 2,
+  "apiVersion": 3,
   "name": "beeseen/bee-shuffle-deck",
   "title": "Bee Shuffle Deck",
   "category": "design",
@@ -65,5 +65,5 @@
   "script": "file:./view.js",
   "style": "file:./style-index.css",
   "editorStyle": "file:./index.css",
-  "version": "v2.0.0"
+  "version": "v2.0.1"
 }

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "beeseen/bee-story-cards",
+  "version": "v2.0.1",
+  "title": "Bee Story Cards",
+  "category": "widgets",
+  "icon": "slides",
+  "description": "Auto-advancing story cards: one card visible at a time, optionally with controls.",
+  "supports": {
+    "html": false
+  },
+  "textdomain": "beeseen",
+  "attributes": {
+    "cards": {
+      "type": "array",
+      "default": [],
+      "items": { "type": "object" }
+    },
+    "autoplay": { "type": "boolean", "default": true },
+    "durationMs": { "type": "number", "default": 4500 },
+    "transitionMs": { "type": "number", "default": 380 },
+    "transition": { "type": "string", "default": "fade" },
+    "pauseOnHover": { "type": "boolean", "default": true },
+    "showControls": { "type": "boolean", "default": true },
+    "overlay": { "type": "number", "default": 0.35 },
+    "textAlign": { "type": "string", "default": "left" },
+    "textPosition": { "type": "string", "default": "bottom-left" },
+    "rounded": { "type": "boolean", "default": true },
+    "imageFit": { "type": "string", "default": "cover" },
+    "aspect": { "type": "string", "default": "16:9" }
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "viewScript": "file:./view.js"
+}

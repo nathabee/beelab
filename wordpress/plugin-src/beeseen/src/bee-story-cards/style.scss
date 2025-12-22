@@ -1,0 +1,204 @@
+.wp-block-beeseen-bee-story-cards {
+  --beeseen-sc-fit: cover;
+  --beeseen-sc-radius: 16px;
+  --beeseen-sc-overlay: 0.35; /* caption box bg strength */
+  --beeseen-sc-pad: 18px;
+
+  &[data-image-fit="contain"] { --beeseen-sc-fit: contain; }
+  &[data-image-fit="cover"] { --beeseen-sc-fit: cover; }
+
+  position: relative;
+
+  /* ---------- STAGE (IMAGE ONLY) ---------- */
+  .beeseen-sc__stage {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  &[data-rounded="1"] .beeseen-sc__stage {
+    border-radius: var(--beeseen-sc-radius);
+  }
+
+  /* ratio box on stage */
+  .beeseen-sc__stage::before {
+    content: "";
+    display: block;
+    padding-top: 56.25%; /* default 16:9 */
+  }
+
+  &[data-aspect="16:9"] .beeseen-sc__stage::before { padding-top: 56.25%; }
+  &[data-aspect="4:3"]  .beeseen-sc__stage::before { padding-top: 75%; }
+  &[data-aspect="1:1"]  .beeseen-sc__stage::before { padding-top: 100%; }
+  &[data-aspect="3:4"]  .beeseen-sc__stage::before { padding-top: 133.333%; }
+
+  .beeseen-sc__slides--media {
+    position: absolute;
+    inset: 0;
+  }
+
+  .beeseen-sc__slide--media {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+    pointer-events: none;
+    will-change: opacity, transform;
+  }
+
+  .beeseen-sc__slide--media.is-active {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    pointer-events: auto;
+  }
+
+  .beeseen-sc__media {
+    position: absolute;
+    inset: 0;
+  }
+
+  .beeseen-sc__media img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: var(--beeseen-sc-fit);
+  }
+
+  /* ---------- CAPTION (BELOW IMAGE) ---------- */
+  .beeseen-sc__captionWrap {
+    margin-top: 10px;
+  }
+
+  .beeseen-sc__slides--caption {
+    position: relative;
+  }
+
+  .beeseen-sc__slide--caption {
+    display: none;
+  }
+
+  .beeseen-sc__slide--caption.is-active {
+    display: block;
+  }
+
+  .beeseen-sc__content {
+    max-width: 100%;
+    padding: var(--beeseen-sc-pad);
+    color: #fff;
+    text-wrap: pretty;
+
+    /* overlay only behind text */
+    background: rgba(0, 0, 0, var(--beeseen-sc-overlay));
+    border-radius: 12px;
+  }
+
+  /* “positions” now mean alignment only (since caption is below) */
+  .beeseen-sc__content.pos-bottom-left   { text-align: left; }
+  .beeseen-sc__content.pos-bottom-center { text-align: center; }
+  .beeseen-sc__content.pos-bottom-right  { text-align: right; }
+  .beeseen-sc__content.pos-top-left      { text-align: left; }
+  .beeseen-sc__content.pos-top-right     { text-align: right; }
+  .beeseen-sc__content.pos-center        { text-align: center; }
+
+  /* sensible typography on small screens */
+  .beeseen-sc__content h2 {
+    margin: 0 0 6px 0;
+    font-size: clamp(1.05rem, 2.6vw, 1.45rem);
+    line-height: 1.2;
+  }
+
+  .beeseen-sc__content p {
+    margin: 0;
+    font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+    line-height: 1.45;
+  }
+
+  /* ---------- CONTROLS (OVER IMAGE, AS BEFORE) ---------- */
+  .beeseen-sc__ui {
+    position: absolute;
+    inset: auto 12px 12px 12px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  &[data-show-controls="0"] .beeseen-sc__ui {
+    display: none;
+  }
+
+  .beeseen-sc__btn {
+    pointer-events: auto;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(0,0,0,0.35);
+    color: #fff;
+    border-radius: 999px;
+    padding: 8px 12px;
+    line-height: 1;
+    font: inherit;
+  }
+
+  .beeseen-sc__dots {
+    pointer-events: auto;
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .beeseen-sc__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.25);
+    cursor: pointer;
+  }
+
+  .beeseen-sc__dot.is-active {
+    background: rgba(255,255,255,0.85);
+  }
+
+  /* Print: show all cards stacked */
+  @media print {
+    .beeseen-sc__ui { display: none !important; }
+
+    .beeseen-sc__stage::before { display: none !important; }
+
+    .beeseen-sc__slides--media {
+      position: static !important;
+      inset: auto !important;
+    }
+
+    .beeseen-sc__slide--media {
+      position: static !important;
+      opacity: 1 !important;
+      transform: none !important;
+      display: block !important;
+      page-break-inside: avoid;
+      margin: 0 0 16px 0;
+    }
+
+    .beeseen-sc__media {
+      position: static !important;
+    }
+
+    .beeseen-sc__media img {
+      height: auto !important;
+      width: 100% !important;
+      object-fit: contain !important;
+    }
+
+    .beeseen-sc__slide--caption {
+      display: block !important;
+      margin: 0 0 16px 0;
+    }
+
+    .beeseen-sc__content {
+      background: transparent !important;
+      color: #000 !important;
+      padding: 10px 0 0 0 !important;
+    }
+  }
+}

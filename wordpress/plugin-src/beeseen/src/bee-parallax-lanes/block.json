@@ -1,0 +1,74 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "beeseen/bee-parallax-lanes",
+	"version": "v2.0.1",
+	"title": "Bee Parallax Lanes",
+	"category": "widgets",
+	"icon": "format-image",
+	"description": "Columns of images move at different scroll speeds (clean parallax).",
+	"supports": {
+		"html": false
+	},
+	"textdomain": "beeseen",
+	"attributes": {
+		"images": {
+			"type": "array",
+			"default": [],
+			"items": {
+				"type": "object"
+			}
+		},
+		"laneCount": {
+			"type": "number",
+			"default": 3
+		},
+		"laneGap": {
+			"type": "number",
+			"default": 16
+		},
+		"imageGap": {
+			"type": "number",
+			"default": 16
+		},
+		"maxShift": {
+			"type": "number",
+			"default": 140
+		},
+		"speeds": {
+			"type": "array",
+			"default": [
+				0.35,
+				-0.2,
+				0.25
+			],
+			"items": {
+				"type": "number"
+			}
+		},
+		"cropMode": {
+			"type": "string",
+			"default": "cover"
+		},
+		"rounded": {
+			"type": "boolean",
+			"default": true
+		},
+		"aspectRatio": {
+			"type": "string",
+			"default": "4/3"
+		},
+		"focusX": {
+			"type": "number",
+			"default": 50
+		},
+		"focusY": {
+			"type": "number",
+			"default": 40
+		}
+	},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"viewScript": "file:./view.js"
+}

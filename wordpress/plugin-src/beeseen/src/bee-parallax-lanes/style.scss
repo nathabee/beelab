@@ -1,0 +1,35 @@
+.wp-block-beeseen-bee-parallax-lanes {
+  .beeseen-parallax__lanes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--beeseen-lane-gap, 16px);
+    align-items: start;
+  }
+
+  .beeseen-parallax__lane {
+    display: flex;
+    flex-direction: column;
+    gap: var(--beeseen-image-gap, 16px);
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+  }
+
+  .beeseen-parallax__item {
+    overflow: hidden;
+    // ratio handled via CSS var set by JS (or editor inline style if you prefer)
+    aspect-ratio: var(--beeseen-aspect-ratio, auto);
+  }
+
+  .beeseen-parallax__item.is-rounded {
+    border-radius: 16px;
+  }
+
+  .beeseen-parallax__item img {
+    width: 100%;
+    height: 100%;
+    display: block;
+
+    object-fit: var(--beeseen-crop, cover);
+    object-position: var(--beeseen-focus-x, 50%) var(--beeseen-focus-y, 40%);
+  }
+}
