@@ -1,0 +1,173 @@
+.wp-block-beeseen-bee-spin-wheel {
+	.beeseen-spin-wheel {
+		display: block;
+		margin: 1.25rem 0;
+	}
+
+
+
+	.beeseen-spin-wheel__wheel {
+		display: block;
+		--radius: 120px;
+
+		position: relative;
+		width: 280px;
+		height: 280px;
+		margin: 0 auto;
+		border-radius: 50%;
+		list-style: none;
+		padding: 0;
+
+		/* Slices injected by JS: conic-gradient(...) */
+		background: var(--bee-wheel-bg, radial-gradient(circle at center, rgba(0, 0, 0, .06) 0 1px, transparent 1px));
+		box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+		overflow: hidden;
+	}
+
+	.beeseen-spin-wheel__arrow {
+		width: 0;
+		height: 0;
+		border-left: 10px solid transparent;
+		border-right: 10px solid transparent;
+		border-bottom: 16px solid rgba(0, 0, 0, .75);
+		margin: 0 auto 10px auto;
+	}
+
+	.beeseen-spin-wheel__segment {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform-origin: 0 0;
+
+		--a: calc(360deg * var(--i) / var(--n));
+		transform: rotate(var(--a)) translateY(calc(-1 * var(--radius)));
+	}
+
+	.beeseen-spin-wheel__label {
+		display: inline-block;
+		transform: translate(-50%, -50%);
+		white-space: nowrap;
+		font-size: 0.95rem;
+		font-weight: 600;
+		text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+	}
+
+	/* IMPORTANT: don't overwrite segment transform */
+	.beeseen-spin-wheel__segment.is-active .beeseen-spin-wheel__label {
+		transform: translate(-50%, -50%) scale(1.08);
+	}
+
+	.beeseen-spin-wheel__result {
+		margin-top: 1rem;
+		opacity: 0;
+		transform: scale(0.96);
+		transition: opacity 240ms ease, transform 240ms ease;
+		min-height: 160px;
+	}
+
+	.beeseen-spin-wheel__result.is-active {
+		opacity: 1;
+		transform: scale(1);
+	}
+
+	.beeseen-spin-wheel__resultInner {
+		display: grid;
+		gap: 8px;
+		justify-items: center;
+	}
+
+	.beeseen-spin-wheel__cta {
+		display: inline-block;
+		padding: 8px 12px;
+		border-radius: 999px;
+		text-decoration: none;
+		border: 1px solid rgba(0, 0, 0, .18);
+	}
+
+	.beeseen-spin-wheel__spinBtn {
+		justify-self: start;
+		align-self: start;
+		width: max-content;
+
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5em;
+
+		padding: 10px 16px;
+		border-radius: 999px;
+
+		font-weight: 600;
+		font-size: 0.95rem;
+
+		background: var(--wp--preset--color--background, #fff);
+		color: inherit;
+
+		border: 1px solid rgba(0, 0, 0, .18);
+		cursor: pointer;
+
+		transition:
+			transform 120ms ease,
+			box-shadow 120ms ease,
+			background-color 120ms ease;
+	}
+
+
+		.beeseen-spin-wheel__spinBtn:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 6px 16px rgba(0, 0, 0, .12);
+		}
+
+		.beeseen-spin-wheel__spinBtn:active {
+			transform: translateY(0);
+			box-shadow: 0 3px 8px rgba(0, 0, 0, .18);
+		}
+
+		.beeseen-spin-wheel__spinBtn::after {
+			content: '↻';
+			font-size: 0.9em;
+			opacity: 0.7;
+			transition: transform 240ms ease;
+		}
+
+		.beeseen-spin-wheel__spinBtn:hover::after {
+			transform: rotate(90deg);
+		}
+
+
+
+
+	.beeseen-spin-wheel__spinBtn:focus-visible {
+		outline: 2px solid currentColor;
+		outline-offset: 3px;
+	}
+
+	.beeseen-spin-wheel__layout {
+		display: grid;
+		gap: 16px;
+		align-items: start;
+	}
+
+	/* Desktop: two columns */
+	@media (min-width: 780px) {
+		.beeseen-spin-wheel__layout {
+			grid-template-columns: 320px 1fr;
+			gap: 20px;
+			align-items: start;
+		}
+	}
+
+	.beeseen-spin-wheel__left {
+		display: grid;
+		justify-items: center;
+	}
+
+	.beeseen-spin-wheel__right {
+		display: grid;
+		gap: 12px;
+		align-content: start;
+	}
+
+
+
+
+}

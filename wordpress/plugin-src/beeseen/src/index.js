@@ -10,3 +10,5 @@ import './bee-shuffle-deck';
 import './bee-parallax-lanes';
 // import './bee-scroll-story'; // really bad
 import './bee-story-cards';
+import './bee-spin-wheel';
+

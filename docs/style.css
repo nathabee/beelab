@@ -4,19 +4,20 @@
 
 /* Page background inspired by SVG colors */
 body {
-  background: linear-gradient(to right, #F5B684 0%, #cccccc 30%, #F5B684 100%);
-  margin: 0;
+  /*ckground: linear-gradient(to right, #5F5F5F 0%, #f8f0e0 40%, #363535 100%);*/
+  background: #4a6486;
+  margin: 10;
   font-family: sans-serif;
 }
 
 /* Main container with white background */
 .container {
-  max-width: 960px;
+  max-width: 65%;
   margin: 0 auto;
-  background: white;
+  background: #e7e2d8;
   padding: 1.5rem;
   box-shadow: 0 0 10px rgba(0,0,0,0.05);
-  border-radius: 8px;
+  border-radius: 5x;
   min-height: 100vh; /* 🔥 force full screen height */
   display: flex;
   flex-direction: column;
