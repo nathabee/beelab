@@ -95,7 +95,7 @@ Goals:
 This git repository was installed on a VPS, you can access it there:
 
 After installing this repository on nathabee we get:
-* WordPress Pomolobee plugin: [https://beelab-wp.nathabee.de/pomolobee](https://beelab-wp.nathabee.de/pomolobee)
+
 * WordPress Competence plugin: [https://beelab-wp.nathabee.de/competence](https://beelab-wp.nathabee.de/competence)
 * WordPress: [https://beelab-wp.nathabee.de](https://beelab-wp.nathabee.de)
 * WordPress admin: [https://beelab-wp.nathabee.de/wp-admin](https://beelab-wp.nathabee.de/wp-admin)
@@ -109,10 +109,26 @@ After installing this repository on nathabee we get:
  
 ## WordPress  
 
+* **beefont — Custom font creation workflow embedded in WordPress.**
+Provides a guided UI to define a font project, upload SVG glyphs, manage variants, and trigger font builds via the BeeLab backend. Designed as a focused tool rather than a generic font editor.
+
+<a href="./docs/screenshot_beefont_plugin.png"> <img src="./docs/screenshot_beefont_plugin.png" alt="BeeFont plugin screenshot" width="49%"> </a>
+
+* **beeseen — Visual interaction blocks for Full Site Editing.**
+A collection of experimental and reusable blocks (orbit, wobble, depth, shuffle, etc.) focused on subtle motion, layered visuals, and interaction — all theme-aware and frontend-only.
+
+<a href="./docs/screenshot_beeseen_plugin.png"> <img src="./docs/screenshot_beeseen_plugin.png" alt="BeeSeen plugin screenshot" width="49%"> </a>
+
+* **beegame — Interactive simulation games as WordPress blocks.**
+React-based simulations (starting with Conway’s Game of Life) rendered inside FSE blocks. Runs entirely in the browser, no login required, no backend dependency.
+
+<a href="./docs/screenshot_beegame_plugin.png"> <img src="./docs/screenshot_beegame_plugin.png" alt="BeeGame plugin screenshot" width="49%"> </a>
+
 * **Theme**: `beelab-theme` (child of Twenty Twenty-Five).
 
-  * Header/nav integrates links to plugin pages (e.g. `/competence`, `/pomolobee`).
+  * Header/nav integrates links to plugin pages (e.g. `/competence`).
   * Custom logo/assets + base styling.
+  * Neutral base styling so plugins inherit WordPress presets
 * **Plugins**:
 
   * `competence` — SPA-style bundle that calls the Django API (`/api` on 9001).
@@ -121,11 +137,6 @@ After installing this repository on nathabee we get:
 </a>
 
 
-  * `pomolobee` — same pattern, separate app & routes.
-  
-<a href="./docs/screenshot_pomolobee_plugin.png">
-  <img src="./docs/screenshot_pomolobee_plugin.png" alt="Pomolobee plugin screenshot" width="49%">
-</a>
 
 
 * **Tooling**:
