@@ -109,33 +109,37 @@ After installing this repository on nathabee we get:
  
 ## WordPress  
 
-* **beefont — Custom font creation workflow embedded in WordPress.**
+* **Plugins**:
+
+
+
+  * `beefont` — Custom font creation workflow embedded in WordPress.
 Provides a guided UI to define a font project, upload SVG glyphs, manage variants, and trigger font builds via the BeeLab backend. Designed as a focused tool rather than a generic font editor.
 
-<a href="./docs/screenshot_beefont_plugin.png"> <img src="./docs/screenshot_beefont_plugin.png" alt="BeeFont plugin screenshot" width="49%"> </a>
+<a href="./docs/screenshot/screenshot_beefont_plugin.png"> <img src="./docs/screenshot/screenshot_beefont_plugin.png" alt="BeeFont plugin screenshot" width="49%"> </a>
 
-* **beeseen — Visual interaction blocks for Full Site Editing.**
+  * `beeseen` — Visual interaction blocks for Full Site Editing.
 A collection of experimental and reusable blocks (orbit, wobble, depth, shuffle, etc.) focused on subtle motion, layered visuals, and interaction — all theme-aware and frontend-only.
 
-<a href="./docs/screenshot_beeseen_plugin.png"> <img src="./docs/screenshot_beeseen_plugin.png" alt="BeeSeen plugin screenshot" width="49%"> </a>
+<a href="./docs/screenshot/screenshot_beeseen_plugin.png"> <img src="./docs/screenshot/screenshot_beeseen_plugin.png" alt="BeeSeen plugin screenshot" width="49%"> </a>
 
-* **beegame — Interactive simulation games as WordPress blocks.**
+  * `beegame` — Interactive simulation games as WordPress blocks.
 React-based simulations (starting with Conway’s Game of Life) rendered inside FSE blocks. Runs entirely in the browser, no login required, no backend dependency.
 
-<a href="./docs/screenshot_beegame_plugin.png"> <img src="./docs/screenshot_beegame_plugin.png" alt="BeeGame plugin screenshot" width="49%"> </a>
+<a href="./docs/screenshot/screenshot_beegame_plugin.png"> <img src="./docs/screenshot/screenshot_beegame_plugin.png" alt="BeeGame plugin screenshot" width="49%"> </a>
+
+
+  * `competence` — SPA-style bundle that calls the Django API (`/api` on 9001).
+  <a href="./docs/screenshot/screenshot_competence_plugin.png">
+  <img src="./docs/screenshot/screenshot_competence_plugin.png" alt="Competence plugin screenshot" width="49%">
+</a>
+
 
 * **Theme**: `beelab-theme` (child of Twenty Twenty-Five).
 
   * Header/nav integrates links to plugin pages (e.g. `/competence`).
   * Custom logo/assets + base styling.
   * Neutral base styling so plugins inherit WordPress presets
-* **Plugins**:
-
-  * `competence` — SPA-style bundle that calls the Django API (`/api` on 9001).
-  <a href="./docs/screenshot_competence_plugin.png">
-  <img src="./docs/screenshot_competence_plugin.png" alt="Competence plugin screenshot" width="49%">
-</a>
-
 
 
 
@@ -150,7 +154,7 @@ React-based simulations (starting with Conway’s Game of Life) rendered inside 
 * **Routing**:
 
   * Uses standard WP **pretty permalinks**.
-  * Plugins mount their frontends on pages (`/competence`, `/pomolobee`) and talk to Django via the configured API base URL.
+  * Plugins mount their frontends on pages (`/competence`, `/beefont`) and talk to Django via the configured API base URL.
 
 ---
 
