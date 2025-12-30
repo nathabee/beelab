@@ -199,8 +199,14 @@ All restores use **existing BeeLab aliases**:
 * `dcwpdbrestore`
 * `dcwpuploadsunzip`
 * `dcwpfixcloneurls`
+* Theme portability (dev only):
+`dcwpthemezip_make_dev` (creates beelab-theme-dev.zip from the prod export)
+`dcwpthemeinstall` (installs the dev ZIP so theme files are actually updated)
 
 No raw `docker exec`, no manual SQL piping.
+
+ 
+
 
 ---
 
@@ -242,6 +248,10 @@ What the script does, in order:
 2. Drops and restores WordPress DB (`dcwpdbrestore`)
 3. Restores uploads (`dcwpuploadsunzip`)
 4. Fixes URLs according to environment (`dcwpfixcloneurls`)
+5. In dev only: generates a dev-ready theme ZIP (dcwpthemezip_make_dev) and installs it (dcwpthemeinstall) to remove absolute prod asset URLs.
+6. Flushes cache/rewrites (dcwpcachflush, wp rewrite flush --hard)
+
+
  
 ---
 
@@ -279,6 +289,15 @@ Use this when:
 * DB content is still valid
 
 ---
+
+#### Restore Theme zip from dev to prod
+
+```bash
+source scripts/alias.sh dev
+dcwpthemezip_make_dev
+dcwpthemeinstall wordpress/build/beelab-theme-dev.zip beelab-theme
+dcwpcachflush
+```
 
 ### 2.6 Typical restore scenarios
 

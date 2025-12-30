@@ -24,7 +24,7 @@ _beelab_ensure_wpcli() {
 # -------------------------------------------------------------------
 dcwplogs()   { dclogs "$BEELAB_WP_SVC" "$@"; }
 dcwplog()    { dcwplogs "$@"; }
-dcwpup()     { dc up -d "$BEELAB_WP_SVC"; }
+dcwpup()     {   dc up -d "$BEELAB_WP_SVC";   }
 dcwpdown()   { dc stop  "$BEELAB_WP_SVC"; }
 dcwplsmedia(){ dcexec "$BEELAB_WP_SVC" bash -lc "ls -lAh --group-directories-first /var/www/html/media/${1:-}"; }
 dcwpcurlmedia(){ local path="${1:-/media}"; curl -I "http://localhost:9082${path}"; }
@@ -36,6 +36,20 @@ dcwpcli() {
   _beelab_ensure_wpcli
   local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
   dc exec $tty_flags "$BEELAB_WPCLI_SVC" "$@"
+}
+
+dcwpsanity() {
+  _beelab_ensure_wpcli
+  echo "home:      $(dcwp option get home)"
+  echo "siteurl:   $(dcwp option get siteurl)"
+  echo "theme:     $(dcwp option get stylesheet) (parent: $(dcwp option get template))"
+  echo "plugins:"
+  dcwp plugin list --status=active --field=name | sed 's/^/  - /'
+}
+
+dcwpfix_theme() {
+  _beelab_ensure_wpcli
+  dcwp theme activate beelab-theme || true
 }
 
 dcwp() {
@@ -529,6 +543,9 @@ echo "✓ extracted uploads into wp-content"
   echo "uploads restored from: $in"
 }
 
+
+
+
 # -------------------------------------------------------------------
 # Clone URL fix (prod <-> dev)
 # -------------------------------------------------------------------
@@ -579,8 +596,7 @@ dcwpfixcloneurls() {
   echo "current siteurl:${cur_siteurl:-<empty>}"
   echo
 
-  # Safety: if the site is already on the expected base, that's fine.
-  # But if it is on some third URL, refuse (prevents accidental damage).
+  # Safety: refuse if we're on an unexpected third URL (prevents accidental damage).
   if [[ -n "$cur_home" && "$cur_home" != "$to" && "$cur_home" != "$from" ]]; then
     echo "❌ Refusing: 'home' is neither expected ($to) nor source ($from): $cur_home"
     return 1
@@ -590,49 +606,80 @@ dcwpfixcloneurls() {
     return 1
   fi
 
-  # Count occurrences of the source URL in posts (fast signal). If 0, we may be done.
-  local n_plain n_esc
-  n_plain="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc \
-    "wp db query --skip-column-names --quick \"SELECT COUNT(*) FROM wp_posts WHERE post_content LIKE '%${from}%'\" 2>/dev/null || echo 0" \
-    | tr -d '\r' | tail -n 1)"
-  # JSON-escaped search (https:\/\/...):
-  local from_esc="${from//\//\\/}"
-  n_esc="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc \
-    "wp db query --skip-column-names --quick \"SELECT COUNT(*) FROM wp_posts WHERE post_content LIKE '%${from_esc}%'\" 2>/dev/null || echo 0" \
-    | tr -d '\r' | tail -n 1)"
-
-  echo "matches in wp_posts:"
-  echo "  plain:  $n_plain"
-  echo "  esc:    $n_esc"
-  echo
-
-  # Always enforce canonical base URLs (idempotent)
+  # Always enforce canonical base URLs (idempotent).
   dc exec -T "$BEELAB_WPCLI_SVC" sh -lc "
 set -euo pipefail
 wp option update home   '$to' >/dev/null
 wp option update siteurl '$to' >/dev/null
 "
 
-  # Only run search-replace if there is something to do
-  if [[ "${n_plain:-0}" != "0" ]]; then
-    echo "== replacing plain URLs =="
+  # Use WP's table prefix (never assume wp_).
+  local prefix
+  prefix="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc "wp db prefix --quiet 2>/dev/null || echo wp_" | tr -d '\r')"
+
+  # Detect whether the "from" URL exists anywhere important (posts + options + postmeta).
+  # This catches fonts/CSS stored in options, serialized theme settings, etc.
+  local n_posts n_opts n_meta n_total
+  n_posts="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc \
+    "wp db query --skip-column-names --quick \
+     \"SELECT COUNT(*) FROM ${prefix}posts WHERE post_content LIKE '%${from}%'\" 2>/dev/null || echo 0" \
+    | tr -d '\r' | tail -n 1)"
+  n_opts="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc \
+    "wp db query --skip-column-names --quick \
+     \"SELECT COUNT(*) FROM ${prefix}options WHERE option_value LIKE '%${from}%'\" 2>/dev/null || echo 0" \
+    | tr -d '\r' | tail -n 1)"
+  n_meta="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc \
+    "wp db query --skip-column-names --quick \
+     \"SELECT COUNT(*) FROM ${prefix}postmeta WHERE meta_value LIKE '%${from}%'\" 2>/dev/null || echo 0" \
+    | tr -d '\r' | tail -n 1)"
+
+  # Sum safely (bash arithmetic).
+  n_total=$(( ${n_posts:-0} + ${n_opts:-0} + ${n_meta:-0} ))
+
+  echo "matches (plain '$from'):"
+  echo "  posts:    ${n_posts:-0}"
+  echo "  options:  ${n_opts:-0}"
+  echo "  postmeta: ${n_meta:-0}"
+  echo "  total:    ${n_total:-0}"
+  echo
+
+  # If there's anything to replace, do it once across all tables.
+  # (Even if 0, it's safe to skip to avoid unnecessary DB churn.)
+  if [[ "${n_total:-0}" != "0" ]]; then
+    echo "== replacing plain URLs across ALL tables =="
     dc exec -T "$BEELAB_WPCLI_SVC" sh -lc "
 set -euo pipefail
 wp search-replace '$from' '$to' --all-tables --precise --recurse-objects
 "
   else
-    echo "== plain replace skipped (no matches detected in wp_posts) =="
+    echo "== plain replace skipped (no matches detected in posts/options/postmeta) =="
   fi
 
+  # Also fix JSON-escaped variants (https:\/\/example.com) which often appear in block/theme JSON.
+  local from_esc to_esc n_esc
+  from_esc="${from//\//\\/}"
+  to_esc="${to//\//\\/}"
+
+  n_esc="$(dc exec -T "$BEELAB_WPCLI_SVC" sh -lc \
+    "wp db query --skip-column-names --quick \
+     \"SELECT (
+        (SELECT COUNT(*) FROM ${prefix}posts    WHERE post_content LIKE '%${from_esc}%')
+      + (SELECT COUNT(*) FROM ${prefix}options  WHERE option_value LIKE '%${from_esc}%')
+      + (SELECT COUNT(*) FROM ${prefix}postmeta WHERE meta_value   LIKE '%${from_esc}%')
+     )\" 2>/dev/null || echo 0" \
+    | tr -d '\r' | tail -n 1)"
+
+  echo
+  echo "matches (escaped '$from_esc'): ${n_esc:-0}"
+
   if [[ "${n_esc:-0}" != "0" ]]; then
-    echo "== replacing escaped URLs =="
-    local to_esc="${to//\//\\/}"
+    echo "== replacing escaped URLs across ALL tables =="
     dc exec -T "$BEELAB_WPCLI_SVC" sh -lc "
 set -euo pipefail
 wp search-replace '$from_esc' '$to_esc' --all-tables --precise --recurse-objects
 "
   else
-    echo "== escaped replace skipped (no matches detected in wp_posts) =="
+    echo "== escaped replace skipped (no matches detected) =="
   fi
 
   # Flush (idempotent)
@@ -641,6 +688,60 @@ wp search-replace '$from_esc' '$to_esc' --all-tables --precise --recurse-objects
 
   echo "✅ dcwpfixcloneurls done."
 }
+
+dcwpthemezip_make_dev() {
+  # Usage:
+  #   dcwpthemezip_make_dev [in_zip_rel_to_repo] [out_zip_rel_to_repo]
+  #
+  # Defaults (relative to repo root):
+  #   wordpress/build/beelab-theme.zip
+  #   wordpress/build/beelab-theme-dev.zip
+
+  local in_rel="${1:-wordpress/build/beelab-theme.zip}"
+  local out_rel="${2:-wordpress/build/beelab-theme-dev.zip}"
+
+  local prod="https://beelab-wp.nathabee.de"
+  local dev="http://localhost:9082"
+
+  [[ -n "${_BEELAB_ROOT:-}" ]] || { echo "❌ _BEELAB_ROOT not set (did you source scripts/alias.sh ?)"; return 1; }
+
+  local in_zip="$_BEELAB_ROOT/$in_rel"
+  local out_zip="$_BEELAB_ROOT/$out_rel"
+
+  [[ -f "$in_zip" ]] || { echo "❌ Input ZIP not found: $in_zip"; return 1; }
+
+  local tmp; tmp="$(mktemp -d)"
+  trap 'rm -rf "$tmp"' RETURN
+
+  rm -f "$out_zip" 2>/dev/null || true
+  mkdir -p "$(dirname "$out_zip")"
+
+  # Unpack
+  ( cd "$tmp" && unzip -q "$in_zip" )
+
+  # Sanity: ensure we actually extracted something meaningful
+  if ! ( cd "$tmp" && find . -type f -name "style.css" | grep -q . ); then
+    echo "❌ ZIP did not look like a theme export (style.css not found). Input: $in_zip"
+    return 1
+  fi
+
+  # Rewrite only typical theme text assets
+  ( cd "$tmp" && \
+    find . -type f \( -name "*.json" -o -name "*.html" -o -name "*.css" \) -print0 \
+      | xargs -0 sed -i \
+        -e "s|${prod}/wp-content/|/wp-content/|g" \
+        -e "s|${dev}/wp-content/|/wp-content/|g" \
+        -e "s|${prod//\//\\/}\\/wp-content\\/|\\/wp-content\\/|g" \
+        -e "s|${dev//\//\\/}\\/wp-content\\/|\\/wp-content\\/|g" \
+  )
+
+  # Re-pack
+  ( cd "$tmp" && zip -qr "$out_zip" . )
+
+  echo "✅ Dev theme ZIP written: $out_zip"
+  echo "   Source ZIP preserved: $in_zip"
+}
+
 
 # -------------------------------------------------------------------
 # HELP SECTION (WordPress only)
@@ -671,6 +772,11 @@ dcwpmenuitems <menu>
 dcwpmenu_locations
 dcwpcount
 
+########
+# check in case env reset
+########
+dcwpsanity
+dcwpfix_theme
 ############################################################################
 ## clone wordpress style from source (usually dev) to target (usually) prod :
 ############################################################################

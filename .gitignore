@@ -24,8 +24,8 @@ wordpress/wp-content/themes/*
 !wordpress/wp-content/themes/.gitkeep
 wordpress/wp-content/languages/
 
-# Keep build artifacts tracked (your source of truth)
-!wordpress/build/*.zip
+# Keep build artifacts tracked (your source of truth) not anymore we do that in realease
+# !wordpress/build/*.zip
 # Any folder named "upload" or "uploads" anywhere (defensive)
 **/upload/
 **/uploads/
