@@ -25,7 +25,14 @@ wordpress/wp-content/themes/*
 wordpress/wp-content/languages/
 
 # Keep build artifacts tracked (your source of truth) not anymore we do that in realease
-# !wordpress/build/*.zip
+# wordpress/build/*.zip
+# they will be send in release with release script
+
+wordpress/build/
+*.zip
+wordpress/wp-content/debug.log
+
+
 # Any folder named "upload" or "uploads" anywhere (defensive)
 **/upload/
 **/uploads/
