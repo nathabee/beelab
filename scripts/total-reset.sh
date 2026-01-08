@@ -22,6 +22,25 @@ WPDB_SVC=$([[ "$ENV" == "prod" ]] && echo "wpdb-prod" || echo "wpdb")
 abort() { echo "❌ $*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || abort "Missing dependency: $1"; }
 
+require_env() {
+  local k="$1"
+  if [[ -z "${!k:-}" ]]; then
+    echo "❌ Missing required env var: $k (set it in $ENV_FILE)" >&2
+    exit 1
+  fi
+}
+
+require_env_many() {
+  local missing=0
+  for k in "$@"; do
+    if [[ -z "${!k:-}" ]]; then
+      echo "❌ Missing required env var: $k (set it in $ENV_FILE)" >&2
+      missing=1
+    fi
+  done
+  [[ $missing -eq 0 ]] || exit 1
+}
+
 yes_no() {
   local q="$1" def="${2:-no}" ans prompt="[y/N]"
   [[ "$def" == "yes" ]] && prompt="[Y/n]"
@@ -55,6 +74,32 @@ need docker; need bash
 
 # load env (for URLs, creds, etc.)
 set -a; source "$ENV_FILE"; set +a
+
+# ---- required env vars (fail fast) ----
+require_env_many \
+  DJANGO_BASE_URL \
+  WEB_BASE_URL \
+  WP_BASE_URL \
+  HOST_UID \
+  HOST_GID \
+  POSTGRES_DB \
+  POSTGRES_USER \
+  POSTGRES_PASSWORD \
+  WP_DB_NAME \
+  WP_DB_USER \
+  WP_DB_PASSWORD \
+  SECRET_KEY \
+  ALLOWED_HOSTS \
+  CORS_ALLOWED_ORIGINS \
+  CSRF_TRUSTED_ORIGINS \
+  NEXT_PUBLIC_API_BASE
+
+# WordPress core install credentials (WP-CLI)
+require_env_many \
+  WP_TITLE \
+  WP_ADMIN_USER \
+  WP_ADMIN_PASSWORD \
+  WP_ADMIN_EMAIL
 
 # Compose helper
 compose() { docker compose -p "$PROJECT" --env-file "$ENV_FILE" --profile "$PROFILE" "$@"; }
@@ -134,27 +179,28 @@ compose up -d --build
 if [[ "$ENV" == "prod" ]]; then
   echo "🔧 Fixing Django volume ownership in prod..."
   compose exec -u 0 "$DJANGO_SVC" bash -lc "
-    install -d -m 775 -o ${HOST_UID:-1000} -g ${HOST_GID:-1000} /app/media /app/staticfiles &&
-    chown -R ${HOST_UID:-1000}:${HOST_GID:-1000} /app/media /app/staticfiles &&
+    install -d -m 775 -o ${HOST_UID} -g ${HOST_GID} /app/media /app/staticfiles &&
+    chown -R ${HOST_UID}:${HOST_GID} /app/media /app/staticfiles &&
     find /app/media /app/staticfiles -type d -exec chmod 775 {} \; &&
     find /app/media /app/staticfiles -type f -exec chmod 664 {} \;
   " || true
 fi
 
-# --- wait for django health (avoid DisallowedHost for internal probes) ---
-API_URL="${DJANGO_BASE_URL:-http://localhost:9001}"
+# --- wait for django health ---
+require_env DJANGO_BASE_URL
+API_URL="${DJANGO_BASE_URL}"
 HEALTH_URL="${API_URL%/}/health"
 
-# internal probes should accept localhost even if prod ALLOWED_HOSTS is strict
+# Prefer internal probe to avoid external routing dependency.
+# If ALLOWED_HOSTS is strict in prod, we temporarily extend it for this one probe.
 echo "⏳ Waiting for Django health (internal probe)..."
 set +e
 compose exec -T \
-  -e "ALLOWED_HOSTS=${ALLOWED_HOSTS:-},localhost,127.0.0.1,django" \
+  -e "ALLOWED_HOSTS=${ALLOWED_HOSTS},localhost,127.0.0.1,django" \
   "$DJANGO_SVC" python -c "import sys,urllib.request; urllib.request.urlopen('http://localhost:8000/health'); sys.exit(0)" >/dev/null 2>&1
 RC=$?
 set -e
 if [[ $RC -ne 0 ]]; then
-  # fallback: try public URL (might already be routed by apache)
   wait_http_200 "$HEALTH_URL" 120 || true
 else
   echo "✅ Django health reachable at http://localhost:8000/health"
@@ -179,21 +225,18 @@ echo "🧺 collectstatic..."
 compose exec "$DJANGO_SVC" python manage.py collectstatic --noinput || true
 
 # --- WordPress: core install via WP-CLI (NO theme, NO plugins) ---
-WP_URL="${WP_BASE_URL:-http://localhost:9082}"
-WP_TITLE="${WP_TITLE:-BeeLab}"
-WP_ADMIN_USER="${WP_ADMIN_USER:-beelab}"
-WP_ADMIN_PASSWORD="${WP_ADMIN_PASSWORD:-changeMeStrong}"
-WP_ADMIN_EMAIL="${WP_ADMIN_EMAIL:-admin@example.com}"
+require_env_many WP_BASE_URL WP_TITLE WP_ADMIN_USER WP_ADMIN_PASSWORD WP_ADMIN_EMAIL
+
+WP_URL="${WP_BASE_URL}"
 
 echo
 echo "=============================="
 echo "WordPress: core install (WP-CLI)"
 echo "=============================="
 
-# wait for wpdb mysql to accept connections (service name differs; inside compose network it's just the service)
-# in most setups host is 'wpdb'/'wpdb-prod' but from wpcli container it's the service name defined in env or compose.
-# We rely on WP-CLI to retry a bit; still, a short wait helps.
-wait_tcp "wpdb" 3306 60 || true
+# Wait for MariaDB in the wp network namespace.
+# Hostname from WP-CLI container is the compose service name.
+wait_tcp "$WPDB_SVC" 3306 90 || true
 
 set +e
 compose exec -T "$WPCLI_SVC" wp core is-installed --allow-root >/dev/null 2>&1
@@ -215,7 +258,6 @@ else
   echo "✅ WordPress core installed."
 fi
 
-# optional: permalinks (safe even right after install)
 echo "🔧 Setting permalinks to /%postname%/ ..."
 compose exec -T "$WPCLI_SVC" wp rewrite structure '/%postname%/' --hard --allow-root >/dev/null 2>&1 || true
 compose exec -T "$WPCLI_SVC" wp rewrite flush --hard --allow-root >/dev/null 2>&1 || true
@@ -242,8 +284,6 @@ echo "📥 Loading Django fixtures (best-effort)..."
 set +e
 compose exec "$DJANGO_SVC" python manage.py seed_all --clear
 set -e
-# If seed_all doesn't exist, that's fine.
-# The output will show the error, but we continue.
 
 # --- health checks (env-aware) ---
 if [[ -x ./scripts/healthcheck.sh ]]; then
@@ -254,6 +294,6 @@ fi
 
 echo
 echo "✅ Done."
-echo "🖥  Web:     ${WEB_BASE_URL:-http://localhost:9080}"
+echo "🖥  Web:     ${WEB_BASE_URL}"
 echo "🔌 Django:  ${API_URL%/}   (health: ${API_URL%/}/health)"
 echo "📝 WP:      ${WP_URL%/}"
