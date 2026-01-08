@@ -188,7 +188,7 @@ blenv dev|prod      # switch env in this shell
  
 ```bash
 # Make the helper executable
-chmod +x scripts/total-reset.sh <dev/dev>
+chmod +x scripts/total-reset.sh  
 
 # Run the full rebuild/installer (interactive)
 ./scripts/total-reset.sh prod
@@ -204,7 +204,9 @@ When prompted:
 
 open wordpress   : `https://beelab-wp.nathabee.de/wp-admin`
 
-choose Pomolobee Settings and Competence Settings (settings of activated plugin) and check that it is pointing to the correct django backend: 
+install the theme 
+install the plugin you want.
+choose plugin Settings (settings of activated plugin) and check that it is pointing to the correct django backend: 
 in prod
 https://beelab-api.nathabee.de/api
 

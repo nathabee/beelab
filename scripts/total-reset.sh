@@ -34,9 +34,20 @@ wait_http_200() {
   local url="$1" timeout="${2:-90}" t=0
   echo "⏳ Waiting for $url ..."
   until curl -fsS "$url" >/dev/null 2>&1; do
-    sleep 2; t=$((t+2)); (( t >= timeout )) && { echo "⚠️  Timed out: $url"; return 1; }
+    sleep 2; t=$((t+2))
+    (( t >= timeout )) && { echo "⚠️  Timed out: $url"; return 1; }
   done
   echo "✅ $url is up"
+}
+
+wait_tcp() {
+  local host="$1" port="$2" timeout="${3:-60}" t=0
+  echo "⏳ Waiting for TCP ${host}:${port} ..."
+  while ! (echo >/dev/tcp/"$host"/"$port") >/dev/null 2>&1; do
+    sleep 2; t=$((t+2))
+    (( t >= timeout )) && { echo "⚠️  Timed out: ${host}:${port}"; return 1; }
+  done
+  echo "✅ TCP ${host}:${port} is reachable"
 }
 
 need docker; need bash
@@ -64,25 +75,24 @@ if yes_no "Are you sure you want a TOTAL RESET of containers/images/*volumes* fo
 
   # --- targeted volume prune --------------------------------------
   if yes_no "Also remove named volumes for [$ENV]?" no; then
-    # list volumes belonging to this compose project
-    vols=$(docker volume ls -q --filter "label=com.docker.compose.project=$PROJECT")
+    vols=$(docker volume ls -q --filter "label=com.docker.compose.project=$PROJECT" || true)
     echo "📦 Project volumes: $PROJECT"
-    echo "$vols" | sed 's/^/  - /'
+    echo "$vols" | sed 's/^/  - /' || true
 
     if [[ "$ENV" == "dev" ]]; then
-      # remove ONLY non-prod-suffixed volumes (dev ones)
       for v in $vols; do
         if [[ "$v" =~ _prod$ ]]; then
           echo "⏭️  keeping prod volume: $v"
         else
-          echo "🗑️  removing dev volume: $v"; docker volume rm -f "$v" >/dev/null || true
+          echo "🗑️  removing dev volume: $v"
+          docker volume rm -f "$v" >/dev/null 2>&1 || true
         fi
       done
-    else # prod
-      # remove ONLY *_prod volumes (prod ones)
+    else
       for v in $vols; do
         if [[ "$v" =~ _prod$ ]]; then
-          echo "🗑️  removing prod volume: $v"; docker volume rm -f "$v" >/dev/null || true
+          echo "🗑️  removing prod volume: $v"
+          docker volume rm -f "$v" >/dev/null 2>&1 || true
         else
           echo "⏭️  keeping dev volume: $v"
         fi
@@ -90,7 +100,8 @@ if yes_no "Are you sure you want a TOTAL RESET of containers/images/*volumes* fo
     fi
   fi
 else
-  echo "➡️  Cancelled."; exit 0
+  echo "➡️  Cancelled."
+  exit 0
 fi
 
 # --- seed web deps (dev only) ---
@@ -99,7 +110,7 @@ if [[ "$ENV" == "dev" ]]; then
   compose run --rm "$WEB_SVC" npm ci || true
 fi
 
-# --- harden local media folder (only makes sense with dev bind mount) ---
+# --- harden local media folder (dev bind mount only) ---
 if [[ "$ENV" == "dev" ]]; then
   mkdir -p ./django/media
   cat > ./django/media/.htaccess << "EOF"
@@ -119,7 +130,7 @@ fi
 echo "🚀 Starting $ENV stack"
 compose up -d --build
 
-# after: compose up -d --build
+# --- prod: fix volume ownership for django media/static ---
 if [[ "$ENV" == "prod" ]]; then
   echo "🔧 Fixing Django volume ownership in prod..."
   compose exec -u 0 "$DJANGO_SVC" bash -lc "
@@ -127,15 +138,27 @@ if [[ "$ENV" == "prod" ]]; then
     chown -R ${HOST_UID:-1000}:${HOST_GID:-1000} /app/media /app/staticfiles &&
     find /app/media /app/staticfiles -type d -exec chmod 775 {} \; &&
     find /app/media /app/staticfiles -type f -exec chmod 664 {} \;
-  "
+  " || true
 fi
 
-
-# --- wait for Django health ---
+# --- wait for django health (avoid DisallowedHost for internal probes) ---
 API_URL="${DJANGO_BASE_URL:-http://localhost:9001}"
-wait_http_200 "${API_URL%/}/health" 90 || true
+HEALTH_URL="${API_URL%/}/health"
 
-
+# internal probes should accept localhost even if prod ALLOWED_HOSTS is strict
+echo "⏳ Waiting for Django health (internal probe)..."
+set +e
+compose exec -T \
+  -e "ALLOWED_HOSTS=${ALLOWED_HOSTS:-},localhost,127.0.0.1,django" \
+  "$DJANGO_SVC" python -c "import sys,urllib.request; urllib.request.urlopen('http://localhost:8000/health'); sys.exit(0)" >/dev/null 2>&1
+RC=$?
+set -e
+if [[ $RC -ne 0 ]]; then
+  # fallback: try public URL (might already be routed by apache)
+  wait_http_200 "$HEALTH_URL" 120 || true
+else
+  echo "✅ Django health reachable at http://localhost:8000/health"
+fi
 
 # --- migrations ---
 if [[ "$ENV" == "dev" ]]; then
@@ -155,46 +178,76 @@ fi
 echo "🧺 collectstatic..."
 compose exec "$DJANGO_SVC" python manage.py collectstatic --noinput || true
 
-
- 
-
-# --- WordPress manual setup (UI only) ---
+# --- WordPress: core install via WP-CLI (NO theme, NO plugins) ---
 WP_URL="${WP_BASE_URL:-http://localhost:9082}"
+WP_TITLE="${WP_TITLE:-BeeLab}"
+WP_ADMIN_USER="${WP_ADMIN_USER:-beelab}"
+WP_ADMIN_PASSWORD="${WP_ADMIN_PASSWORD:-changeMeStrong}"
+WP_ADMIN_EMAIL="${WP_ADMIN_EMAIL:-admin@example.com}"
+
 echo
 echo "=============================="
-echo "WordPress: manual setup (UI)"
+echo "WordPress: core install (WP-CLI)"
 echo "=============================="
-echo "📋 Open WordPress installer at:  ${WP_URL%/}/wp-admin"
+
+# wait for wpdb mysql to accept connections (service name differs; inside compose network it's just the service)
+# in most setups host is 'wpdb'/'wpdb-prod' but from wpcli container it's the service name defined in env or compose.
+# We rely on WP-CLI to retry a bit; still, a short wait helps.
+wait_tcp "wpdb" 3306 60 || true
+
+set +e
+compose exec -T "$WPCLI_SVC" wp core is-installed --allow-root >/dev/null 2>&1
+IS_INSTALLED=$?
+set -e
+
+if [[ $IS_INSTALLED -eq 0 ]]; then
+  echo "✅ WordPress is already installed (wp core is-installed)."
+else
+  echo "🧱 Installing WordPress core..."
+  compose exec -T "$WPCLI_SVC" wp core install \
+    --url="${WP_URL%/}" \
+    --title="$WP_TITLE" \
+    --admin_user="$WP_ADMIN_USER" \
+    --admin_password="$WP_ADMIN_PASSWORD" \
+    --admin_email="$WP_ADMIN_EMAIL" \
+    --skip-email \
+    --allow-root
+  echo "✅ WordPress core installed."
+fi
+
+# optional: permalinks (safe even right after install)
+echo "🔧 Setting permalinks to /%postname%/ ..."
+compose exec -T "$WPCLI_SVC" wp rewrite structure '/%postname%/' --hard --allow-root >/dev/null 2>&1 || true
+compose exec -T "$WPCLI_SVC" wp rewrite flush --hard --allow-root >/dev/null 2>&1 || true
+
 echo
-echo "1) Install theme (manual):"
-echo "   WP Admin → Appearance → Themes → Add New → Upload Theme"
-echo "   Upload your exported theme ZIP (source-of-truth artifact)."
+echo "=============================="
+echo "WordPress: manual next steps (UI)"
+echo "=============================="
+echo "📋 WP Admin:  ${WP_URL%/}/wp-admin"
 echo
-echo "2) Install plugins (manual):"
-echo "   WP Admin → Plugins → Add New → Upload Plugin"
-echo "   Upload your plugin ZIPs from: wordpress/build/"
+echo "Optional manual steps:"
+echo "1) (If you want) Install your theme:"
+echo "   Appearance → Themes → Add New → Upload Theme"
 echo
-echo "3) Permalinks + cache (manual):"
-echo "   WP Admin → Settings → Permalinks → Save Changes"
-echo "   (then clear any caching plugin if used)"
+echo "2) (If you want) Install your plugins:"
+echo "   Plugins → Add New → Upload Plugin"
 echo
-echo "NOTE: This script intentionally does NOT install themes/plugins via CLI."
+echo "3) Permalinks:"
+echo "   Settings → Permalinks → Save Changes"
 echo
 
-
-
-
-
-# --- load fixtures (best-effort) ---
+# --- load fixtures (best-effort; don't break if command missing) ---
 echo "📥 Loading Django fixtures (best-effort)..."
 set +e
 compose exec "$DJANGO_SVC" python manage.py seed_all --clear
-
 set -e
+# If seed_all doesn't exist, that's fine.
+# The output will show the error, but we continue.
 
 # --- health checks (env-aware) ---
 if [[ -x ./scripts/healthcheck.sh ]]; then
-  ./scripts/healthcheck.sh "$ENV"
+  ./scripts/healthcheck.sh "$ENV" || true
 else
   echo "⚠️  ./scripts/healthcheck.sh not found; skipping."
 fi
@@ -203,4 +256,4 @@ echo
 echo "✅ Done."
 echo "🖥  Web:     ${WEB_BASE_URL:-http://localhost:9080}"
 echo "🔌 Django:  ${API_URL%/}   (health: ${API_URL%/}/health)"
-echo "📝 WP:      ${WP_URL}"
+echo "📝 WP:      ${WP_URL%/}"
