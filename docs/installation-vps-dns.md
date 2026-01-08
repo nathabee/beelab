@@ -7,10 +7,10 @@
  
 ## Access
 
-### Port bindings (public access from your VPS IP)
+### Port bindings 
 
 BeeLab defaults map services to host ports **9080 / 9001 / 9082**. On Linux, Compose publishes on **all interfaces** by default (0.0.0.0).  
-BeeLab services must be bound to 127.0.0.1 in prod.
+BeeLab services must be bound to 127.0.0.1
 
 Example inside `compose.yaml` :
 
@@ -26,8 +26,7 @@ services:
     ports:
       - "127.0.0.1:9082:80"
 ```
-
-> After edits, save the file.
+ 
 
 ### Check Ports  
 
@@ -42,7 +41,7 @@ Use the Hetzner Console  to set allow ports:
 * Allow: `53/udp` (DNS), `53/tcp` (DNS fallback), **`443/tcp` (HTTPS pulls)**, **`80/tcp` (HTTP pulls)**
 * Simpler: allow **all outbound**.
 
-**Check ports are free:**
+**If docker fails to start because the port is already in use, check ports are free:**
 
 we will use per default the 3 ports (9001|9080|9082), check that theyare available
 ```bash
@@ -166,8 +165,7 @@ cd /etc/apache2/sites-available
     sudo touch beelab-web-ssl.conf 
 
 
-please make the next example extensible not to have too much info
-fill the files with the contentsimilar to :
+Create the files with the following templates (adjust domain names and ports) :
   
 ::::::::::::::
 beelab-api-ssl.conf

@@ -79,7 +79,7 @@ groups
 ---
 ### 3) Security & networking
 
-DNS and Apache configuration is detailled in a separate doc: 
+DNS and Apache configuration is detailed in a separate doc: 
 <div class="doc-list">
 <li><a href="installation-vps-dns.md">☁️ Installation on a VPS : DNS and Apache</a></li>
 </div>
@@ -136,7 +136,7 @@ alias cdbeelab='cd ~/beelab/'
 alias beelab-prod='source ~/beelab/scripts/alias.sh prod'
 ```
 
-Run 'beelab-prod' each time you open a new editor call, in order to acess command line helpers:
+Run 'beelab-prod' each time you open a new editor call, in order to access command line helpers:
 
 ```bash
 cdbeelab
@@ -271,9 +271,8 @@ in this example :
 * Admin: `https://beelab-wp.nathabee.de/wp-admin` — log in with the admin you created during setup.
 * Activate desired plugins: **Competence WP**, **PomoloBee WP**.
 
-* in the plugins settings: on a VPS change the API adresse from localhost to your VPS (in prod) to `https://beelab-api.nathabee.de/api`
-
- <img src="./wp-plugin-pomolobee-settings" alt="Pomolobee plugin settings screenshot" width="49%">
+* in the plugins settings: on a VPS change the API address from localhost to your VPS (in prod) to `https://beelab-api.nathabee.de/api`
+ 
 
 Update Django passwords used by the plugins (examples):
 use the helper installed in 4)
