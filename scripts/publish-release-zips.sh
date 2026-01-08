@@ -111,15 +111,52 @@ for a in "${ASSETS[@]}"; do
 done
 
 echo
-echo "== Step 3: Create / push tag (if missing) =="
+echo "== Step 3: Ensure tag on origin and points to HEAD =="
 
-if git rev-parse "$TAG" >/dev/null 2>&1; then
-  echo "Tag already exists: $TAG"
-else
-  git tag -a "$TAG" -m "Release $TAG ($SHA)"
-  git push origin "$TAG"
-  echo "Created + pushed tag: $TAG"
+HEAD_SHA="$(git rev-parse HEAD)"
+HEAD_SHORT="$(git rev-parse --short HEAD)"
+
+# Does a GitHub release already exist for this tag?
+RELEASE_EXISTS="no"
+if gh release view "$TAG" >/dev/null 2>&1; then
+  RELEASE_EXISTS="yes"
 fi
+
+# Helper: create or move local tag to HEAD
+ensure_local_tag_at_head() {
+  if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+    echo "Creating local tag: $TAG -> $HEAD_SHORT"
+    git tag -a "$TAG" -m "Release $TAG ($HEAD_SHORT)" HEAD
+    return
+  fi
+
+  TAG_SHA="$(git rev-parse "$TAG^{commit}")"
+  if [[ "$TAG_SHA" != "$HEAD_SHA" ]]; then
+    echo "Local tag $TAG points to $(git rev-parse --short "$TAG_SHA"), expected $HEAD_SHORT"
+    if [[ "$RELEASE_EXISTS" == "yes" ]]; then
+      die "Refusing to retag: GitHub Release already exists for $TAG. Bump VERSION if you need a new release."
+    fi
+    echo "Moving local tag: $TAG -> $HEAD_SHORT"
+    git tag -f -a "$TAG" -m "Release $TAG ($HEAD_SHORT)" HEAD
+  else
+    echo "Local tag already points to HEAD: $TAG"
+  fi
+}
+
+# Helper: push tag to origin (safe force only when release doesn't exist)
+push_tag_to_origin() {
+  if [[ "$RELEASE_EXISTS" == "yes" ]]; then
+    # no rewriting published releases; just ensure it's on origin
+    echo "Pushing tag to origin (no force): $TAG"
+    git push origin "$TAG"
+  else
+    echo "Pushing tag to origin (force-with-lease allowed): $TAG"
+    git push origin "$TAG" --force-with-lease
+  fi
+}
+
+ensure_local_tag_at_head
+push_tag_to_origin
 
 echo
 echo "== Step 4: Create release (if missing) =="

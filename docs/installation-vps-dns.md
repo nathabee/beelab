@@ -10,8 +10,9 @@
 ### Port bindings (public access from your VPS IP)
 
 BeeLab defaults map services to host ports **9080 / 9001 / 9082**. On Linux, Compose publishes on **all interfaces** by default (0.0.0.0).  
+BeeLab services must be bound to 127.0.0.1 in prod.
 
-Example inside `compose.yaml` (edit only if you see `127.0.0.1`):
+Example inside `compose.yaml` :
 
 ```yaml
 services:
@@ -28,7 +29,7 @@ services:
 
 > After edits, save the file.
 
-### Check for free Ports
+### Check Ports  
 
 **Inbound (Hetzner Cloud Firewall ):**
 Use the Hetzner Console  to set allow ports:
@@ -48,6 +49,13 @@ we will use per default the 3 ports (9001|9080|9082), check that theyare availab
 sudo ss -tulpn | grep -E ':(9001|9080|9082)' || echo "9001/9080/9082 appear free"
 ```
 
+these port will be used with 127.0.0.1 not open to 0.0.0.0
+```bash
+sudo ss -tulpn | grep -E '127\.0\.0\.1:(9001|9080|9082)'
+```
+Seeing 0.0.0.0:9001 or [::]:9001 is a security bug.
+
+
 ### in Hetzner DNS console
 
 create 3 "A records" for each subdomains :
@@ -59,6 +67,9 @@ A record | beelab-api | nathabee.de
 A record | beelab-web | nathabee.de 
 A record | beelab-wp | nathabee.de 
 
+
+DNS does NOT expose ports.
+Apache terminates TLS and proxies internally.
 ---
 
 ## Fill in your “install certbot” section like this
@@ -152,11 +163,10 @@ in this example we will use apache2 to make the 4 files :
 cd /etc/apache2/sites-available
     sudo touch beelab-api-ssl.conf 
     sudo touch beelab-wp-ssl.conf
-    sudo touch beelab-web-ssl.conf
-    sudo touch beelab-api-ssl.conf 
+    sudo touch beelab-web-ssl.conf 
 
 
-please make the next example extentable not to have too much info
+please make the next example extensible not to have too much info
 fill the files with the contentsimilar to :
   
 ::::::::::::::

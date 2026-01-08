@@ -87,7 +87,7 @@ DNS and Apache configuration is detailled in a separate doc:
 ---
 ## 4) Get BeeLab code & prepare
 
-### retriev the git
+### retrieve the git
 ```bash
 # Choose a working directory
 
@@ -178,6 +178,7 @@ dcwebup / dcwebdown # start/stop web only
 ###### MISC ##########
 blenv dev|prod      # switch env in this shell
 
+### and lots of other aliases...
 ``` 
 
 ---
@@ -203,7 +204,7 @@ When prompted:
 
 open wordpress   : `https://beelab-wp.nathabee.de/wp-admin`
 
-chosose Pomolobee Settings and Competence Settings (settings of activated plugin) and check that it is pointing to the correct django backend: 
+choose Pomolobee Settings and Competence Settings (settings of activated plugin) and check that it is pointing to the correct django backend: 
 in prod
 https://beelab-api.nathabee.de/api
 
@@ -261,7 +262,7 @@ in this example :
 * Next.js web: [https://beelab-web.nathabee.de](https://beelab-web.nathabee.de)
 
  
-> Replace `nathabee.de` with your Hetzner server’s public IP.
+> Replace `nathabee.de` with your own domain name pointing to the VPS IP.
 
 ---
 
@@ -346,11 +347,6 @@ blenv dev|prod      # switch env in this shell
 **Docker permission denied**
 
 * Run `groups` — ensure your user is in `docker`. Relogin/reboot after `usermod -aG docker $USER`.
-
-**Can’t reach services from the Internet**
-
-* Check UFW/Hetzner Cloud firewall rules for ports 9001/9080/9082.
-* If `compose.yaml` had `127.0.0.1:PORT:...`, change to `PORT:...` and `docker compose up -d` again.
 
 **Slow builds / low RAM**
 

@@ -2,9 +2,9 @@ name: beelab
 
 x-django-env: &django_env
   DJANGO_SETTINGS_MODULE: config.settings
-  SECRET_KEY: ${SECRET_KEY:-dev-insecure}
-  DEBUG: ${DEBUG:-1}
-  ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+  SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
+  DEBUG: ${DEBUG:-0}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:?set ALLOWED_HOSTS}
   # add these if keeping the old settings.py style:
   DATABASE_NAME: ${POSTGRES_DB:-appdb}
   DATABASE_USER: ${POSTGRES_USER:-appuser}
@@ -12,17 +12,17 @@ x-django-env: &django_env
   DATABASE_HOST: db
   DATABASE_PORT: "5432"
   BYPASS_MEDIA: ${BYPASS_MEDIA:-1}  
-  WP_BASE_URL: ${WP_BASE_URL:-http://localhost:9082}
+  WP_BASE_URL: ${WP_BASE_URL:?set WP_BASE_URL}
   BEEFONT_MEDIA_ROOT: ${BEEFONT_MEDIA_ROOT:-/app/django/media/beefont}
   BEEFONT_BASE_URL: ${BEEFONT_BASE_URL:-/api/beefont}
-  DJANGO_BASE_URL: ${DJANGO_BASE_URL:-http://localhost:9001}
-  WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:9080} 
+  DJANGO_BASE_URL: ${DJANGO_BASE_URL:?set DJANGO_BASE_URL}
+  WEB_BASE_URL: ${WEB_BASE_URL:?set WEB_BASE_URL} 
   CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:9082,http://localhost:9080}
   CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:9082,http://localhost:9080}
   SESSION_COOKIE_SAMESITE: ${SESSION_COOKIE_SAMESITE:-None}
   CSRF_COOKIE_SAMESITE: ${CSRF_COOKIE_SAMESITE:-None}
-  SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-False}
-  CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE:-False}
+  SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-True}
+  CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE:-True}
   
 
 x-db-env: &db_env
@@ -30,57 +30,74 @@ x-db-env: &db_env
   POSTGRES_USER: ${POSTGRES_USER:-app}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
 
-x-wp-env: &wp_env 
+# --- dev WP env (debug on) ---
+x-wp-env-dev: &wp_env_dev
   WORDPRESS_DB_HOST: wpdb:3306
   WORDPRESS_DB_USER: ${WP_DB_USER:-wp}
   WORDPRESS_DB_PASSWORD: ${WP_DB_PASSWORD:-wp}
   WORDPRESS_DB_NAME: ${WP_DB_NAME:-wordpress}
   WORDPRESS_TABLE_PREFIX: ${WP_TABLE_PREFIX:-wp_}
   WORDPRESS_CONFIG_EXTRA: |
-    // You don’t need a physical wp-config.php at all. In your setup 
-    // the WORDPRESS_CONFIG_EXTRA block is the right place to flip WordPress dev flags, 
-    // because the official image injects that snippet into wp-config at runtime.
-    // Only define if not already set (avoid "already defined" warnings)
-    if (!defined('WP_DEBUG'))        define('WP_DEBUG', true);
-    if (!defined('WP_DEBUG_LOG'))    define('WP_DEBUG_LOG', true);
-
-
-    // Load unminified core JS/CSS (including react.js/react-dom.js)
-    if (!defined('SCRIPT_DEBUG'))    define('SCRIPT_DEBUG', true);
-    // Avoid concatenation (helps source maps & readable stacks)
+    // DEV flags
+    if (!defined('WP_DEBUG')) define('WP_DEBUG', true);
+    if (!defined('WP_DEBUG_LOG')) define('WP_DEBUG_LOG', true);
+    if (!defined('SCRIPT_DEBUG')) define('SCRIPT_DEBUG', true);
     if (!defined('CONCATENATE_SCRIPTS')) define('CONCATENATE_SCRIPTS', false);
-    // Let plugins/themes know it’s a dev context
     if (!defined('WP_ENVIRONMENT_TYPE')) define('WP_ENVIRONMENT_TYPE', 'development');
-
-    // Canonical public URLs (no port)
-    if (!defined('WP_HOME'))         define('WP_HOME',    '${WP_BASE_URL}');
-    if (!defined('WP_SITEURL'))      define('WP_SITEURL', '${WP_BASE_URL}');
-
-    // Admin must be HTTPS
     if (!defined('FORCE_SSL_ADMIN')) define('FORCE_SSL_ADMIN', false);
 
-    // Tell WP it’s HTTPS when coming via Apache TLS proxy
+    // Canonical public URLs
+    if (!defined('WP_HOME'))    define('WP_HOME',    '${WP_BASE_URL}');
+    if (!defined('WP_SITEURL')) define('WP_SITEURL', '${WP_BASE_URL}');
+
+    // Trust Apache TLS proxy
     if (isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) && $$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
-      $$_SERVER['HTTPS']            = 'on';
-      $$_SERVER['SERVER_PORT']      = 443;
-      $$_SERVER['REQUEST_SCHEME']   = 'https';
+      $$_SERVER['HTTPS'] = 'on';
+      $$_SERVER['SERVER_PORT'] = 443;
+      $$_SERVER['REQUEST_SCHEME'] = 'https';
       $$_SERVER['HTTP_X_FORWARDED_PORT'] = 443;
     }
 
-    //if (getenv('TRUST_X_FORWARDED_PROTO') === 'true'    && isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) 
-    //    && $$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
-    //  $$_SERVER['HTTPS'] = 'on';
-    //  $$_SERVER['SERVER_PORT'] = 443;
-    //  $$_SERVER['REQUEST_SCHEME'] = 'https';
-    //  $$_SERVER['HTTP_X_FORWARDED_PORT'] = 443;
-    //}
-
-
-    // (Optional) keep cookie domain/path simple in proxy setups
-    if (!defined('COOKIE_DOMAIN'))   define('COOKIE_DOMAIN', '');
-    if (!defined('COOKIEPATH'))      define('COOKIEPATH', '/');
-    if (!defined('SITECOOKIEPATH'))  define('SITECOOKIEPATH', '/');
+    // Cookie paths
+    if (!defined('COOKIE_DOMAIN')) define('COOKIE_DOMAIN', '');
+    if (!defined('COOKIEPATH')) define('COOKIEPATH', '/');
+    if (!defined('SITECOOKIEPATH')) define('SITECOOKIEPATH', '/');
     if (!defined('ADMIN_COOKIE_PATH')) define('ADMIN_COOKIE_PATH', '/');
+
+# --- prod WP env (debug off + force SSL admin) ---
+x-wp-env-prod: &wp_env_prod
+  WORDPRESS_DB_HOST: wpdb:3306
+  WORDPRESS_DB_USER: ${WP_DB_USER:-wp}
+  WORDPRESS_DB_PASSWORD: ${WP_DB_PASSWORD:-wp}
+  WORDPRESS_DB_NAME: ${WP_DB_NAME:-wordpress}
+  WORDPRESS_TABLE_PREFIX: ${WP_TABLE_PREFIX:-wp_}
+  WORDPRESS_CONFIG_EXTRA: |
+    // PROD flags
+    if (!defined('WP_DEBUG')) define('WP_DEBUG', false);
+    if (!defined('WP_DEBUG_LOG')) define('WP_DEBUG_LOG', false);
+    if (!defined('SCRIPT_DEBUG')) define('SCRIPT_DEBUG', false);
+    if (!defined('CONCATENATE_SCRIPTS')) define('CONCATENATE_SCRIPTS', true);
+    if (!defined('WP_ENVIRONMENT_TYPE')) define('WP_ENVIRONMENT_TYPE', 'production');
+    if (!defined('FORCE_SSL_ADMIN')) define('FORCE_SSL_ADMIN', true);
+
+    // Canonical public URLs
+    if (!defined('WP_HOME'))    define('WP_HOME',    '${WP_BASE_URL}');
+    if (!defined('WP_SITEURL')) define('WP_SITEURL', '${WP_BASE_URL}');
+
+    // Trust Apache TLS proxy
+    if (isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) && $$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+      $$_SERVER['HTTPS'] = 'on';
+      $$_SERVER['SERVER_PORT'] = 443;
+      $$_SERVER['REQUEST_SCHEME'] = 'https';
+      $$_SERVER['HTTP_X_FORWARDED_PORT'] = 443;
+    }
+
+    // Cookie paths
+    if (!defined('COOKIE_DOMAIN')) define('COOKIE_DOMAIN', '');
+    if (!defined('COOKIEPATH')) define('COOKIEPATH', '/');
+    if (!defined('SITECOOKIEPATH')) define('SITECOOKIEPATH', '/');
+    if (!defined('ADMIN_COOKIE_PATH')) define('ADMIN_COOKIE_PATH', '/');
+
 
 x-wpdb-env: &wpdb_env
   MYSQL_DATABASE: ${WP_DB_NAME:-wordpress}
@@ -144,7 +161,7 @@ services:
       DATABASE_HOST: db-prod             # ← point to prod DB
     depends_on:
       db-prod: { condition: service_started }
-    ports: ["9001:8000"]
+    ports: ["127.0.0.1:9001:8000"]
     #  persist media/static and keep them outside the image
     volumes:
       - django_media_prod:/app/media
@@ -209,7 +226,7 @@ services:
       BACKEND_INTERNAL_URL: http://django-prod:8000
     depends_on:
       django-prod: { condition: service_healthy }
-    ports: ["9080:3000"]
+    ports: ["127.0.0.1:9080:3000"]
     volumes: []
     command: "npx next start -H 0.0.0.0 -p 3000"
     profiles: ["prod"]
@@ -243,7 +260,7 @@ services:
     build: { context: ./wordpress }
     #container_name: beelab-wp
     env_file: [.env.dev]
-    environment: { <<: *wp_env }
+    environment: { <<: *wp_env_dev }
     depends_on:
       wpdb: { condition: service_healthy }
     ports: ["127.0.0.1:9082:80"]
@@ -264,11 +281,11 @@ services:
     #container_name: beelab-wp-prod
     env_file: [.env.prod]
     environment:
-      <<: *wp_env
+      <<: *wp_env_prod
       WORDPRESS_DB_HOST: wpdb-prod:3306   # ← point to prod MariaDB
     depends_on:
       wpdb-prod: { condition: service_healthy }
-    ports: ["9082:80"]
+    ports: ["127.0.0.1:9082:80"]
     volumes: 
     - wp_data_prod:/var/www/html      
     - django_media_prod:/var/www/html/media:ro
