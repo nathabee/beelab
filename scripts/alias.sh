@@ -27,12 +27,10 @@ _beelab_set_env() {
   if [[ "$env" == "prod" ]]; then
     export BEELAB_DJANGO_SVC="django-prod"
     export BEELAB_WP_SVC="wordpress-prod"
-    export BEELAB_WEB_SVC="web-prod"
     export BEELAB_WPCLI_SVC="wpcli-prod"
   else
     export BEELAB_DJANGO_SVC="django"
     export BEELAB_WP_SVC="wordpress"
-    export BEELAB_WEB_SVC="web"
     export BEELAB_WPCLI_SVC="wpcli"
   fi
 }
@@ -64,13 +62,6 @@ dcexec() {
   local tty_flags; if [[ -t 0 && -t 1 ]]; then tty_flags="-it"; else tty_flags="-T"; fi
   dc exec $tty_flags "$svc" "$@"
 }
-
-# -------------------------------------------------------------------
-# WEB
-# -------------------------------------------------------------------
-dcweblogs() { dclogs "$BEELAB_WEB_SVC" "$@"; }
-dcwebup()   { dc up -d "$BEELAB_WEB_SVC"; }
-dcwebdown() { dc stop  "$BEELAB_WEB_SVC"; }
 
 # -------------------------------------------------------------------
 # LOGS (host json-file driver + in-container files)
@@ -162,7 +153,7 @@ blenv dev|prod       # switch env in this shell (updates compose flags)
 
 ###### DOCKER ########
 dcup                 # start current env stack
-dcbuild              # build images (optionally: dcbuild web django)
+dcbuild              # build images (optionally: dcbuild django wordpress)
 dcdown               # stop stack (remove orphans)
 dcstop SERVICE       # stop one service
 dcps                 # docker compose ps
@@ -175,9 +166,6 @@ dclogsize  [SVC...]      # show docker log file sizes
 dclogzero  [SVC...]      # truncate docker JSON logs (all if no SVC)
 dclogzero_in SVC /path   # zero file logs inside container
 
-###### WEB (Next.js) ##
-dcweblogs            # follow web logs
-dcwebup / dcwebdown  # start/stop web only
 EOF
 
   # appended sections (if defined)

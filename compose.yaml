@@ -116,13 +116,6 @@ x-wpcli-common: &wpcli_common
     WORDPRESS_DB_NAME: ${WP_DB_NAME:-wordpress}
   working_dir: /var/www/html
  
-x-web-env: &web_env
-  BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://django:8000}
-  NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:9001}
-  PORT: ${WEB_PORT:-3000}
-
-
-
 services:
   # ---- services ----
   # DEV DJANGO
@@ -191,45 +184,6 @@ services:
     volumes:
       - ./django:/app:delegated
     profiles: ["test"]      
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-  # DEV WEB
-  web:
-    build: { context: ./web, target: dev }
-    #container_name: beelab-web
-    env_file: [.env.dev]
-    environment:
-      <<: *web_env
-    depends_on:
-      django: { condition: service_healthy }
-    ports: ["127.0.0.1:9080:3000"]
-    volumes:
-      - ./web:/app:delegated
-      - web_node_modules:/app/node_modules
-    command: "npx next dev -H 0.0.0.0 -p 3000"
-    profiles: ["dev"]
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-  # PROD WEB (explicit, no extends)
-  web-prod:
-    build: { context: ./web, target: prod }
-    #container_name: beelab-web-prod
-    env_file: [.env.prod]
-    environment:
-      <<: *web_env
-      BACKEND_INTERNAL_URL: http://django-prod:8000
-    depends_on:
-      django-prod: { condition: service_healthy }
-    ports: ["127.0.0.1:9080:3000"]
-    volumes: []
-    command: "npx next start -H 0.0.0.0 -p 3000"
-    profiles: ["prod"]
     logging:
       driver: "json-file"
       options:
@@ -404,7 +358,6 @@ services:
 
 # ---- volumes ----
 volumes:
-  web_node_modules:
   db_data:
   db_data_prod:
   wp_db_data:
@@ -413,5 +366,4 @@ volumes:
   wp_data_prod:
   django_media_prod:      
   django_static_prod:    
-
 
