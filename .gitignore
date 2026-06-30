@@ -66,5 +66,9 @@ backups/**/*.sql*
 # Personal
 *.old
 *.obsolete
- 
 
+# Root-level deployment helper copies. Canonical scripts live in scripts/.
+/alias.sh
+/beefont-redeploy-prod.sh
+/beelab-dump.sh
+/dump-wp.sh
