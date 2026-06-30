@@ -114,7 +114,29 @@ openssl rand -base64 48 | tr -d '\n'
 
 > Tip: set a strong Django `SECRET_KEY` in `.env.prod` or `.env.dev` (e.g. output of `openssl rand -base64 48 | tr -d '\n'`).
 
-change all other necessary env variable
+Change all other necessary env variables.
+
+### Required InGo mock configuration
+
+BeeLab currently provides the InGo-compatible mock API itself. Add these variables during first install, otherwise the InGo test workflow cannot request a token or post a project.
+
+For dev in `.env.dev`:
+
+```env
+INGO_BASE_URL=http://localhost:9001
+INGO_TENANT_NAME=ingo
+INGO_CLIENT_ID=ingo-client
+INGO_CLIENT_SECRET=ingo-secret
+```
+
+For prod in `.env.prod`, use the public Django API domain:
+
+```env
+INGO_BASE_URL=https://beelab-api.nathabee.de
+INGO_TENANT_NAME=ingo
+INGO_CLIENT_ID=ingo-client
+INGO_CLIENT_SECRET=ingo-secret
+```
 
 
 ### add helpers

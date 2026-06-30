@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     'PomoloBeeCore.apps.PomoloBeeCoreConfig',  # main app  
     'CompetenceCore.apps.CompetenceCoreConfig',  # main app  
     "BeeFontCore.apps.BeeFontCoreConfig",
+    "InGoCore.apps.InGoCoreConfig",
     'corsheaders',   
 ]
  
@@ -211,6 +212,10 @@ MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', str(BASE_DIR / 'media')))
 # If you want a subfolder for BeeFont, keep it a Path as well
 BEEFONT_MEDIA_ROOT = Path(os.getenv("BEEFONT_MEDIA_ROOT", str(MEDIA_ROOT / "beefont")))
 BEEFONT_BASE_URL   = os.getenv("BEEFONT_BASE_URL", "/api/beefont")
+INGO_BASE_URL = os.getenv("INGO_BASE_URL", "")
+INGO_TENANT_NAME = os.getenv("INGO_TENANT_NAME", "")
+INGO_CLIENT_ID = os.getenv("INGO_CLIENT_ID", "")
+INGO_CLIENT_SECRET = os.getenv("INGO_CLIENT_SECRET", "")
 
 # In production, Django does NOT serve media files
 #if not BYPASS_MEDIA:
@@ -293,5 +298,3 @@ SIMPLE_JWT = {
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY, #env("JWT_SECRET"),
 }
-
-

@@ -9,6 +9,7 @@ from django.conf.urls import handler404, handler500
  
 from django.db import connection
 from django.db.utils import OperationalError
+from InGoCore.views import mock_get_token, mock_project_import
 
 def ready(_):
     try:
@@ -49,11 +50,14 @@ urlpatterns = [
 
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path("api/GetToken/<str:tenant_name>", mock_get_token, name="ingo_mock_get_token"),
+    path("api/projectimport", mock_project_import, name="ingo_mock_project_import"),
 
     path("api/user/", include("UserCore.urls")),      # hello, auth, me
     path("api/pomolobee/", include("PomoloBeeCore.urls")),   #   app’s endpoints
     path("api/competence/", include("CompetenceCore.urls")),   #   app’s endpoints
     path("api/beefont/", include("BeeFontCore.urls")),
+    path("api/ingo/", include("InGoCore.urls")),
 ]
 
 # this is off in docker

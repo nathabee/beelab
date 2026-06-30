@@ -17,6 +17,15 @@ cp .env.dev.example .env.dev
 
 Dev typically uses `http`, `localhost` + ports.
 
+Add the InGo mock values for local testing:
+
+```env
+INGO_BASE_URL=http://localhost:9001
+INGO_TENANT_NAME=ingo
+INGO_CLIENT_ID=ingo-client
+INGO_CLIENT_SECRET=ingo-secret
+```
+
 #### Prod: `.env.prod`
 
 Create it from the template and set real domains, HTTPS, certs, secrets.
@@ -26,6 +35,15 @@ cp .env.prod.example .env.prod
 # edit .env.prod
 # change SSL key
 # modify subdomains and domain for DNS
+```
+
+Add the InGo mock values with the public Django API domain:
+
+```env
+INGO_BASE_URL=https://beelab-api.nathabee.de
+INGO_TENANT_NAME=ingo
+INGO_CLIENT_ID=ingo-client
+INGO_CLIENT_SECRET=ingo-secret
 ```
 
 ### Create Aliases

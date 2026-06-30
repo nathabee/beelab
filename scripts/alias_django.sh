@@ -293,6 +293,16 @@ EOF
 }
 
 # -------------------------------------------------------------------
+# INGO MOCK HELPERS
+# -------------------------------------------------------------------
+ingo() {
+  ( cd "$_BEELAB_ROOT" && scripts/ingo-dev.sh "$BEELAB_ENV" "$@" )
+}
+ingocreateclient(){ ingo create-user; }
+ingoconnect()    { ingo connect; }
+ingopostproject(){ ingo post-project; }
+
+# -------------------------------------------------------------------
 # HELP SECTION (Django only)
 # -------------------------------------------------------------------
 dchelp_django() {
@@ -318,6 +328,12 @@ dcdjmm               # makemigrations (dev) + migrate
 dcdjreseed [mode] [cores]
   modes: --soft (default), --flush, --hard
   cores: CompetenceCore PomolobeeCore UserCore BeeFontCore
+
+###### INGO MOCK ######
+ingo                 # open InGo helper menu for current env
+ingocreateclient     # create/update Django user for INGO_CLIENT_ID
+ingoconnect          # request a mock InGo access token
+ingopostproject      # post the sample project to /api/projectimport
 
 ###### TESTS (dev only) ####
 dtup / dtdown        # start/stop test stack
