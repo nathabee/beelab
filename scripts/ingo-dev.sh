@@ -20,6 +20,11 @@ TOKEN="${INGO_TOKEN:-}"
 COMPOSE_PROJECT="beelab_${ENV}"
 DJANGO_SERVICE=$([[ "$ENV" == "prod" ]] && echo "django-prod" || echo "django")
 ACTION="${2:-menu}"
+URL_OVERRIDE="${3:-}"
+if [[ -n "$URL_OVERRIDE" ]]; then
+  INGO_API_URL="${URL_OVERRIDE%/}"
+fi
+
 
 is_set() {
   [[ -n "${!1+x}" ]]
@@ -96,8 +101,7 @@ confirm_prod() {
   fi
 
   echo
-  echo "DANGER: You are targeting PROD."
-  echo "Target InGo API: $INGO_API_URL"
+  echo "Target InGo mock API: $INGO_API_URL" 
   read -r -p "Type PROD to continue: " confirm
   [[ "$confirm" == "PROD" ]] || { echo "Cancelled."; exit 1; }
 }
@@ -208,7 +212,7 @@ menu() {
 }
 
 show_env_report
-confirm_prod
+# confirm_prod
 
 case "$ACTION" in
   create-user|user) create_test_user ;;

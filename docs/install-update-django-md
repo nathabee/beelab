@@ -1,0 +1,19 @@
+# md install prod in case djang o getr an update
+
+
+## 
+
+cd ~/beelab
+git pull --ff-only
+
+source scripts/alias.sh prod
+
+dcbuild django-prod
+dcdjup
+dcdjango python manage.py migrate --noinput
+
+
+## test 
+ingocreateuser
+ingoconnect
+ingopostproject
