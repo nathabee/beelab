@@ -296,7 +296,7 @@ EOF
 # INGO MOCK HELPERS
 # -------------------------------------------------------------------
 ingo() {
-  ( cd "$_BEELAB_ROOT" && scripts/ingo-dev.sh "$BEELAB_ENV" "$@" )
+  source "$_BEELAB_ROOT/scripts/ingo-dev.sh" "$BEELAB_ENV" "$@"
 }
 ingocreateclient(){ ingo create-user; }
 ingoconnect()    { ingo connect; }
