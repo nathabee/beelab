@@ -135,6 +135,7 @@ connect() {
 
   TOKEN=$(printf '%s' "$response" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("access_token",""))' 2>/dev/null || true)
   if [[ -n "$TOKEN" ]]; then
+    export INGO_TOKEN="$TOKEN" 
     echo "InGo access token loaded for this session."
   else
     echo "No access_token found in response."
