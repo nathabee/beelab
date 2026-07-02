@@ -26,16 +26,25 @@ curl -sS -X POST "$BASE_URL/api/projectimport" \
         "streetName": "Musterstrasse",
         "streetNumber": "1",
         "city": "Musterstadt",
-        "state": "Hessen",
-        "postalCode": "64750",
+        "state": "Musterbundesland",
+        "postalCode": "123456",
         "country": "deu"
-      }
+      },
+      "coordinates": "8.0, 54.0"
     },
     "localContact": {
-      "localContactName": "Max Mustermann",
-      "localContactPhone": "+49 123456789"
+      "localContactName": "Karl Kontakt",
+      "localContactPhone": "+49 30 123456"
     },
-    "startDate": "2026-07-01",
+    "firstResponder": {
+      "firstResponderName": "Emil Erster",
+      "firstResponderNumber": "+49 30 321321"
+    },
+    "fireDepartment": {
+      "fireDepartmentName": "Fabian Feuer",
+      "fireDepartmentNumber": "+49 30 987987"
+    },
+    "startDate": "2024-03-25",
     "nuLevel": 2
   }'
 

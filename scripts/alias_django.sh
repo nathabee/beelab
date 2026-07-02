@@ -298,9 +298,10 @@ EOF
 ingo() {
   source "$_BEELAB_ROOT/scripts/ingo-dev.sh" "$BEELAB_ENV" "$@"
 }
-ingocreateclient(){ ingo create-user; }
-ingoconnect()    { ingo connect; }
-ingopostproject(){ ingo post-project; }
+ingocreateclient(){ ingo create-user "$@"; }
+ingoconnect()    { ingo connect "$@"; }
+ingopostproject(){ ingo post-project "$@"; }
+
 
 # -------------------------------------------------------------------
 # HELP SECTION (Django only)

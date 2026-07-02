@@ -140,6 +140,7 @@ After changing env values, restart Django:
 source scripts/alias.sh dev
 dcbuild django
 dcdjup
+dcdjango python manage.py migrate --noinput
 ```
 
 For prod:
@@ -148,6 +149,7 @@ For prod:
 source scripts/alias.sh prod
 dcbuild django-prod
 dcdjup
+dcdjango python manage.py migrate --noinput
 ```
 
 ---
@@ -163,10 +165,10 @@ source scripts/alias.sh prod
 
 dcbuild django-prod
 dcup django-prod
-dcdjango python manage.py migrate
+dcdjango python manage.py migrate --noinput
 ```
 
-The InGo integration currently has no database models, so migrations are not expected. Running `migrate` is still harmless and keeps the normal deployment routine.
+The InGo mock stores successful imports in the `ingocore_ingoimportedproject` table. Running `migrate` is required after the first deployment of this feature.
 
 The longer clone/update guide lives here:
 
@@ -264,20 +266,38 @@ curl -sS -X POST http://127.0.0.1:9001/api/projectimport \
         "streetName": "Musterstrasse",
         "streetNumber": "1",
         "city": "Musterstadt",
-        "state": "Hessen",
-        "postalCode": "64750",
+        "state": "Musterbundesland",
+        "postalCode": "123456",
         "country": "deu"
       },
-      "coordinates": "8.12345,49.98765"
+      "coordinates": "8.0, 54.0"
     },
     "localContact": {
-      "localContactName": "Max Mustermann",
-      "localContactPhone": "+49 123456789"
+      "localContactName": "Karl Kontakt",
+      "localContactPhone": "+49 30 123456"
     },
-    "startDate": "2026-07-01",
+    "firstResponder": {
+      "firstResponderName": "Emil Erster",
+      "firstResponderNumber": "+49 30 321321"
+    },
+    "fireDepartment": {
+      "fireDepartmentName": "Fabian Feuer",
+      "fireDepartmentNumber": "+49 30 987987"
+    },
+    "startDate": "2024-03-25",
     "nuLevel": 2
   }'
 ```
+
+Success returns only:
+
+```json
+{
+  "projectSharedId": "<generated-project-shared-id>"
+}
+```
+
+The request payload is stored in the database for audit/debugging, but it is not echoed in the API response.
 
 For prod, replace the base URL:
 
