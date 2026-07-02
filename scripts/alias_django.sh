@@ -301,6 +301,7 @@ ingo() {
 ingocreateclient(){ ingo create-user "$@"; }
 ingoconnect()    { ingo connect "$@"; }
 ingopostproject(){ ingo post-project "$@"; }
+ingoposterror()  { ingo post-project-error "$@"; }
 
 
 # -------------------------------------------------------------------
@@ -335,6 +336,7 @@ ingo                 # open InGo helper menu for current env
 ingocreateclient     # create/update Django user for INGO_CLIENT_ID
 ingoconnect          # request a mock InGo access token
 ingopostproject      # post the sample project to /api/projectimport
+ingoposterror        # post duplicate-error project (postalCode 99999 -> 409)
 
 ###### TESTS (dev only) ####
 dtup / dtdown        # start/stop test stack

@@ -125,6 +125,34 @@ run_curl() {
   echo
 }
 
+run_project_import_curl() {
+  local url="$1"
+  local token="$2"
+  local payload="$3"
+  local body_file
+  local http_status
+
+  body_file="$(mktemp)"
+  print_command curl -sS -X POST "$url" -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d "$payload"
+
+  if ! http_status=$(curl -sS -o "$body_file" -w "%{http_code}" -X POST "$url" \
+    -H "Authorization: Bearer $token" \
+    -H "Content-Type: application/json" \
+    -d "$payload"); then
+    rm -f "$body_file"
+    return 1
+  fi
+
+  if [[ -s "$body_file" ]]; then
+    json_pretty < "$body_file"
+  else
+    echo "<empty response body>"
+  fi
+  echo "HTTP_STATUS:$http_status"
+  echo
+  rm -f "$body_file"
+}
+
 connect() {
   local payload
   payload=$(printf '{"client_id":"%s","client_secret":"%s"}' "$INGO_CLIENT_ID" "$INGO_CLIENT_SECRET")
@@ -156,14 +184,10 @@ create_test_user() {
     python manage.py create_ingo_test_user
 }
 
-post_project() {
-  if [[ -z "$TOKEN" ]]; then
-    echo "No InGo token loaded. Run connect first, or export INGO_TOKEN=..."
-    return 1
-  fi
-
-  local payload
-  payload='{
+project_payload() {
+  local postal_code="${1:-123456}"
+  cat <<EOF
+{
     "projectName": "ImportProject",
     "projectNumber": "1000",
     "location": {
@@ -172,7 +196,7 @@ post_project() {
         "streetNumber": "1",
         "city": "Musterstadt",
         "state": "Musterbundesland",
-        "postalCode": "123456",
+        "postalCode": "$postal_code",
         "country": "deu"
       },
       "coordinates": "8.0, 54.0"
@@ -191,12 +215,29 @@ post_project() {
     },
     "startDate": "2024-03-25",
     "nuLevel": 2
-  }'
+  }
+EOF
+}
 
-  run_curl curl -sS -X POST "$INGO_API_URL/api/projectimport" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$payload"
+post_project_with_postal_code() {
+  local postal_code="${1:-123456}"
+  if [[ -z "$TOKEN" ]]; then
+    echo "No InGo token loaded. Run connect first, or export INGO_TOKEN=..."
+    return 1
+  fi
+
+  local payload
+  payload="$(project_payload "$postal_code")"
+
+  run_project_import_curl "$INGO_API_URL/api/projectimport" "$TOKEN" "$payload"
+}
+
+post_project() {
+  post_project_with_postal_code "123456"
+}
+
+post_project_error() {
+  post_project_with_postal_code "99999"
 }
 
 menu() {
@@ -206,15 +247,17 @@ menu() {
     echo "1) create/update InGo client user ($INGO_CLIENT_ID)"
     echo "2) connect: POST /api/GetToken/$INGO_TENANT_NAME"
     echo "3) post project: POST /api/projectimport"
-    echo "4) exit"
+    echo "4) post duplicate-error project: POST /api/projectimport -> 409"
+    echo "5) exit"
     read -r -p "> " choice
 
     case "$choice" in
       1|user|"create user"|"test user"|"create client") create_test_user ;;
       2|connect) connect ;;
       3|post|project|"post project") post_project ;;
-      4|exit|quit|q) exit 0 ;;
-      *) echo "Choose: create client, connect, post project, or exit." ;;
+      4|error|"post error"|"duplicate") post_project_error ;;
+      5|exit|quit|q) exit 0 ;;
+      *) echo "Choose: create client, connect, post project, post error, or exit." ;;
     esac
   done
 }
@@ -226,6 +269,7 @@ case "$ACTION" in
   create-user|user) create_test_user ;;
   connect) connect ;;
   post-project|post_project|post) post_project ;;
+  post-project-error|post_error|error|duplicate) post_project_error ;;
   menu) menu ;;
-  *) echo "Usage: $0 [dev|prod] [menu|create-user|connect|post-project]"; exit 1 ;;
+  *) echo "Usage: $0 [dev|prod] [menu|create-user|connect|post-project|post-project-error]"; exit 1 ;;
 esac

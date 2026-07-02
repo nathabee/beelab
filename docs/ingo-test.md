@@ -210,7 +210,8 @@ The menu offers:
 1) create/update InGo client user (ingo-client)
 2) connect: POST /api/GetToken/ingo
 3) post project: POST /api/projectimport
-4) exit
+4) post duplicate-error project: POST /api/projectimport -> 409
+5) exit
 ```
 
 `create/update InGo client user` creates the Django user named by `INGO_CLIENT_ID` and sets its password to `INGO_CLIENT_SECRET`.
@@ -223,7 +224,9 @@ The menu offers:
 /api/projectimport
 ```
 
-The script prints the curl command before it sends it, then prints the returned JSON.
+`post duplicate-error project` sends the same sample with `postalCode` set to `99999`. The mock returns HTTP `409` without a response body.
+
+The script prints the curl command before it sends it, then prints the returned JSON when there is a JSON body.
 
 Direct commands:
 
@@ -231,6 +234,7 @@ Direct commands:
 scripts/ingo-dev.sh dev create-user
 scripts/ingo-dev.sh dev connect
 scripts/ingo-dev.sh dev post-project
+scripts/ingo-dev.sh dev post-project-error
 ```
 
 You can provide an existing mock InGo JWT token:
@@ -337,6 +341,7 @@ ingo
 ingocreateclient
 ingoconnect
 ingopostproject
+ingoposterror
 ```
 
 ---
