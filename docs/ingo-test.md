@@ -392,6 +392,9 @@ Common results:
 * `INGO_MOCK_INVALID_CLIENT`  
   The mock token endpoint is alive, but `INGO_CLIENT_ID` or `INGO_CLIENT_SECRET` does not match the env values.
 
+* `/api/projectimport` returns `400`, `401`, or `409`  
+  The PDF does not define an error JSON for this endpoint, so the strict mock returns the HTTP status without a response body.
+
 * `INGO_CONFIGURATION_ERROR`  
   One of `INGO_BASE_URL`, `INGO_TENANT_NAME`, `INGO_CLIENT_ID`, or `INGO_CLIENT_SECRET` is missing.
 

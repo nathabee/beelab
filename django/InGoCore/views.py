@@ -220,33 +220,17 @@ def mock_project_import(request):
         auth_result = None
 
     if auth_result is None:
-        return Response({
-            "error": {
-                "code": "INGO_MOCK_UNAUTHORIZED",
-                "message": "Missing or invalid bearer token.",
-            }
-        }, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     validation_errors = validate_project_payload(request.data)
 
     if validation_errors:
-        return Response({
-            "error": {
-                "code": "INGO_VALIDATION_ERROR",
-                "message": "Invalid project payload.",
-                "details": validation_errors,
-            }
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     postal_code = get_nested(request.data, "location.address.postalCode")
 
     if postal_code == "99999":
-        return Response({
-            "error": {
-                "code": "INGO_PROJECT_ALREADY_EXISTS",
-                "message": "Project already exists.",
-            }
-        }, status=status.HTTP_409_CONFLICT)
+        return Response(status=status.HTTP_409_CONFLICT)
 
     project_number = request.data["projectNumber"]
     project_shared_id = make_project_shared_id(project_number)

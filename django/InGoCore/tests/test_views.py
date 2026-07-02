@@ -228,8 +228,7 @@ def test_mock_ingo_project_import_rejects_duplicate_postal_code(api_client, db):
     )
 
     assert res.status_code == 409
-    assert "projectSharedId" not in res.data
-    assert res.data["error"]["code"] == "INGO_PROJECT_ALREADY_EXISTS"
+    assert res.data is None
     assert InGoImportedProject.objects.count() == 0
 
 
@@ -246,8 +245,7 @@ def test_mock_ingo_project_import_validates_required_fields(api_client, db):
     res = api_client.post(MOCK_PROJECT_IMPORT_URL, payload, format="json")
 
     assert res.status_code == 400
-    assert res.data["error"]["code"] == "INGO_VALIDATION_ERROR"
-    assert {"field": "location.address.streetName", "message": "Field is required."} in res.data["error"]["details"]
+    assert res.data is None
 
 
 def test_mock_ingo_project_import_validates_pdf_constraints(api_client, db):
@@ -266,8 +264,11 @@ def test_mock_ingo_project_import_validates_pdf_constraints(api_client, db):
     res = api_client.post(MOCK_PROJECT_IMPORT_URL, payload, format="json")
 
     assert res.status_code == 400
-    fields = {error["field"] for error in res.data["error"]["details"]}
-    assert "projectName" in fields
-    assert "location.address.country" in fields
-    assert "startDate" in fields
-    assert "nuLevel" in fields
+    assert res.data is None
+
+
+def test_mock_ingo_project_import_unauthorized_has_no_error_body(api_client):
+    res = api_client.post(MOCK_PROJECT_IMPORT_URL, pdf_project_payload(), format="json")
+
+    assert res.status_code == 401
+    assert res.data is None
